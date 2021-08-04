@@ -1,0 +1,3 @@
+[submodule "libpicofe"]
+	path = libpicofe
+	url = https://github.com/notaz/libpicofe

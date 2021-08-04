@@ -1,0 +1,9 @@
+*.o
+*.so
+/pkg
+/profile
+picoarch
+
+/gpsp
+/snes9x2002
+/snes9x2005

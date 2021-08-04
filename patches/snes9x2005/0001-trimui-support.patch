@@ -1,0 +1,46 @@
+diff --git a/Makefile b/Makefile
+index b293853..5704da3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -282,6 +282,20 @@ else ifeq ($(platform), gcw0)
+ 	FLAGS += -fomit-frame-pointer -ffast-math -march=mips32 -mtune=mips32r2 -mhard-float
+ 	FLAGS += -DFAST_LSB_WORD_ACCESS
+ 
++else ifeq ($(platform), trimui)
++	TARGET := $(TARGET_NAME)_libretro.so
++	CC = $(CROSS_COMPILE)gcc
++	AR = $(CROSS_COMPILE)ar
++	SHARED := -shared -Wl,--version-script=link.T -Wl,--no-undefined
++	CFLAGS += -fsingle-precision-constant -fno-PIC -flto
++	CFLAGS += -DLSB_FIRST -DFAST_ALIGNED_LSB_WORD_ACCESS -DRIGHTSHIFT_IS_SAR
++	CFLAGS += -std=c99 -fomit-frame-pointer -ffast-math -mcpu=arm926ej-s -mtune=arm926ej-s
++	LDFLAGS += -flto
++	OPTIMIZE += -Ofast -DNDEBUG=1
++	ifeq (,$(DEBUG))
++		LDFLAGS += -s
++	endif
++
+ # (armv7 a7, hard point, neon based) ### 
+ # NESC, SNESC, C64 mini 
+ else ifeq ($(platform), classic_armv7_a7)
+@@ -570,10 +584,20 @@ endif
+ 
+ ifeq ($(DEBUG),1)
+ 	FLAGS += -O0 -g
++else ifneq (,$(OPTIMIZE))
++	FLAGS += $(OPTIMIZE)
+ else
+ 	FLAGS += -O2 -DNDEBUG
+ endif
+ 
++
++ifeq ($(PROFILE), GENERATE)
++	CFLAGS	+= -fprofile-generate=./profile/snes9x2005
++	LDFLAGS	+= -lgcov
++else ifeq ($(PROFILE), APPLY)
++	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/snes9x2005 -fbranch-probabilities
++endif
++
+ ifneq (,$(findstring msvc,$(platform)))
+ ifeq ($(DEBUG),1)
+    FLAGS += -MTd

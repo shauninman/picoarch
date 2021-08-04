@@ -1,0 +1,105 @@
+diff --git a/libretro.c b/libretro.c
+index c368d8f..f4675ed 100644
+--- a/libretro.c
++++ b/libretro.c
+@@ -57,13 +57,11 @@ static int32_t samplerate = (((SNES_CLOCK_SPEED * 6) / (32 * ONE_APU_CYCLE)));
+ static unsigned frameskip_type             = 0;
+ static unsigned frameskip_threshold        = 0;
+ static uint16_t frameskip_counter          = 0;
++static unsigned frameskip_interval         = 0;
+ 
+ static bool retro_audio_buff_active        = false;
+ static unsigned retro_audio_buff_occupancy = 0;
+ static bool retro_audio_buff_underrun      = false;
+-/* Maximum number of consecutive frames that
+- * can be skipped */
+-#define FRAMESKIP_MAX 30
+ 
+ static unsigned retro_audio_latency        = 0;
+ static bool update_audio_latency           = false;
+@@ -341,6 +339,7 @@ void retro_deinit(void)
+    frameskip_type             = 0;
+    frameskip_threshold        = 0;
+    frameskip_counter          = 0;
++   frameskip_interval         = 0;
+    retro_audio_buff_active    = false;
+    retro_audio_buff_occupancy = 0;
+    retro_audio_buff_underrun  = false;
+@@ -414,7 +413,7 @@ static void check_variables(bool first_run)
+    {
+       if (strcmp(var.value, "auto") == 0)
+          frameskip_type = 1;
+-      else if (strcmp(var.value, "manual") == 0)
++      else if (strcmp(var.value, "auto_threshold") == 0)
+          frameskip_type = 2;
+    }
+ 
+@@ -426,6 +425,14 @@ static void check_variables(bool first_run)
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+       frameskip_threshold = strtol(var.value, NULL, 10);
+ 
++   var.key = "catsfc_frameskip_interval";
++   var.value = NULL;
++
++   frameskip_interval = 4;
++
++   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
++      frameskip_interval = strtol(var.value, NULL, 10);
++
+    var.key = "catsfc_overclock_cycles";
+    var.value = NULL;
+ 
+@@ -531,7 +538,7 @@ void retro_run(void)
+ 
+       if (skip_frame)
+       {
+-         if(frameskip_counter < FRAMESKIP_MAX)
++         if(frameskip_counter < frameskip_interval)
+          {
+             IPPU.RenderThisFrame = false;
+             frameskip_counter++;
+diff --git a/libretro_core_options.h b/libretro_core_options.h
+index 8620a4a..dc79a38 100644
+--- a/libretro_core_options.h
++++ b/libretro_core_options.h
+@@ -74,9 +74,9 @@ struct retro_core_option_definition option_defs_us[] = {
+       "Skip frames to avoid audio crackling. Improves\n"
+       "performance at the expense of visual smoothness.",
+       {
+-         { "disabled", NULL },
+-         { "auto",     "Auto" },
+-         { "manual",   "Manual" },
++         { "disabled",       NULL },
++         { "auto",           "Auto" },
++         { "auto_threshold", "Threshold" },
+          { NULL, NULL },
+       },
+       "auto"
+@@ -108,6 +108,27 @@ struct retro_core_option_definition option_defs_us[] = {
+       },
+       "33"
+    },
++   {
++      "catsfc_frameskip_interval",
++      "FS Interval",
++      "The maximum number of frames that can be skipped\n"
++      "before a new frame is rendered.",
++      {
++         { "0",  NULL },
++         { "1",  NULL },
++         { "2",  NULL },
++         { "3",  NULL },
++         { "4",  NULL },
++         { "5",  NULL },
++         { "6",  NULL },
++         { "7",  NULL },
++         { "8",  NULL },
++         { "9",  NULL },
++         { "10", NULL },
++         { NULL, NULL },
++      },
++      "4"
++   },
+    {
+       "catsfc_overclock_cycles",
+       "Overclock (Restart)",

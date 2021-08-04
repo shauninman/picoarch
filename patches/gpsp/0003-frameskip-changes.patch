@@ -1,0 +1,22 @@
+diff --git a/libretro.c b/libretro.c
+index f31235b..241a69e 100644
+--- a/libretro.c
++++ b/libretro.c
+@@ -1099,7 +1099,7 @@ void retro_run(void)
+                         1 : 0;
+ 
+             if (!skip_next_frame ||
+-                (frameskip_counter >= FRAMESKIP_MAX))
++                (frameskip_counter >= frameskip_interval))
+             {
+                skip_next_frame   = 0;
+                frameskip_counter = 0;
+@@ -1116,7 +1116,7 @@ void retro_run(void)
+                               1 : 0;
+ 
+             if (!skip_next_frame ||
+-                (frameskip_counter >= FRAMESKIP_MAX))
++                (frameskip_counter >= frameskip_interval))
+             {
+                skip_next_frame   = 0;
+                frameskip_counter = 0;
