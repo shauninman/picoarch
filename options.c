@@ -105,15 +105,17 @@ void options_init(const struct retro_core_option_definition *defs) {
 		strncpy(entry->desc, entry->def->desc, len);
 		truncate(entry->desc, MAX_DESC_LEN);
 
-		len = strlen(entry->def->info) + 1;
-		entry->info = (char *)calloc(len, sizeof(char));
-		if (!entry->info) {
-			PA_ERROR("Error allocating description string\n");
-			options_free();
-			return;
+		if (entry->def->info) {
+			len = strlen(entry->def->info) + 1;
+			entry->info = (char *)calloc(len, sizeof(char));
+			if (!entry->info) {
+				PA_ERROR("Error allocating description string\n");
+				options_free();
+				return;
+			}
+			strncpy(entry->info, entry->def->info, len);
+			wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
 		}
-		strncpy(entry->info, entry->def->info, len);
-		wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
 
 		for (j = 0; entry->def->values[j].value; j++)
 			;

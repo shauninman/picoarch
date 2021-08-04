@@ -70,17 +70,19 @@ define CORE_template =
 
 $1_REPO ?= https://github.com/libretro/$(1)/
 
+$1_MAKE = make $(and $($1_MAKEFILE),-f $($1_MAKEFILE)) platform=$(platform) $(and $(DEBUG),DEBUG=$(DEBUG)) $(and $(PROFILE),PROFILE=$(PROFILE)) $($(1)_FLAGS)
+
 $(1):
 	git clone $(if $($1_REVISION),,--depth 1) $$($(1)_REPO) $(1)
 	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
 	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), patch -p1 < ../$(patch) &&) true)
 
 $(1)_libretro.so: $(1)
-	cd $(1) && make platform=$(platform) $(if $(DEBUG),DEBUG=$(DEBUG),) $(if $(PROFILE),PROFILE=$(PROFILE),) $($(1)_FLAGS)
+	cd $(1) && $$($1_MAKE)
 	cp $(1)/$(1)_libretro.so .
 
 clean-$(1):
-	test ! -d $(1) || cd $(1) && make platform=$(platform) clean
+	test ! -d $(1) || cd $(1) && $$($1_MAKE) clean
 	rm -f $(1)_libretro.so
 endef
 
