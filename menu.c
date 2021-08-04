@@ -9,6 +9,8 @@
 #define MENU_ALIGN_LEFT 0
 #define MENU_X2 0
 
+#define CORE_OPTIONS_PER_PAGE 11
+
 typedef enum
 {
 	MA_NONE = 1,
@@ -155,23 +157,24 @@ static int mh_savecfg(int id, int keys)
 	return 1;
 }
 
-static int menu_loop_core_options(int id, int keys)
-{
+static int menu_loop_core_options_page(int offset, int keys) {
 	static int sel = 0;
 	menu_entry *e_menu_core_options;
+	int i, menu_idx;
 
-	e_menu_core_options = (menu_entry *)calloc(core_options.visible_len + 1, sizeof(menu_entry));
+	/* core_option + 2 for possible "Next page" +  NULL */
+	e_menu_core_options = (menu_entry *)calloc(core_options.visible_len + 2, sizeof(menu_entry));
 
 	if (!e_menu_core_options) {
 		PA_ERROR("Error allocating core options\n");
 		return 0;
 	}
 
-	for(int i = 0, menu_idx = 0; i < core_options.len; i++) {
-		const char *key;
+	for (i = offset, menu_idx = 0; i < core_options.len && menu_idx < CORE_OPTIONS_PER_PAGE; i++) {
 		struct core_option_entry *entry;
 		menu_entry *option;
-		key = core_options.defs ? core_options.defs[i].key : core_options.vars[i].key;
+		const char *key = options_get_key(i);
+
 		if (options_is_blocked(key))
 			continue;
 
@@ -189,12 +192,29 @@ static int menu_loop_core_options(int id, int keys)
 		menu_idx++;
 	}
 
+	if (i < core_options.len) {
+		menu_entry *option;
+		option = &e_menu_core_options[menu_idx];
+		option->name = "Next page";
+		option->beh = MB_OPT_CUSTOM;
+		option->id = i;
+		option->enabled = 1;
+		option->selectable = 1;
+		option->handler = menu_loop_core_options_page;
+	}
+
 	me_loop(e_menu_core_options, &sel);
 
 	options_update_changed();
 
 	free(e_menu_core_options);
+
 	return 0;
+}
+
+static int menu_loop_core_options(int id, int keys)
+{
+	return menu_loop_core_options_page(0, keys);
 }
 
 static const char h_restore_def[]     = "Switches back to default / recommended\n"
