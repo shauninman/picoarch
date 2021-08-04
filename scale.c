@@ -835,7 +835,8 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 		dst_w = SCREEN_WIDTH;
 		dst_h = SCREEN_HEIGHT;
 		dst_offs = 0;
-	} else if (scale_size == SCALE_SIZE_ASPECT) {
+	} else if (scale_size == SCALE_SIZE_ASPECT ||
+	           (scale_size == SCALE_SIZE_NONE && w > SCREEN_WIDTH || h > SCREEN_HEIGHT)) {
 		dst_w = SCREEN_WIDTH;
 		dst_h = SCREEN_WIDTH / aspect_ratio + 0.5;
 		dst_offs = ((SCREEN_HEIGHT-dst_h)/2) * SCREEN_PITCH;
@@ -845,7 +846,7 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 			dst_h = SCREEN_HEIGHT;
 			dst_offs = ((SCREEN_WIDTH-dst_w)/2);
 		}
-	} else if (scale_size == SCALE_SIZE_NONE && w <= SCREEN_WIDTH && h <= SCREEN_HEIGHT) {
+	} else if (scale_size == SCALE_SIZE_NONE) {
 		unsigned dst_x = ((SCREEN_WIDTH - w) * SCREEN_BPP / 2);
 		unsigned dst_y = ((SCREEN_HEIGHT - h) / 2);
 		dst_offs = dst_y * SCREEN_PITCH + dst_x;
