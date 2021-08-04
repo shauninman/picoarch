@@ -1,15 +1,13 @@
 diff --git a/libretro_core_options.h b/libretro_core_options.h
-index c23a2c3..ae3c70c 100644
+index c23a2c3..0ac55a9 100644
 --- a/libretro_core_options.h
 +++ b/libretro_core_options.h
-@@ -56,11 +56,13 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -56,11 +56,11 @@ struct retro_core_option_definition option_defs_us[] = {
     {
        "gpsp_bios",
        "BIOS",
 -      "Choose the BIOS image to use. The official BIOS must be provided by the user. Using a non-official (or builtin) BIOS might result in incompatibility problems with some games. Best results are to be achieved with the official Nintendo BIOS.",
-+      "Choose the BIOS image to use. The official BIOS\n"
-+      "must be provided by the user. Using a builtin\n"
-+      "BIOS might result in compatibility problems.",
++      "Choose the BIOS image to use. The official BIOS must be provided by the user. Using a builtin BIOS might result in compatibility problems.",
        {
 -         { "auto",      "Auto select" },
 -         { "builtin",   "Builtin BIOS" },
@@ -20,13 +18,12 @@ index c23a2c3..ae3c70c 100644
           { NULL, NULL },
        },
        "auto"
-@@ -68,10 +70,11 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -68,10 +68,10 @@ struct retro_core_option_definition option_defs_us[] = {
     {
        "gpsp_boot_mode",
        "Boot mode",
 -      "Choose whether to boot the BIOS before the game or not. There's not much difference in either modes.",
-+      "Choose whether to boot the BIOS before the game\n"
-+      "or not.",
++      "Choose whether to boot the BIOS before the game or not.",
        {
 -         { "game",      "Boot to game" },
 -         { "bios",      "Boot to BIOS" },
@@ -35,13 +32,12 @@ index c23a2c3..ae3c70c 100644
           { NULL, NULL },
        },
        "game"
-@@ -79,20 +82,23 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -79,20 +79,20 @@ struct retro_core_option_definition option_defs_us[] = {
     {
        "gpsp_frameskip",
        "Frameskip",
 -      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Auto (Threshold)' utilises the 'Frameskip Threshold (%)' setting. 'Fixed Interval' utilises the 'Frameskip Interval' setting.",
-+      "Skip frames to avoid audio crackling. Improves\n"
-+      "performance at the expense of visual smoothness.",
++      "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
        {
           { "disabled",       NULL },
           { "auto",           "Auto" },
@@ -59,25 +55,22 @@ index c23a2c3..ae3c70c 100644
 -      "Frameskip Threshold (%)",
 -      "When 'Frameskip' is set to 'Auto (Threshold)', specifies the audio buffer occupancy threshold (percentage) below which frames will be skipped. Higher values reduce the risk of crackling by causing frames to be dropped more frequently.",
 +      "FS Threshold (%)",
-+      "When 'Frameskip' is set to 'Threshold', sets\n"
-+      "how low the audio buffer can get before frames\n"
-+      "will be skipped.",
++      "When 'Frameskip' is set to 'Threshold', sets how low the audio buffer can get before frames will be skipped.",
        {
           { "15", NULL },
           { "18", NULL },
-@@ -116,8 +122,9 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -116,8 +116,8 @@ struct retro_core_option_definition option_defs_us[] = {
     },
     {
        "gpsp_frameskip_interval",
 -      "Frameskip Interval",
 -      "When 'Frameskip' is set to 'Fixed Interval', the value set here is the number of frames omitted after a frame is rendered - i.e. '0' = 60fps, '1' = 30fps, '2' = 15fps, etc.",
 +      "FS Interval",
-+      "The maximum number of frames that can be skipped\n"
-+      "before a new frame is rendered.",
++      "The maximum number of frames that can be skipped before a new frame is rendered.",
        {
           { "0",  NULL },
           { "1",  NULL },
-@@ -132,46 +139,49 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -132,40 +132,40 @@ struct retro_core_option_definition option_defs_us[] = {
           { "10", NULL },
           { NULL, NULL },
        },
@@ -116,8 +109,7 @@ index c23a2c3..ae3c70c 100644
 -      "Backup Save Method (Restart)",
 -      "Choose the data format used for cartridge save files. 'gpSP' can be used for compatibility with the stand-alone version of gpSP. 'libretro' provides better integration with the frontend.",
 +      "Save Format",
-+      "Choose the data format used for cartridge save\n"
-+      "files. Must restart to take effect.",
++      "Choose the data format used for cartridge save files. Must restart to take effect.",
        {
           { "gpSP",     NULL },
           { "libretro", NULL },
@@ -128,22 +120,3 @@ index c23a2c3..ae3c70c 100644
     },
  #if defined(HAVE_DYNAREC)
     {
-       "gpsp_drc",
-       "Dynamic Recompiler",
--      "Dynamically recompile CPU instructions to native instructions. Greatly improves performance, but may reduce accuracy.",
-+      "Dynamically recompile CPU instructions to native\n"
-+      "instructions. Greatly improves performance, but\n"
-+      "may reduce accuracy.",
-       {
-          { "enabled",  NULL },
-          { "disabled", NULL },
-@@ -183,7 +193,8 @@ struct retro_core_option_definition option_defs_us[] = {
-    {
-       "gpsp_turbo_period",
-       "Turbo Button Period",
--      "Specify the repeat interval (in frames) when holding down the Turbo A/B buttons.",
-+      "Specify the repeat interval (in frames) when\n"
-+      "holding down the Turbo A/B buttons.",
-       {
-          { "4",   NULL },
-          { "5",   NULL },

@@ -2,6 +2,16 @@
 
 picoarch uses libpicofe and SDL to create a small frontend to libretro cores. It's designed for small (320x240 2.0-2.4") screen, low-powered devices like the Trimui Model S (PowKiddy A66).
 
+## Running
+
+picoarch can be run by specifying the core library and the content to run:
+
+```
+./picoarch /path/to/core_name_libretro.so /path/to/game.gba
+```
+
+It does not have a built-in file browser, so both core and content must be specified on the command line.
+
 ## Building
 
 The frontend can currently be built for the TrimUI Model S and Linux (useful for testing and debugging).
@@ -98,7 +108,7 @@ A few common changes will need to be made when you add cores, since TrimUI is no
 Common changes include:
 
 - Adding a `platform=trimui` target to the core Makefile
-- Modifying `libretro_core_options.h` to shorten text, add manual line breaks, and change defaults for small screen / low power devices
+- Modifying `libretro_core_options.h` to shorten text and change defaults for small screen / low power devices
 - Hiding unnecessary core options and forcing different defaults
 
 picoarch also keeps the running core name in a global variable. This can be used for:

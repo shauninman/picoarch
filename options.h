@@ -16,7 +16,7 @@ struct core_option_entry {
 	char *desc;
 	char *retro_var_value;
 	bool blocked;
-	const char *info;
+	char *info;
 	const char **options;
 	const struct retro_core_option_definition *def;
 	const struct retro_variable *var;

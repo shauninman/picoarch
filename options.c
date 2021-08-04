@@ -14,12 +14,37 @@ enum scale_filter scale_filter;
 struct core_options core_options;
 
 #define MAX_DESC_LEN 20
+#define MAX_LINE_LEN 52
+#define MAX_LINES 3
 
 static void truncate(char *string, int max_len) {
 	size_t len = strlen(string) + 1;
 	if (len <= max_len) return;
 
 	strncpy(&string[max_len - 4], "...\0", 4);
+}
+
+static void wrap(char *string, size_t max_len, size_t max_lines) {
+	char *line = string;
+
+	for (int i = 1; i < max_lines; i++) {
+		char *p = line;
+		char *prev;
+		do {
+			prev = p;
+			p = strchr(prev+1, ' ');
+		} while (p && p - line < max_len);
+
+		if (!p && strlen(line) < max_len) break;
+
+		if (prev && prev != line) {
+			line = prev + 1;
+			*prev = '\n';
+		}
+	}
+	truncate(line, max_len);
+
+	return;
 }
 
 static const char *blocked_options[] = { "gpsp_save_method", NULL};
@@ -65,7 +90,6 @@ void options_init(const struct retro_core_option_definition *defs) {
 		entry->def = &core_options.defs[i];
 		entry->value = options_default_index(entry->def->key);
 		entry->prev_value = entry->value;
-		entry->info = entry->def->info;
 		entry->blocked = option_blocked(entry->def->key);
 		if (entry->blocked)
 			core_options.visible_len--;
@@ -80,6 +104,16 @@ void options_init(const struct retro_core_option_definition *defs) {
 
 		strncpy(entry->desc, entry->def->desc, len);
 		truncate(entry->desc, MAX_DESC_LEN);
+
+		len = strlen(entry->def->info) + 1;
+		entry->info = (char *)calloc(len, sizeof(char));
+		if (!entry->info) {
+			PA_ERROR("Error allocating description string\n");
+			options_free();
+			return;
+		}
+		strncpy(entry->info, entry->def->info, len);
+		wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
 
 		for (j = 0; entry->def->values[j].value; j++)
 			;

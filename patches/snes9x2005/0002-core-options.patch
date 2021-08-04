@@ -1,25 +1,22 @@
 diff --git a/libretro_core_options.h b/libretro_core_options.h
-index 032cefd..63e17ae 100644
+index 032cefd..b32864a 100644
 --- a/libretro_core_options.h
 +++ b/libretro_core_options.h
-@@ -57,7 +57,9 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -57,7 +57,7 @@ struct retro_core_option_definition option_defs_us[] = {
     {
        "catsfc_VideoMode",
        "Console Region",
 -      "Specify which region the system is from. 'PAL' is 50hz, 'NTSC' is 60hz. Games will run faster or slower than normal if the incorrect region is selected.",
-+      "'PAL' is 50hz, 'NTSC' is 60hz. Games will run\n"
-+      "faster or slower than normal if the incorrect\n"
-+      "region is selected.",
++      "'PAL' is 50hz, 'NTSC' is 60hz. Games will run faster or slower than normal if the incorrect region is selected.",
        {
           { "auto", "Auto" },
           { "NTSC", NULL },
-@@ -69,19 +71,22 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -69,19 +69,19 @@ struct retro_core_option_definition option_defs_us[] = {
     {
        "catsfc_frameskip",
        "Frameskip",
 -      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Manual' utilises the 'Frameskip Threshold (%)' setting.",
-+      "Skip frames to avoid audio crackling. Improves\n"
-+      "performance at the expense of visual smoothness.",
++      "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
        {
           { "disabled", NULL },
           { "auto",     "Auto" },
@@ -34,26 +31,22 @@ index 032cefd..63e17ae 100644
 -      "Frameskip Threshold (%)",
 -      "When 'Frameskip' is set to 'Manual', specifies the audio buffer occupancy threshold (percentage) below which frames will be skipped. Higher values reduce the risk of crackling by causing frames to be dropped more frequently.",
 +      "FS Threshold (%)",
-+      "When 'Frameskip' is set to 'Threshold', sets\n"
-+      "how low the audio buffer can get before frames\n"
-+      "will be skipped.",
++      "When 'Frameskip' is set to 'Threshold', sets how low the audio buffer can get before frames will be skipped.",
        {
           { "15", NULL },
           { "18", NULL },
-@@ -105,8 +110,10 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -105,8 +105,8 @@ struct retro_core_option_definition option_defs_us[] = {
     },
     {
        "catsfc_overclock_cycles",
 -      "Reduce Slowdown (Hack, Unsafe, Restart)",
 -      "Many games for the SNES suffered from slowdown due to the weak main CPU. This option helps allievate that at the cost of possible bugs. COMPATIBLE: Reduce slowdown but keep as much game compatibility as much as possible. MAX: Reduce slowdown as much as possible but will break more games.",
 +      "Overclock (Restart)",
-+      "Alleviate normal SNES slowdown. Compatible keeps\n"
-+      "as much compatibility as possible. Max will reduce\n"
-+      "more slowdown but break more games.",
++      "Alleviate normal SNES slowdown. Compatible keeps as much compatibility as possible. Max will reduce more slowdown but break more games.",
        {
           { "disabled",   NULL },
           { "compatible", "Compatible" },
-@@ -117,7 +124,7 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -117,7 +117,7 @@ struct retro_core_option_definition option_defs_us[] = {
     },
     {
        "catsfc_reduce_sprite_flicker",

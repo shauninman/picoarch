@@ -1,5 +1,5 @@
 diff --git a/libretro.c b/libretro.c
-index c368d8f..f4675ed 100644
+index c368d8f..305adee 100644
 --- a/libretro.c
 +++ b/libretro.c
 @@ -57,13 +57,11 @@ static int32_t samplerate = (((SNES_CLOCK_SPEED * 6) / (32 * ONE_APU_CYCLE)));
@@ -59,12 +59,12 @@ index c368d8f..f4675ed 100644
              IPPU.RenderThisFrame = false;
              frameskip_counter++;
 diff --git a/libretro_core_options.h b/libretro_core_options.h
-index 8620a4a..dc79a38 100644
+index b32864a..b69d19a 100644
 --- a/libretro_core_options.h
 +++ b/libretro_core_options.h
-@@ -74,9 +74,9 @@ struct retro_core_option_definition option_defs_us[] = {
-       "Skip frames to avoid audio crackling. Improves\n"
-       "performance at the expense of visual smoothness.",
+@@ -71,9 +71,9 @@ struct retro_core_option_definition option_defs_us[] = {
+       "Frameskip",
+       "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
        {
 -         { "disabled", NULL },
 -         { "auto",     "Auto" },
@@ -75,15 +75,14 @@ index 8620a4a..dc79a38 100644
           { NULL, NULL },
        },
        "auto"
-@@ -108,6 +108,27 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -103,6 +103,26 @@ struct retro_core_option_definition option_defs_us[] = {
        },
        "33"
     },
 +   {
 +      "catsfc_frameskip_interval",
 +      "FS Interval",
-+      "The maximum number of frames that can be skipped\n"
-+      "before a new frame is rendered.",
++      "The maximum number of frames that can be skipped before a new frame is rendered.",
 +      {
 +         { "0",  NULL },
 +         { "1",  NULL },
