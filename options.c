@@ -7,7 +7,7 @@
 int show_fps;
 int limit_frames;
 int enable_audio;
-int audio_buffer_size;
+unsigned audio_buffer_size;
 enum scale_size scale_size;
 enum scale_filter scale_filter;
 
@@ -17,7 +17,7 @@ struct core_options core_options;
 #define MAX_LINE_LEN 52
 #define MAX_LINES 3
 
-static void truncate(char *string, int max_len) {
+static void truncate(char *string, size_t max_len) {
 	size_t len = strlen(string) + 1;
 	if (len <= max_len) return;
 
@@ -27,13 +27,13 @@ static void truncate(char *string, int max_len) {
 static void wrap(char *string, size_t max_len, size_t max_lines) {
 	char *line = string;
 
-	for (int i = 1; i < max_lines; i++) {
+	for (size_t i = 1; i < max_lines; i++) {
 		char *p = line;
 		char *prev;
 		do {
 			prev = p;
 			p = strchr(prev+1, ' ');
-		} while (p && p - line < max_len);
+		} while (p && p - line < (int)max_len);
 
 		if (!p && strlen(line) < max_len) break;
 
@@ -68,7 +68,7 @@ static int options_default_override(const char *key) {
 }
 
 void options_init(const struct retro_core_option_definition *defs) {
-	int i;
+	size_t i;
 
 	for (i = 0; defs[i].key; i++)
 		;
@@ -140,7 +140,7 @@ void options_init(const struct retro_core_option_definition *defs) {
 }
 
 void options_init_variables(const struct retro_variable *vars) {
-	int i;
+	size_t i;
 
 	for (i = 0; vars[i].key; i++)
 		;
@@ -226,7 +226,7 @@ void options_update_changed(void) {
 	if (core_options.changed)
 		return;
 
-	for(int i = 0; i < core_options.len; i++) {
+	for(size_t i = 0; i < core_options.len; i++) {
 		struct core_option_entry* entry = &core_options.entries[i];
 		if (entry->value != entry->prev_value) {
 			core_options.changed = true;
@@ -244,7 +244,7 @@ const char* options_get_key(int index) {
 }
 
 struct core_option_entry* options_get_entry(const char* key) {
-	for(int i = 0; i < core_options.len; i++) {
+	for(size_t i = 0; i < core_options.len; i++) {
 		const char *opt_key = core_options.defs ?
 			core_options.defs[i].key :
 			core_options.vars[i].key;
@@ -356,7 +356,7 @@ const char** options_get_options(const char* key) {
 
 void options_free(void) {
 	if (core_options.entries) {
-		for (int i = 0; i < core_options.len; i++) {
+		for (size_t i = 0; i < core_options.len; i++) {
 			struct core_option_entry* entry = &core_options.entries[i];
 			if (entry->options) {
 				free(entry->options);

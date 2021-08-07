@@ -6,7 +6,7 @@
 extern int show_fps;
 extern int limit_frames;
 extern int enable_audio;
-extern int audio_buffer_size;
+extern unsigned audio_buffer_size;
 extern enum scale_size scale_size;
 extern enum scale_filter scale_filter;
 

@@ -20,7 +20,7 @@ struct core_cbs current_core;
 double sample_rate;
 double frame_rate;
 double aspect_ratio;
-int audio_buffer_size_override;
+unsigned audio_buffer_size_override;
 int state_slot;
 
 static char config_dir[MAX_PATH];
@@ -580,14 +580,14 @@ void core_unload(void) {
 		game_info.data = NULL;
 	}
 
-	if (current_core.handle) {
-		dlclose(current_core.handle);
-		current_core.handle = NULL;
-	}
-
 	if (temp_rom[0]) {
 		remove(temp_rom);
 		temp_rom[0] = '\0';
 	}
 	options_free();
+
+	if (current_core.handle) {
+		dlclose(current_core.handle);
+		current_core.handle = NULL;
+	}
 }

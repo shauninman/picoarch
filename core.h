@@ -33,7 +33,7 @@ extern struct core_cbs current_core;
 extern double sample_rate;
 extern double frame_rate;
 extern double aspect_ratio;
-extern int audio_buffer_size_override;
+extern unsigned audio_buffer_size_override;
 extern int state_slot;
 
 void config_file_name(char *buf, size_t len, int is_game);

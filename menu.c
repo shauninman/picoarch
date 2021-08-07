@@ -160,7 +160,7 @@ static int mh_savecfg(int id, int keys)
 static int menu_loop_core_options_page(int offset, int keys) {
 	static int sel = 0;
 	menu_entry *e_menu_core_options;
-	int i, menu_idx;
+	size_t i, menu_idx;
 
 	/* core_option + 2 for possible "Next page" +  NULL */
 	e_menu_core_options = (menu_entry *)calloc(core_options.visible_len + 2, sizeof(menu_entry));

@@ -19,7 +19,7 @@ typedef enum {
 } emu_action;
 
 extern bool should_quit;
-extern int current_audio_buffer_size;
+extern unsigned current_audio_buffer_size;
 extern char core_name[MAX_PATH];
 extern char* content_path;
 

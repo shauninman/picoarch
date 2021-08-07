@@ -30,7 +30,7 @@ static const struct {
 
 void config_write(FILE *f)
 {
-	for (int i = 0; i < array_size(config_data); i++) {
+	for (size_t i = 0; i < array_size(config_data); i++) {
 		switch (config_data[i].type)
 		{
 		case CE_TYPE_STR:
@@ -45,7 +45,7 @@ void config_write(FILE *f)
 		}
 	}
 
-	for (int i = 0; i < core_options.len; i++) {
+	for (size_t i = 0; i < core_options.len; i++) {
 		const char* k = options_get_key(i);
 		if (!options_is_blocked(k))
 			fprintf(f, "%s = %s\n", k, options_get_value(k));
@@ -91,7 +91,7 @@ static char *config_find_value(const char* cfg, const char *key) {
 
 void config_read(const char* cfg)
 {
-	for (int i = 0; i < array_size(config_data); i++) {
+	for (size_t i = 0; i < array_size(config_data); i++) {
 		char *tmp = config_find_value(cfg, config_data[i].name);
 		if (!tmp)
 			continue;
@@ -104,7 +104,7 @@ void config_read(const char* cfg)
 		parse_num_val(config_data[i].val, tmp);
 	}
 
-	for (int i = 0; i < core_options.len; i++) {
+	for (size_t i = 0; i < core_options.len; i++) {
 		char value[256] = {0};
 		const char *key = options_get_key(i);
 		if (options_is_blocked(key))

@@ -9,16 +9,17 @@ OBJS      = libpicofe/input.o libpicofe/in_sdl.o libpicofe/linux/in_evdev.o libp
 BIN       = picoarch
 
 CFLAGS     += -Wall
-CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' -flto -fno-PIC
+CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' -flto
 CFLAGS     += -I./ $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 
-LDFLAGS    = -lc -ldl -lgcc -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto -fno-PIC
+LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 
 CORES      = gpsp snes9x2002 snes9x2005
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
-	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s
+	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s -fno-PIC
+	LDFLAGS += -fno-PIC
 
 else ifeq ($(platform), unix)
 	OBJS += plat_linux.o

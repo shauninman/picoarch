@@ -9,9 +9,9 @@
 static SDL_Surface* screen;
 
 struct audio_state {
-	int buf_w;
-	int max_buf_w;
-	int buf_r;
+	unsigned buf_w;
+	unsigned max_buf_w;
+	unsigned buf_r;
 	size_t buf_len;
 	struct audio_frame *buf;
 	int freq;
@@ -37,14 +37,14 @@ static int audio_resample_nearest(struct audio_frame data) {
 	static int diff = 0;
 	int consumed = 0;
 
-	if (diff <= 0) {
+	if (diff < audio.out_sample_rate) {
 		audio.buf[audio.buf_w++] = data;
 		if (audio.buf_w >= audio.buf_len) audio.buf_w = 0;
 
 		diff += audio.in_sample_rate;
 	}
 
-	if (diff > 0) {
+	if (diff >= audio.out_sample_rate) {
 		consumed++;
 		diff -= audio.out_sample_rate;
 	}

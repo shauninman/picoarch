@@ -19,7 +19,7 @@ char save_template_path[MAX_PATH];
 #endif
 
 bool should_quit = false;
-int current_audio_buffer_size;
+unsigned current_audio_buffer_size;
 char core_name[MAX_PATH];
 char* content_path;
 
@@ -101,7 +101,7 @@ void set_defaults(void)
 	if (current_audio_buffer_size < audio_buffer_size)
 		current_audio_buffer_size = audio_buffer_size;
 
-	for (int i = 0; i < core_options.len; i++) {
+	for (size_t i = 0; i < core_options.len; i++) {
 		const char *key = options_get_key(i);
 		if (key)
 			core_options.entries[i].value = options_default_index(key);
@@ -321,7 +321,7 @@ static void count_fps(void)
 }
 
 static void adjust_audio(void) {
-	static int prev_audio_buffer_size = 0;
+	static unsigned prev_audio_buffer_size = 0;
 
 	if (!prev_audio_buffer_size)
 		prev_audio_buffer_size = audio_buffer_size;
