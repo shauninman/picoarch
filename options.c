@@ -75,6 +75,24 @@ static int options_default_override(const char *key) {
 	return -1;
 }
 
+
+static int options_default_index(const char *key, const struct retro_core_option_definition *def) {
+	const char *value;
+	int default_override = options_default_override(key);
+	if (default_override >= 0)
+		return default_override;
+
+	if (!def)
+		return 0;
+
+	for(int i = 0; (value = def->values[i].value); i++) {
+		if (!strcmp(value, def->default_value)) {
+			return i;
+		}
+	}
+	return 0;
+}
+
 void options_init(const struct retro_core_option_definition *defs) {
 	size_t i;
 
@@ -82,7 +100,6 @@ void options_init(const struct retro_core_option_definition *defs) {
 		;
 
 	core_options.visible_len = core_options.len = i;
-	core_options.defs = defs;
 
 	core_options.entries = (struct core_option_entry *)calloc(core_options.len, sizeof(struct core_option_entry));
 	if (!core_options.entries) {
@@ -93,7 +110,7 @@ void options_init(const struct retro_core_option_definition *defs) {
 
 	for (i = 0; i < core_options.len; i++) {
 		int j, len;
-		const struct retro_core_option_definition *def = &core_options.defs[i];
+		const struct retro_core_option_definition *def = &defs[i];
 		struct core_option_entry *entry = &core_options.entries[i];
 
 		len = strlen(def->key) + 1;
@@ -105,9 +122,9 @@ void options_init(const struct retro_core_option_definition *defs) {
 		}
 		strncpy(entry->key, def->key, len);
 
-		entry->def = def;
-		entry->value = options_default_index(def->key);
+		entry->value = options_default_index(def->key, def);
 		entry->prev_value = entry->value;
+		entry->default_value = entry->value;
 		entry->blocked = option_blocked(def->key);
 		if (entry->blocked)
 			core_options.visible_len--;
@@ -139,20 +156,49 @@ void options_init(const struct retro_core_option_definition *defs) {
 			;
 		j++; /* Make room for NULL entry */
 
-		entry->options = (const char **)calloc(j, sizeof(char *));
-		if (!entry->options) {
+		entry->values = (char **)calloc(j, sizeof(char *));
+		if (!entry->values) {
 			PA_ERROR("Error allocating option entries\n");
 			options_free();
 			return;
 		}
 
+		entry->labels = (char **)calloc(j, sizeof(char *));
+		if (!entry->labels) {
+			PA_ERROR("Error allocating option entries\n");
+			options_free();
+			return;
+		}
 
 		for (j = 0; def->values[j].value; j++) {
+			const char *value = def->values[j].value;
+			size_t value_len = strlen(value);
 			const char *label = def->values[j].label;
-			if (!label) {
-				label = def->values[j].value;
+			size_t label_len = 0;
+
+			entry->values[j] = (char *)calloc(value_len + 1, sizeof(char));
+			if (!entry->values[j]) {
+				PA_ERROR("Error allocating memory for option values");
+				options_free();
+				return;
 			}
-			entry->options[j] = label;
+
+			strncpy(entry->values[j], value, value_len);
+
+			if (label) {
+				label_len = strlen(label);
+
+				entry->labels[j] = (char *)calloc(label_len + 1, sizeof(char));
+				if (!entry->labels[j]) {
+					PA_ERROR("Error allocating memory for option labels");
+					options_free();
+					return;
+				}
+
+				strncpy(entry->labels[j], label, label_len);
+			} else {
+				entry->labels[j] = entry->values[j];
+			}
 		}
 	}
 }
@@ -190,8 +236,9 @@ void options_init_variables(const struct retro_variable *vars) {
 		}
 		strncpy(entry->key, var->key, len);
 
-		entry->value = options_default_index(var->key);
+		entry->value = options_default_index(var->key, NULL);
 		entry->prev_value = entry->value;
+		entry->default_value = entry->value;
 		entry->blocked = option_blocked(var->key);
 		if (entry->blocked)
 			core_options.visible_len--;
@@ -224,8 +271,15 @@ void options_init_variables(const struct retro_variable *vars) {
 		j++; /* Make room for last entry (not ending in |) */
 		j++; /* Make room for NULL entry */
 
-		entry->options = (const char **)calloc(j, sizeof(char *));
-		if (!entry->options) {
+		entry->values = (char **)calloc(j, sizeof(char *));
+		if (!entry->values) {
+			PA_ERROR("Error allocating option entries\n");
+			options_free();
+			return;
+		}
+
+		entry->labels = (char **)calloc(j, sizeof(char *));
+		if (!entry->labels) {
 			PA_ERROR("Error allocating option entries\n");
 			options_free();
 			return;
@@ -233,12 +287,14 @@ void options_init_variables(const struct retro_variable *vars) {
 
 		p = opt_ptr;
 		for (j = 0; (p = strchr(p, '|')); j++) {
-			entry->options[j] = opt_ptr;
+			entry->values[j] = opt_ptr;
+			entry->labels[j] = opt_ptr;
 			*p = '\0';
 			p++;
 			opt_ptr = p;
 		}
-		entry->options[j] = opt_ptr;
+		entry->values[j] = opt_ptr;
+		entry->labels[j] = opt_ptr;
 	}
 }
 
@@ -287,13 +343,9 @@ bool options_is_blocked(const char *key) {
 
 const char* options_get_value(const char* key) {
 	struct core_option_entry* entry = options_get_entry(key);
-	if (entry) {
-		if (entry->def) {
-			return entry->def->values[entry->value].value;
-		} else {
-			return entry->options[entry->value];
-		}
-	}
+	if (entry)
+		return entry->values[entry->value];
+
 	return NULL;
 }
 
@@ -316,24 +368,14 @@ int options_get_value_index(const char* key) {
 void options_set_value(const char* key, const char *value) {
 	struct core_option_entry* entry = options_get_entry(key);
 	if (entry) {
-		const char *option = NULL;
-		entry->value = options_default_index(key);
+		char *option;
+		entry->value = entry->default_value;
 
-		if (entry->def) {
-			for (int i = 0; (option = entry->def->values[i].value); i++) {
-				if (!strcmp(option, value)) {
-					entry->value = i;
-					options_update_changed();
-					return;
-				}
-			}
-		} else {
-			for (int i = 0; (option = entry->options[i]); i++) {
-				if (!strcmp(option, value)) {
-					entry->value = i;
-					options_update_changed();
-					return;
-				}
+		for (int i = 0; (option = entry->values[i]); i++) {
+			if (!strcmp(option, value)) {
+				entry->value = i;
+				options_update_changed();
+				return;
 			}
 		}
 	}
@@ -347,29 +389,10 @@ void options_set_value_index(const char* key, int value) {
 	}
 }
 
-int options_default_index(const char *key) {
-	const char *value;
-	struct core_option_entry *entry;
-	int default_override = options_default_override(key);
-	if (default_override >= 0)
-		return default_override;
-
-	entry = options_get_entry(key);
-	if (!entry || !entry->def)
-		return 0;
-
-	for(int i = 0; (value = entry->def->values[i].value); i++) {
-		if (!strcmp(value, entry->def->default_value)) {
-			return i;
-		}
-	}
-	return 0;
-}
-
 const char** options_get_options(const char* key) {
 	struct core_option_entry* entry = options_get_entry(key);
 	if (entry) {
-		return entry->options;
+		return (const char **)entry->labels;
 	}
 	return NULL;
 }
@@ -378,17 +401,38 @@ void options_free(void) {
 	if (core_options.entries) {
 		for (size_t i = 0; i < core_options.len; i++) {
 			struct core_option_entry* entry = &core_options.entries[i];
-			if (entry->options) {
-				free(entry->options);
-			}
 			if (entry->retro_var_value) {
+				/* option values / labels are all pointers into retro_var_value,
+				 * no need to free them one by one */
 				free(entry->retro_var_value);
-			} else if (entry->desc) {
-				free(entry->desc);
+			} else {
+				if (entry->labels) {
+					char *label;
+					for (int j = 0; (label = entry->labels[j]); j++) {
+						if (label != entry->values[j])
+							free(label);
+					}
+				}
+
+				if (entry->values) {
+					char *value;
+					for (int j = 0; (value = entry->values[j]); j++) {
+					        free(value);
+					}
+				}
+
+				if (entry->desc)
+					free(entry->desc);
 			}
-			if (entry->key) {
+
+			if (entry->labels)
+				free(entry->labels);
+
+			if (entry->values)
+				free(entry->values);
+
+			if (entry->key)
 				free(entry->key);
-			}
 		}
 		free(core_options.entries);
 	}

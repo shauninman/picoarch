@@ -104,7 +104,7 @@ void set_defaults(void)
 	for (size_t i = 0; i < core_options.len; i++) {
 		const char *key = options_get_key(i);
 		if (key)
-			core_options.entries[i].value = options_default_index(key);
+			core_options.entries[i].value = core_options.entries[i].default_value;
 	}
 
 	options_update_changed();

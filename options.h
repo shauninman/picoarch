@@ -12,14 +12,15 @@ extern enum scale_filter scale_filter;
 
 struct core_option_entry {
 	char *key;
+	char *desc;
+	char *info;
 	int value;
 	int prev_value;
-	char *desc;
-	char *retro_var_value;
+	int default_value;
 	bool blocked;
-	char *info;
-	const char **options;
-	const struct retro_core_option_definition *def;
+	char **values;
+	char **labels;
+	char *retro_var_value;
 };
 
 struct core_options {
@@ -27,7 +28,6 @@ struct core_options {
 	size_t visible_len;
 	bool changed;
 	struct core_option_entry *entries;
-	const struct retro_core_option_definition *defs;
 };
 
 extern struct core_options core_options;
@@ -48,7 +48,6 @@ int options_get_value_index(const char* key);
 void options_set_value(const char* key, const char *value);
 void options_set_value_index(const char* key, int value);
 
-int options_default_index(const char *key);
 const char** options_get_options(const char* key);
 void options_free(void);
 
