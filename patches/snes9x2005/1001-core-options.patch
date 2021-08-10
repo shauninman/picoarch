@@ -1,5 +1,5 @@
 diff --git a/libretro_core_options.h b/libretro_core_options.h
-index 032cefd..b32864a 100644
+index 14bf8d8..b69d19a 100644
 --- a/libretro_core_options.h
 +++ b/libretro_core_options.h
 @@ -57,7 +57,7 @@ struct retro_core_option_definition option_defs_us[] = {
@@ -18,9 +18,9 @@ index 032cefd..b32864a 100644
 -      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Manual' utilises the 'Frameskip Threshold (%)' setting.",
 +      "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
        {
-          { "disabled", NULL },
-          { "auto",     "Auto" },
-          { "manual",   "Manual" },
+          { "disabled",       NULL },
+          { "auto",           "Auto" },
+          { "auto_threshold", "Threshold" },
           { NULL, NULL },
        },
 -      "disabled"
@@ -35,7 +35,16 @@ index 032cefd..b32864a 100644
        {
           { "15", NULL },
           { "18", NULL },
-@@ -105,8 +105,8 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -105,7 +105,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "catsfc_frameskip_interval",
+-      "Frameskip Interval",
++      "FS Interval",
+       "The maximum number of frames that can be skipped before a new frame is rendered.",
+       {
+          { "0",  NULL },
+@@ -125,8 +125,8 @@ struct retro_core_option_definition option_defs_us[] = {
     },
     {
        "catsfc_overclock_cycles",
@@ -46,7 +55,7 @@ index 032cefd..b32864a 100644
        {
           { "disabled",   NULL },
           { "compatible", "Compatible" },
-@@ -117,7 +117,7 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -137,7 +137,7 @@ struct retro_core_option_definition option_defs_us[] = {
     },
     {
        "catsfc_reduce_sprite_flicker",

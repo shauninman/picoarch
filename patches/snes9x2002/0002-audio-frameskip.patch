@@ -1,5 +1,5 @@
 diff --git a/libretro/libretro.c b/libretro/libretro.c
-index bc64376..b09354a 100644
+index 81ce4aa..3c24e8f 100644
 --- a/libretro/libretro.c
 +++ b/libretro/libretro.c
 @@ -96,6 +96,21 @@ bool8 ROMAPUEnabled                              = 0;
@@ -87,9 +87,9 @@ index bc64376..b09354a 100644
     static const struct retro_variable vars[] =
     {
 +      { "snes9x2002_frameskip", "Frameskip ; disabled|auto|threshold" },
-+      { "snes9x2002_frameskip_threshold", "FS Threshold (%); 30|40|50|60" },
-+      { "snes9x2002_frameskip_interval", "FS Interval; 1|2|3|4|5|6|7|8|9" },
-       { "snes9x2002_overclock_cycles", "Overclock (Restart); disabled|compatible|max" },
++      { "snes9x2002_frameskip_threshold", "Frameskip Threshold (%); 30|40|50|60" },
++      { "snes9x2002_frameskip_interval", "Frameskip Interval; 1|2|3|4|5|6|7|8|9" },
+       { "snes9x2002_overclock_cycles", "Reduce Slowdown (Hack, Unsafe, Restart); disabled|compatible|max" },
        { NULL, NULL },
     };
 @@ -383,6 +452,14 @@ void retro_deinit(void)

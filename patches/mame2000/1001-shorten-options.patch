@@ -1,8 +1,8 @@
 diff --git a/src/libretro/libretro.c b/src/libretro/libretro.c
-index f9b3cfe..aad93bc 100644
+index 0171ac1..2f37f52 100644
 --- a/src/libretro/libretro.c
 +++ b/src/libretro/libretro.c
-@@ -306,12 +306,12 @@ void retro_set_environment(retro_environment_t cb)
+@@ -321,12 +321,12 @@ void retro_set_environment(retro_environment_t cb)
  {
     static const struct retro_variable vars[] = {
        { "mame2000-frameskip", "Frameskip ; disabled|auto|threshold" },
@@ -18,6 +18,6 @@ index f9b3cfe..aad93bc 100644
 +      { "mame2000-show_gameinfo", "Show Game Info; disabled|enabled" },
 +      { "mame2000-sample_rate", "Snd. Rate (Restart); 11025|22050|32000|44100" },
 +      { "mame2000-stereo", "Stereo (Restart); disabled|enabled" },
+       { "mame2000-rotate", "Rotate (Restart); disabled|enabled" },
        { NULL, NULL },
     };
-    environ_cb = cb;

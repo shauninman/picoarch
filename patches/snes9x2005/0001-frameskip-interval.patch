@@ -59,12 +59,12 @@ index c368d8f..305adee 100644
              IPPU.RenderThisFrame = false;
              frameskip_counter++;
 diff --git a/libretro_core_options.h b/libretro_core_options.h
-index b32864a..b69d19a 100644
+index 032cefd..14bf8d8 100644
 --- a/libretro_core_options.h
 +++ b/libretro_core_options.h
 @@ -71,9 +71,9 @@ struct retro_core_option_definition option_defs_us[] = {
        "Frameskip",
-       "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
+       "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Manual' utilises the 'Frameskip Threshold (%)' setting.",
        {
 -         { "disabled", NULL },
 -         { "auto",     "Auto" },
@@ -74,14 +74,14 @@ index b32864a..b69d19a 100644
 +         { "auto_threshold", "Threshold" },
           { NULL, NULL },
        },
-       "auto"
+       "disabled"
 @@ -103,6 +103,26 @@ struct retro_core_option_definition option_defs_us[] = {
        },
        "33"
     },
 +   {
 +      "catsfc_frameskip_interval",
-+      "FS Interval",
++      "Frameskip Interval",
 +      "The maximum number of frames that can be skipped before a new frame is rendered.",
 +      {
 +         { "0",  NULL },
@@ -101,4 +101,4 @@ index b32864a..b69d19a 100644
 +   },
     {
        "catsfc_overclock_cycles",
-       "Overclock (Restart)",
+       "Reduce Slowdown (Hack, Unsafe, Restart)",
