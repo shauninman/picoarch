@@ -207,7 +207,7 @@ void handle_emu_action(emu_action action)
 		if (mmenu) {
 			ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
 			SDL_Surface *screen = SDL_GetVideoSurface();
-			MenuReturnStatus status = ShowMenu(content_path, save_template_path, screen, kMenuEventKeyDown);
+			MenuReturnStatus status = ShowMenu(content_path, state_allowed() ? save_template_path : NULL, screen, kMenuEventKeyDown);
 
 			if (status==kStatusExitGame) {
 				should_quit = 1;
@@ -384,7 +384,7 @@ int main(int argc, char **argv) {
 		if (ResumeSlot) resume_slot = ResumeSlot();
 	}
 
-	if (resume_slot!=-1) {
+	if (state_allowed() && resume_slot!=-1) {
 		state_slot = resume_slot;
 		state_read();
 		resume_slot = -1;

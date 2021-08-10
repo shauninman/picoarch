@@ -392,9 +392,14 @@ void menu_loop(void)
 
 	me_enable(e_menu_main, MA_MAIN_CORE_OPTS, core_options.visible_len > 0);
 
+	me_enable(e_menu_main, MA_MAIN_SAVE_STATE, state_allowed());
+	me_enable(e_menu_main, MA_MAIN_LOAD_STATE, state_allowed());
+
 #ifdef MMENU
-	me_enable(e_menu_main, MA_MAIN_SAVE_STATE, mmenu == NULL);
-	me_enable(e_menu_main, MA_MAIN_LOAD_STATE, mmenu == NULL);
+	if (state_allowed()) {
+		me_enable(e_menu_main, MA_MAIN_SAVE_STATE, mmenu == NULL);
+		me_enable(e_menu_main, MA_MAIN_LOAD_STATE, mmenu == NULL);
+	}
 #endif
 
 	memcpy(g_menubg_ptr, g_menuscreen_ptr, g_menuscreen_h * g_menuscreen_pp * sizeof(uint16_t));

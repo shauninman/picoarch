@@ -41,6 +41,7 @@ void config_file_name(char *buf, size_t len, int is_game);
 void sram_read(void);
 void sram_write(void);
 
+bool state_allowed(void);
 void state_file_name(char *name, size_t size, int slot);
 int state_read(void);
 int state_write(void);

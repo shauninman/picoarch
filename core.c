@@ -110,6 +110,10 @@ void sram_read(void) {
 	fclose(sram_file);
 }
 
+bool state_allowed(void) {
+	return current_core.retro_serialize_size() > 0;
+}
+
 void state_file_name(char *name, size_t size, int slot) {
 	char extension[5] = {0};
 
