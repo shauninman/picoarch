@@ -12,7 +12,7 @@ index e42d169..a1f8794 100644
 +	AR = $(CROSS_COMPILE)ar
 +	SHARED := -shared -Wl,--version-script=libretro/link.T -Wl,--no-undefined
 +	CFLAGS += -fsingle-precision-constant -fno-PIC -flto
-+	CFLAGS += -DLSB_FIRST -DFAST_ALIGNED_LSB_WORD_ACCESS -DRIGHTSHIFT_IS_SAR
++	CFLAGS += -DLSB_FIRST -DRIGHTSHIFT_IS_SAR
 +	CFLAGS += -std=c99 -fomit-frame-pointer -ffast-math -mcpu=arm926ej-s -mtune=arm926ej-s
 +	LDFLAGS += -flto
 +	OFLAGS += -Ofast -DNDEBUG=1

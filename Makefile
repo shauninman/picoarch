@@ -4,6 +4,8 @@ platform   ?= unix
 CC        = $(CROSS_COMPILE)gcc
 SYSROOT   = $(shell $(CC) --print-sysroot)
 
+PROCS     = -j4
+
 OBJS      = libpicofe/input.o libpicofe/in_sdl.o libpicofe/linux/in_evdev.o libpicofe/linux/plat.o libpicofe/fonts.o libpicofe/readpng.o libpicofe/config_file.o config.o core.o menu.o main.o options.o scale.o unzip.o
 
 BIN       = picoarch
@@ -14,7 +16,19 @@ CFLAGS     += -I./ $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 
 LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 
-CORES      = gpsp snes9x2002 snes9x2005
+# Unpolished or slow cores that build
+# EXTRA_CORES += fbalpha2012
+# EXTRA_CORES += gambatte
+# EXTRA_CORES += mame2003_plus
+
+CORES     = gpsp mame2000 snes9x2002 snes9x2005 $(EXTRA_CORES)
+
+gambatte_REPO = https://github.com/libretro/gambatte-libretro
+mame2000_REPO = https://github.com/libretro/mame2000-libretro
+mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
+
+fbalpha2012_BUILD_PATH = fbalpha2012/svn-current/trunk
+fbalpha2012_MAKEFILE = makefile.libretro
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
@@ -59,6 +73,9 @@ endif
 
 SOFILES = $(foreach core,$(CORES),$(core)_libretro.so)
 
+print-%:
+	@echo '$*=$($*)'
+
 all: $(BIN) cores
 
 plat_trimui.o: plat_sdl.c
@@ -71,6 +88,8 @@ define CORE_template =
 
 $1_REPO ?= https://github.com/libretro/$(1)/
 
+$1_BUILD_PATH ?= $(1)
+
 $1_MAKE = make $(and $($1_MAKEFILE),-f $($1_MAKEFILE)) platform=$(platform) $(and $(DEBUG),DEBUG=$(DEBUG)) $(and $(PROFILE),PROFILE=$(PROFILE)) $($(1)_FLAGS)
 
 $(1):
@@ -79,11 +98,11 @@ $(1):
 	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), patch -p1 < ../$(patch) &&) true)
 
 $(1)_libretro.so: $(1)
-	cd $(1) && $$($1_MAKE)
-	cp $(1)/$(1)_libretro.so .
+	cd $$($1_BUILD_PATH) && $$($1_MAKE) $(PROCS)
+	cp $$($1_BUILD_PATH)/$(1)_libretro.so .
 
 clean-$(1):
-	test ! -d $(1) || cd $(1) && $$($1_MAKE) clean
+	test ! -d $(1) || cd $$($1_BUILD_PATH) && $$($1_MAKE) clean
 	rm -f $(1)_libretro.so
 endef
 
@@ -102,6 +121,15 @@ force-clean: clean
 
 ifeq ($(platform), trimui)
 
+fbalpha2012_NAME = fba2012
+fbalpha2012_ROM_DIR = ARCADE
+fbalpha2012_TYPES = zip
+fbalpha2012_PAK_NAME = Arcade (FBA)
+
+gambatte_ROM_DIR = GB
+gambatte_TYPES = gb,gbc,dmg,zip
+gambatte_PAK_NAME = Game Boy
+
 gpsp_ROM_DIR = GBA
 gpsp_TYPES = gba,bin,zip
 gpsp_PAK_NAME = Game Boy Advance
@@ -111,12 +139,21 @@ needs-swap
 
 endef
 
+mame2000_ROM_DIR = ARCADE
+mame2000_TYPES = zip
+mame2000_PAK_NAME = Arcade
+
+mame2003_plus_NAME = mame2003+
+mame2003_plus_ROM_DIR = ARCADE
+mame2003_plus_TYPES = zip
+mame2003_plus_PAK_NAME = Arcade (MAME 2003-plus)
+
 snes9x2002_ROM_DIR = SFC
-snes9x2002_TYPES = smc,fig,sfc,gd3,gd7,dx2,bsx,swc
+snes9x2002_TYPES = smc,fig,sfc,gd3,gd7,dx2,bsx,swc,zip
 snes9x2002_PAK_NAME = Super Nintendo
 
 snes9x2005_ROM_DIR = SFC
-snes9x2005_TYPES = smc,fig,sfc,gd3,gd7,dx2,bsx,swc
+snes9x2005_TYPES = smc,fig,sfc,gd3,gd7,dx2,bsx,swc,zip
 snes9x2005_PAK_NAME = Super Nintendo (2005)
 
 # -- gmenunx
@@ -128,8 +165,10 @@ dist-gmenu-section:
 
 define CORE_gmenushortcut =
 
+$1_NAME ?= $1
+
 define $1_SHORTCUT
-title=$1
+title=$$($1_NAME)
 exec=/mnt/SDCARD/Apps/picoarch/picoarch
 params=/mnt/SDCARD/Apps/picoarch/$1_libretro.so
 selectordir=/mnt/SDCARD/Roms/$($1_ROM_DIR)

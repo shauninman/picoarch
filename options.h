@@ -11,6 +11,7 @@ extern enum scale_size scale_size;
 extern enum scale_filter scale_filter;
 
 struct core_option_entry {
+	char *key;
 	int value;
 	int prev_value;
 	char *desc;
@@ -19,7 +20,6 @@ struct core_option_entry {
 	char *info;
 	const char **options;
 	const struct retro_core_option_definition *def;
-	const struct retro_variable *var;
 };
 
 struct core_options {
@@ -28,7 +28,6 @@ struct core_options {
 	bool changed;
 	struct core_option_entry *entries;
 	const struct retro_core_option_definition *defs;
-	const struct retro_variable *vars;
 };
 
 extern struct core_options core_options;

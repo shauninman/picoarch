@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "core.h"
+#include "main.h"
 #include "options.h"
 #include "scale.h"
 
@@ -326,6 +327,14 @@ static void scale_sharp_256xXXX_320xXXX(unsigned w, unsigned h, size_t pitch, co
 }
 
 static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
+	double current_aspect_ratio = aspect_ratio > 0 ? aspect_ratio : ((double)w / (double)h);
+
+	/* mame2000 sets resolutions / aspect ration without notifying
+	 * of changes, new should always override old */
+	if (!strcmp(core_name, "mame2000")) {
+		current_aspect_ratio = ((double)w / (double)h);
+	}
+
 	scaler = NULL;
 
 	if (blend_args.blend_line != NULL) {
@@ -340,13 +349,13 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 	} else if (scale_size == SCALE_SIZE_ASPECT ||
 	           (scale_size == SCALE_SIZE_NONE && (w > SCREEN_WIDTH || h > SCREEN_HEIGHT))) {
 		dst_w = SCREEN_WIDTH;
-		dst_h = SCREEN_WIDTH / aspect_ratio + 0.5;
+		dst_h = SCREEN_WIDTH / current_aspect_ratio + 0.5;
 		dst_offs = ((SCREEN_HEIGHT-dst_h)/2) * SCREEN_PITCH;
 
 		if (dst_h > SCREEN_HEIGHT) {
-			dst_w = SCREEN_HEIGHT * aspect_ratio + 0.5;
+			dst_w = SCREEN_HEIGHT * current_aspect_ratio + 0.5;
 			dst_h = SCREEN_HEIGHT;
-			dst_offs = ((SCREEN_WIDTH-dst_w)/2);
+			dst_offs = ((SCREEN_WIDTH-dst_w)/2) * SCREEN_BPP;
 		}
 	} else if (scale_size == SCALE_SIZE_NONE) {
 		unsigned dst_x = ((SCREEN_WIDTH - w) * SCREEN_BPP / 2);
@@ -369,7 +378,7 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 		}
 	}
 
-	if (!scaler && aspect_ratio == 4.0f / 3.0f && w == 256) {
+	if (!scaler && current_aspect_ratio == 4.0f / 3.0f && w == 256) {
 		if (scale_filter == SCALE_FILTER_SHARP) {
 			scaler = scale_sharp_256xXXX_320xXXX;
 			return;
@@ -416,6 +425,7 @@ void scale_update_scaler(void) {
 
 void scale(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
 	if (w != prev.w || h != prev.h || pitch != prev.pitch) {
+		PA_INFO("Dimensions changed to %dx%d\n", w, h);
 		scale_select_scaler(w, h, pitch);
 		prev.w = w; prev.h = h; prev.pitch = pitch;
 	}

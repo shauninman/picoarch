@@ -62,6 +62,14 @@ static int options_default_override(const char *key) {
 		return 1;
 	} else if (!strcmp(key, "snes9x2002_frameskip_interval")) {
 		return 3;
+	} else if (!strcmp(key, "mame2000-frameskip")) {
+		return 1;
+	} else if (!strcmp(key, "mame2000-frameskip_interval")) {
+		return 1;
+	} else if (!strcmp(key, "mame2000-skip_disclaimer")) {
+		return 1;
+	} else if (!strcmp(key, "mame2000-sample_rate")) {
+		return 1;
 	}
 
 	return -1;
@@ -85,16 +93,26 @@ void options_init(const struct retro_core_option_definition *defs) {
 
 	for (i = 0; i < core_options.len; i++) {
 		int j, len;
+		const struct retro_core_option_definition *def = &core_options.defs[i];
 		struct core_option_entry *entry = &core_options.entries[i];
 
-		entry->def = &core_options.defs[i];
-		entry->value = options_default_index(entry->def->key);
+		len = strlen(def->key) + 1;
+		entry->key = (char *)calloc(len, sizeof(char));
+		if (!entry->key) {
+			PA_ERROR("Error allocating option entries\n");
+			options_free();
+			return;
+		}
+		strncpy(entry->key, def->key, len);
+
+		entry->def = def;
+		entry->value = options_default_index(def->key);
 		entry->prev_value = entry->value;
-		entry->blocked = option_blocked(entry->def->key);
+		entry->blocked = option_blocked(def->key);
 		if (entry->blocked)
 			core_options.visible_len--;
 
-		len = strlen(entry->def->desc) + 1;
+		len = strlen(def->desc) + 1;
 		entry->desc = (char *)calloc(len, sizeof(char));
 		if (!entry->desc) {
 			PA_ERROR("Error allocating option entries\n");
@@ -102,22 +120,22 @@ void options_init(const struct retro_core_option_definition *defs) {
 			return;
 		}
 
-		strncpy(entry->desc, entry->def->desc, len);
+		strncpy(entry->desc, def->desc, len);
 		truncate(entry->desc, MAX_DESC_LEN);
 
-		if (entry->def->info) {
-			len = strlen(entry->def->info) + 1;
+		if (def->info) {
+			len = strlen(def->info) + 1;
 			entry->info = (char *)calloc(len, sizeof(char));
 			if (!entry->info) {
 				PA_ERROR("Error allocating description string\n");
 				options_free();
 				return;
 			}
-			strncpy(entry->info, entry->def->info, len);
+			strncpy(entry->info, def->info, len);
 			wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
 		}
 
-		for (j = 0; entry->def->values[j].value; j++)
+		for (j = 0; def->values[j].value; j++)
 			;
 		j++; /* Make room for NULL entry */
 
@@ -129,10 +147,10 @@ void options_init(const struct retro_core_option_definition *defs) {
 		}
 
 
-		for (j = 0; entry->def->values[j].value; j++) {
-			const char *label = entry->def->values[j].label;
+		for (j = 0; def->values[j].value; j++) {
+			const char *label = def->values[j].label;
 			if (!label) {
-				label = entry->def->values[j].value;
+				label = def->values[j].value;
 			}
 			entry->options[j] = label;
 		}
@@ -146,7 +164,6 @@ void options_init_variables(const struct retro_variable *vars) {
 		;
 
 	core_options.visible_len = core_options.len = i;
-	core_options.vars = vars;
 
 	core_options.entries = (struct core_option_entry *)calloc(core_options.len, sizeof(struct core_option_entry));
 	if (!core_options.entries) {
@@ -159,18 +176,27 @@ void options_init_variables(const struct retro_variable *vars) {
 		int j = 0;
 		int len;
 		struct core_option_entry *entry = &core_options.entries[i];
+		const struct retro_variable *var = &vars[i];
 		char *p;
 		char *opt_ptr;
 		char *value;
 
-		entry->var = &core_options.vars[i];
-		entry->value = options_default_index(entry->var->key);
+		len = strlen(var->key) + 1;
+		entry->key = (char *)calloc(len, sizeof(char));
+		if (!entry->key) {
+			PA_ERROR("Error allocating option entries\n");
+			options_free();
+			return;
+		}
+		strncpy(entry->key, var->key, len);
+
+		entry->value = options_default_index(var->key);
 		entry->prev_value = entry->value;
-		entry->blocked = option_blocked(entry->var->key);
+		entry->blocked = option_blocked(var->key);
 		if (entry->blocked)
 			core_options.visible_len--;
 
-		len = strlen(entry->var->value) + 1;
+		len = strlen(var->value) + 1;
 		value = (char *)calloc(len, sizeof(char));
 		if (!value) {
 			PA_ERROR("Error allocating option entries\n");
@@ -180,7 +206,7 @@ void options_init_variables(const struct retro_variable *vars) {
 
 		entry->retro_var_value = value;
 
-		strncpy(value, entry->var->value, len);
+		strncpy(value, var->value, len);
 
 		p = strchr(value, ';');
 		if (p && *(p + 1) == ' ') {
@@ -236,18 +262,12 @@ void options_update_changed(void) {
 }
 
 const char* options_get_key(int index) {
-	if (core_options.defs) {
-		return core_options.defs[index].key;
-	} else {
-		return core_options.vars[index].key;
-	}
+	return core_options.entries[index].key;
 }
 
 struct core_option_entry* options_get_entry(const char* key) {
 	for(size_t i = 0; i < core_options.len; i++) {
-		const char *opt_key = core_options.defs ?
-			core_options.defs[i].key :
-			core_options.vars[i].key;
+		const char *opt_key = options_get_key(i);
 
 		if (!strcmp(opt_key, key)) {
 			return &core_options.entries[i];
@@ -365,6 +385,9 @@ void options_free(void) {
 				free(entry->retro_var_value);
 			} else if (entry->desc) {
 				free(entry->desc);
+			}
+			if (entry->key) {
+				free(entry->key);
 			}
 		}
 		free(core_options.entries);

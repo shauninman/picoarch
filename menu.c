@@ -81,6 +81,24 @@ me_bind_action snes_ctrl_actions[] =
 	{ NULL,       0 }
 };
 
+me_bind_action mame_ctrl_actions[] =
+{
+	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
+	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
+	{ "LEFT     ",  1 << RETRO_DEVICE_ID_JOYPAD_LEFT },
+	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
+	{ "BUTTON 1 ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
+	{ "BUTTON 2 ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
+	{ "BUTTON 3 ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
+	{ "BUTTON 4 ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
+	{ "BUTTON 5 ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
+	{ "BUTTON 6 ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
+	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
+	{ "COIN     ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
+	{ "OSD MENU ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 },
+	{ NULL,       0 }
+};
+
 /* Must be a superset of all possible actions. This is used when
  * saving config, and if an entry isn't here, the saver won't see
  * it. */
@@ -273,6 +291,9 @@ static int key_config_loop_wrap(int id, int keys)
 	} else if (strstr(core_name, "snes")) {
 		actions = snes_ctrl_actions;
 		action_size = array_size(snes_ctrl_actions);
+	} else if (strstr(core_name, "mame")) {
+		actions = mame_ctrl_actions;
+		action_size = array_size(mame_ctrl_actions);
 	}
 
 	switch (id) {

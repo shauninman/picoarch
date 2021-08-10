@@ -547,13 +547,11 @@ int core_load_content(const char *path) {
 	PA_INFO("Screen: %dx%d\n", av_info.geometry.base_width, av_info.geometry.base_height);
 	PA_INFO("Audio sample rate: %f\n", av_info.timing.sample_rate);
 	PA_INFO("Frame rate: %f\n", av_info.timing.fps);
+	PA_INFO("Reported aspect ratio: %f\n", av_info.geometry.aspect_ratio);
 
 	sample_rate = av_info.timing.sample_rate;
 	frame_rate = av_info.timing.fps;
 	aspect_ratio = av_info.geometry.aspect_ratio;
-
-	if (!aspect_ratio)
-		aspect_ratio = (float)av_info.geometry.base_width / (float)av_info.geometry.base_height;
 
 #ifdef MMENU
 	gamepak_related_name(save_template_path, MAX_PATH, ".st%i");
