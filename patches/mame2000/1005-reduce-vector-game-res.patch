@@ -1,0 +1,47 @@
+diff --git a/src/libretro/libretro.c b/src/libretro/libretro.c
+index 2f37f52..c58fceb 100644
+--- a/src/libretro/libretro.c
++++ b/src/libretro/libretro.c
+@@ -948,6 +948,9 @@ bool retro_load_game(const struct retro_game_info *info)
+    /* skip disclaimer - skips 'nag screen' */
+    options.skip_disclaimer = skip_disclaimer;
+ 
++   options.vector_width = 320;
++   options.vector_height = 240;
++
+ #if (HAS_CYCLONE || HAS_DRZ80)
+    int use_cyclone = 1;
+    int use_drz80 = 1;
+diff --git a/src/libretro/video.c b/src/libretro/video.c
+index f97ac05..d947468 100644
+--- a/src/libretro/video.c
++++ b/src/libretro/video.c
+@@ -366,23 +366,13 @@ static void select_display_mode(int width,int height,int depth,int attributes,in
+ 		gfx_height=height;
+ 	}
+ 
+-	/* vector games use 640x480 as default */
++	/* vector games use 320x240 as default */
+ 	if (vector_game && !iOS_fixedRes)
+ 	{
+-		if(safe_render_path)
+-		{
+-		   gfx_width = 640;
+-		   gfx_height = 480;
+-		   emulated_width = 640;
+-		   emulated_height = 480;
+-		}
+-		else
+-		{
+-		   gfx_width = 320;
+-		   gfx_height = 240;
+-		   emulated_width = 320;
+-		   emulated_height = 240;
+-		}
++		gfx_width = 320;
++		gfx_height = 240;
++		emulated_width = 320;
++		emulated_height = 240;
+ 	}
+ 
+ 	gp2x_set_video_mode(16,gfx_width,gfx_height);
