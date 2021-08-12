@@ -1,25 +1,26 @@
 diff --git a/libretro_core_options.h b/libretro_core_options.h
-index 14bf8d8..b69d19a 100644
+index 41d5ff1..f41ee18 100644
 --- a/libretro_core_options.h
 +++ b/libretro_core_options.h
-@@ -57,7 +57,7 @@ struct retro_core_option_definition option_defs_us[] = {
-    {
-       "catsfc_VideoMode",
+@@ -68,7 +68,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+       "snes9x_2005_region",
        "Console Region",
+       NULL,
 -      "Specify which region the system is from. 'PAL' is 50hz, 'NTSC' is 60hz. Games will run faster or slower than normal if the incorrect region is selected.",
 +      "'PAL' is 50hz, 'NTSC' is 60hz. Games will run faster or slower than normal if the incorrect region is selected.",
+       NULL,
+       NULL,
        {
-          { "auto", "Auto" },
-          { "NTSC", NULL },
-@@ -69,19 +69,19 @@ struct retro_core_option_definition option_defs_us[] = {
-    {
-       "catsfc_frameskip",
+@@ -83,7 +83,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+       "snes9x_2005_frameskip",
        "Frameskip",
+       NULL,
 -      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Manual' utilises the 'Frameskip Threshold (%)' setting.",
 +      "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
+       NULL,
+       NULL,
        {
-          { "disabled",       NULL },
-          { "auto",           "Auto" },
+@@ -92,13 +92,13 @@ struct retro_core_option_v2_definition option_defs_us[] = {
           { "auto_threshold", "Threshold" },
           { NULL, NULL },
        },
@@ -27,40 +28,45 @@ index 14bf8d8..b69d19a 100644
 +      "auto"
     },
     {
-       "catsfc_frameskip_threshold",
+       "snes9x_2005_frameskip_threshold",
 -      "Frameskip Threshold (%)",
--      "When 'Frameskip' is set to 'Manual', specifies the audio buffer occupancy threshold (percentage) below which frames will be skipped. Higher values reduce the risk of crackling by causing frames to be dropped more frequently.",
 +      "FS Threshold (%)",
+       NULL,
+-      "When 'Frameskip' is set to 'Manual', specifies the audio buffer occupancy threshold (percentage) below which frames will be skipped. Higher values reduce the risk of crackling by causing frames to be dropped more frequently.",
 +      "When 'Frameskip' is set to 'Threshold', sets how low the audio buffer can get before frames will be skipped.",
+       NULL,
+       NULL,
        {
-          { "15", NULL },
-          { "18", NULL },
-@@ -105,7 +105,7 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -124,7 +124,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
     },
     {
-       "catsfc_frameskip_interval",
+       "snes9x_2005_frameskip_interval",
 -      "Frameskip Interval",
 +      "FS Interval",
+       NULL,
        "The maximum number of frames that can be skipped before a new frame is rendered.",
-       {
-          { "0",  NULL },
-@@ -125,8 +125,8 @@ struct retro_core_option_definition option_defs_us[] = {
+       NULL,
+@@ -147,9 +147,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
     },
     {
-       "catsfc_overclock_cycles",
+       "snes9x_2005_overclock_cycles",
 -      "Reduce Slowdown (Hack, Unsafe, Restart)",
--      "Many games for the SNES suffered from slowdown due to the weak main CPU. This option helps allievate that at the cost of possible bugs. COMPATIBLE: Reduce slowdown but keep as much game compatibility as much as possible. MAX: Reduce slowdown as much as possible but will break more games.",
 +      "Overclock (Restart)",
+       NULL,
+-      "Many games for the SNES suffered from slowdown due to the weak main CPU. This option helps allievate that at the cost of possible bugs. COMPATIBLE: Reduce slowdown but keep as much game compatibility as much as possible. MAX: Reduce slowdown as much as possible but will break more games.",
 +      "Alleviate normal SNES slowdown. Compatible keeps as much compatibility as possible. Max will reduce more slowdown but break more games.",
+       NULL,
+       "hacks",
        {
-          { "disabled",   NULL },
-          { "compatible", "Compatible" },
-@@ -137,7 +137,7 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -162,9 +162,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
     },
     {
-       "catsfc_reduce_sprite_flicker",
+       "snes9x_2005_reduce_sprite_flicker",
 -      "Reduce Flickering (Hack, Unsafe)",
 +      "Reduce Flicker",
-       "Raises sprite limit to reduce flickering in games.",
+       NULL,
+-      "Increases number of sprites that can be drawn simultaneously on screen. Reduces flickering in games.",
++      "Raises sprite limit to reduce flickering in games.",
+       NULL,
+       "hacks",
        {
-          { "disabled", NULL },
