@@ -53,12 +53,20 @@ const struct menu_keymap in_sdl_joy_map[] =
 	{ SDLK_WORLD_3, PBTN_MA3 },
 };
 
+static const struct mod_keymap in_sdl_mod_keymap[] = {
+	{ SDLK_TAB,       SDLK_q },          /* mod+L1 = L2 */
+	{ SDLK_BACKSPACE, SDLK_BACKSLASH },  /* mod+R1 = R2 */
+};
+
 static const struct in_pdata in_sdl_platform_data = {
-	.defbinds  = in_sdl_defbinds,
-	.key_map   = in_sdl_key_map,
-	.kmap_size = array_size(in_sdl_key_map),
-	.joy_map   = in_sdl_joy_map,
-	.jmap_size = array_size(in_sdl_joy_map),
+	.defbinds     = in_sdl_defbinds,
+	.key_map      = in_sdl_key_map,
+	.kmap_size    = array_size(in_sdl_key_map),
+	.joy_map      = in_sdl_joy_map,
+	.jmap_size    = array_size(in_sdl_joy_map),
+	.mod_key      = SDLK_ESCAPE,
+	.mod_keymap   = in_sdl_mod_keymap,
+	.modmap_size  = array_size(in_sdl_mod_keymap),
 };
 
 #include "plat_sdl.c"

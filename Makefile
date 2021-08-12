@@ -78,10 +78,16 @@ print-%:
 
 all: $(BIN) cores
 
+libpicofe/.patched:
+	cd libpicofe && patch -p1 < ../patches/libpicofe/0001-key-combos.patch && touch .patched
+
+clean-libpicofe:
+	test ! -f libpicofe/.patched || (cd libpicofe && patch -p1 -R < ../patches/libpicofe/0001-key-combos.patch && rm .patched)
+
 plat_trimui.o: plat_sdl.c
 plat_linux.o: plat_sdl.c
 
-$(BIN): $(OBJS)
+$(BIN): libpicofe/.patched $(OBJS)
 	$(CC) $(OBJS) $(LDFLAGS) -o $(BIN)
 
 define CORE_template =
@@ -110,7 +116,7 @@ $(foreach core,$(CORES),$(eval $(call CORE_template,$(core))))
 
 cores: $(SOFILES)
 
-clean:
+clean: clean-libpicofe
 	rm -f $(OBJS) $(BIN) $(SOFILES)
 	rm -rf pkg
 

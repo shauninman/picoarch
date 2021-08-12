@@ -66,7 +66,34 @@ static const char * const in_sdl_key_names[SDLK_LAST] = {
   [SDLK_RCTRL]      = "select",
   [SDLK_TAB]        = "l",
   [SDLK_BACKSPACE]  = "r",
+  [SDLK_1]          = "menu+up",
+  [SDLK_2]          = "menu+down",
+  [SDLK_3]          = "menu+left",
+  [SDLK_4]          = "menu+right",
+  [SDLK_5]          = "menu+b",
+  [SDLK_6]          = "menu+a",
+  [SDLK_7]          = "menu+x",
+  [SDLK_8]          = "menu+y",
+  [SDLK_9]          = "menu+start",
+  [SDLK_0]          = "menu+select",
+  [SDLK_q]          = "menu+l",
+  [SDLK_BACKSLASH]  = "menu+r",
   [SDLK_ESCAPE]     = "menu",
+};
+
+static const struct mod_keymap in_sdl_mod_keymap[] = {
+	{ SDLK_UP,        SDLK_1 },
+	{ SDLK_DOWN,      SDLK_2 },
+	{ SDLK_LEFT,      SDLK_3 },
+	{ SDLK_RIGHT,     SDLK_4 },
+	{ SDLK_LCTRL,     SDLK_5 },
+	{ SDLK_SPACE,     SDLK_6 },
+	{ SDLK_LSHIFT,    SDLK_7 },
+	{ SDLK_LALT,      SDLK_8 },
+	{ SDLK_RETURN,    SDLK_9 },
+	{ SDLK_RCTRL,     SDLK_0 },
+	{ SDLK_TAB,       SDLK_q },          /* mod+L1 = L2 */
+	{ SDLK_BACKSPACE, SDLK_BACKSLASH },  /* mod+R1 = R2 */
 };
 
 static const struct in_pdata in_sdl_platform_data = {
@@ -76,6 +103,9 @@ static const struct in_pdata in_sdl_platform_data = {
   .joy_map   = in_sdl_joy_map,
   .jmap_size = array_size(in_sdl_joy_map),
   .key_names = in_sdl_key_names,
+	.mod_key      = SDLK_ESCAPE,
+	.mod_keymap   = in_sdl_mod_keymap,
+	.modmap_size  = array_size(in_sdl_mod_keymap),
 };
 
 #include "plat_sdl.c"
