@@ -1,6 +1,8 @@
+#include <png.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "core.h"
 #include "config.h"
 #include "libpicofe/config_file.h"
@@ -23,6 +25,7 @@ unsigned current_audio_buffer_size;
 char core_name[MAX_PATH];
 char* content_path;
 int config_override = 0;
+static int last_screenshot = 0;
 
 static uint32_t vsyncs;
 static uint32_t renders;
@@ -87,6 +90,119 @@ static void toggle_fast_forward(int force_off)
 		limit_frames = limit_frames_was;
 		enable_audio = enable_audio_was;
 	}
+}
+
+static int screenshot_file_name(char *name, size_t len) {
+	char suffix[MAX_PATH];
+
+	for (int i = last_screenshot; i < 10000; i++) {
+		snprintf(suffix, MAX_PATH, "IMG_%04d.png", i);
+		save_relative_path(name, len, suffix);
+
+		if (access(name, F_OK) == -1) {
+			last_screenshot = i;
+			return 0;
+		}
+	}
+	*name = '\0';
+	return -1;
+}
+
+static int png_write_rgb565(const uint16_t *buf, png_structp png_ptr, int w, int h) {
+	png_byte *row_pointer = calloc(w * 3, sizeof(png_byte));
+	int ret = -1;
+
+	if (!row_pointer)
+		return ret;
+
+	if (setjmp(png_jmpbuf(png_ptr)))
+		goto finish;
+
+	for (int i = 0; i < h; i++) {
+		uint16_t *pbuf = &((uint16_t *)buf)[i * w];
+		png_byte *prow = row_pointer;
+
+		for (int j = 0; j < w; j++) {
+			uint16_t px = *pbuf++;
+			*prow++ = ((((px & 0xF800) >> 11) * 255 + 15) / 31);
+			*prow++ = ((((px & 0x07E0) >> 5)  * 255 + 31) / 63);
+			*prow++ = ((((px & 0x001F))       * 255 + 15) / 31);
+		}
+		png_write_row(png_ptr, row_pointer);
+	}
+	ret = 0;
+
+finish:
+	if (row_pointer)
+		free(row_pointer);
+
+	return ret;
+}
+
+static int write_png(const uint16_t *buf, int w, int h, FILE *file) {
+	png_structp png_ptr = NULL;
+	png_infop info_ptr = NULL;
+	int ret = -1;
+
+	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+	if (!png_ptr)
+		goto finish;
+
+	info_ptr = png_create_info_struct(png_ptr);
+	if (!info_ptr)
+		goto finish;
+
+	if (setjmp(png_jmpbuf(png_ptr)))
+		goto finish;
+
+	png_init_io(png_ptr, file);
+
+	png_set_IHDR(png_ptr, info_ptr, w, h, 8,
+	             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+	             PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+	png_write_info(png_ptr, info_ptr);
+
+	if (png_write_rgb565(buf, png_ptr, w, h))
+		goto finish;
+
+	if (setjmp(png_jmpbuf(png_ptr)))
+		goto finish;
+
+	png_write_end(png_ptr, info_ptr);
+	ret = 0;
+
+finish:
+	png_destroy_write_struct(&png_ptr, &info_ptr);
+	return ret;
+}
+
+int screenshot(void) {
+	FILE *fp;
+	char filename[MAX_PATH];
+	int w, h;
+	void *buf = plat_prepare_screenshot(&w, &h, NULL);
+	int ret = -1;
+
+	if (screenshot_file_name(filename, MAX_PATH)) {
+		PA_ERROR("No available filename for screenshot\n");
+		return -1;
+	}
+
+	fp = fopen(filename, "wb");
+	if (!fp)
+		goto finish;
+
+	if (write_png(buf, w, h, fp))
+		goto finish;
+
+	PA_INFO("Wrote screenshot to %s\n", filename);
+	ret = 0;
+
+finish:
+	if (fp)
+		fclose(fp);
+	return ret;
 }
 
 void set_defaults(void)
@@ -270,6 +386,9 @@ void handle_emu_action(emu_action action)
 		break;
 	case EACTION_TOGGLE_FF:
 		toggle_fast_forward(0);
+		break;
+	case EACTION_SCREENSHOT:
+		screenshot();
 		break;
 	case EACTION_QUIT:
 		should_quit = 1;

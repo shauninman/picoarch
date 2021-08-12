@@ -109,6 +109,7 @@ me_bind_action emuctrl_actions[] =
 	{ "Load State       ", 1 << EACTION_LOAD_STATE },
 	{ "Show/Hide FPS    ", 1 << EACTION_TOGGLE_FPS },
 	{ "Toggle FF        ", 1 << EACTION_TOGGLE_FF },
+	{ "Take Screenshot  ", 1 << EACTION_SCREENSHOT },
 	{ NULL,                0 }
 };
 

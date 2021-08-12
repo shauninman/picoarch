@@ -37,6 +37,7 @@ extern unsigned audio_buffer_size_override;
 extern int state_slot;
 
 void config_file_name(char *buf, size_t len, int is_game);
+void save_relative_path(char *buf, size_t len, const char *basename);
 
 void sram_read(void);
 void sram_write(void);

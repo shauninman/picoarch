@@ -58,6 +58,15 @@ static void *fb_flip(void)
 	return screen->pixels;
 }
 
+void *plat_prepare_screenshot(int *w, int *h, int *bpp)
+{
+	if (w) *w = SCREEN_WIDTH;
+	if (h) *h = SCREEN_HEIGHT;
+	if (bpp) *bpp = SCREEN_BPP;
+
+	return g_menuscreen_ptr;
+}
+
 void plat_video_menu_enter(int is_rom_loaded)
 {
 }

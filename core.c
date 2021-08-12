@@ -55,6 +55,10 @@ void config_file_name(char *buf, size_t len, int is_game)
 	}
 }
 
+void save_relative_path(char *buf, size_t len, const char *basename) {
+	snprintf(buf, len, "%s%s", save_dir, basename);
+}
+
 void sram_write(void) {
 	char filename[MAX_PATH];
 	FILE *sram_file = NULL;

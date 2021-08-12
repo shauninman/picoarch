@@ -15,6 +15,7 @@ typedef enum {
   EACTION_TOGGLE_FF,
   EACTION_SAVE_STATE,
   EACTION_LOAD_STATE,
+  EACTION_SCREENSHOT,
   EACTION_QUIT,
 } emu_action;
 
@@ -52,6 +53,7 @@ static inline bool has_suffix_i(const char *str, const char *suffix) {
 #define PA_ERROR(...) pa_log(RETRO_LOG_ERROR, __VA_ARGS__)
 #define PA_FATAL(...) do { pa_log(RETRO_LOG_ERROR, __VA_ARGS__); quit(-1); } while(0)
 
+int screenshot(void);
 
 void set_defaults(void);
 int save_config(int is_game);
