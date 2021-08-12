@@ -201,14 +201,13 @@ static int menu_loop_core_options_page(int offset, int keys) {
 	}
 
 	for (i = offset, menu_idx = 0; i < core_options.len && menu_idx < CORE_OPTIONS_PER_PAGE; i++) {
-		struct core_option_entry *entry;
+		struct core_option_entry *entry = &core_options.entries[i];
 		menu_entry *option;
-		const char *key = options_get_key(i);
+		const char *key = entry->key;
 
-		if (options_is_blocked(key))
+		if (entry->blocked || !entry->visible)
 			continue;
 
-		entry = options_get_entry(key);
 		option = &e_menu_core_options[menu_idx];
 
 		option->name = entry->desc;

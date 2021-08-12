@@ -128,6 +128,7 @@ void options_init(const struct retro_core_option_definition *defs) {
 		entry->blocked = option_blocked(def->key);
 		if (entry->blocked)
 			core_options.visible_len--;
+		entry->visible = true;
 
 		len = strlen(def->desc) + 1;
 		entry->desc = (char *)calloc(len, sizeof(char));
@@ -243,6 +244,7 @@ void options_init_variables(const struct retro_variable *vars) {
 		if (entry->blocked)
 			core_options.visible_len--;
 
+		entry->visible = true;
 		len = strlen(var->value) + 1;
 		value = (char *)calloc(len, sizeof(char));
 		if (!value) {
@@ -332,15 +334,6 @@ struct core_option_entry* options_get_entry(const char* key) {
 	return NULL;
 }
 
-
-bool options_is_blocked(const char *key) {
-	struct core_option_entry* entry = options_get_entry(key);
-	if (entry) {
-		return entry->blocked;
-	}
-	return true;
-}
-
 const char* options_get_value(const char* key) {
 	struct core_option_entry* entry = options_get_entry(key);
 	if (entry)
@@ -386,6 +379,13 @@ void options_set_value_index(const char* key, int value) {
 	if (entry) {
 		entry->value = value;
 		options_update_changed();
+	}
+}
+
+void options_set_visible(const char* key, bool visible) {
+	struct core_option_entry* entry = options_get_entry(key);
+	if (entry) {
+		entry->visible = visible;
 	}
 }
 

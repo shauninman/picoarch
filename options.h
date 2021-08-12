@@ -18,6 +18,7 @@ struct core_option_entry {
 	int prev_value;
 	int default_value;
 	bool blocked;
+	bool visible;
 	char **values;
 	char **labels;
 	char *retro_var_value;
@@ -39,7 +40,6 @@ void options_update_changed(void);
 const char* options_get_key(int index);
 
 struct core_option_entry* options_get_entry(const char* key);
-bool options_is_blocked(const char *key);
 
 const char* options_get_value(const char* key);
 int* options_get_value_ptr(const char* key);
@@ -47,6 +47,7 @@ int options_get_value_index(const char* key);
 
 void options_set_value(const char* key, const char *value);
 void options_set_value_index(const char* key, int value);
+void options_set_visible(const char* key, bool visible);
 
 const char** options_get_options(const char* key);
 void options_free(void);

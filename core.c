@@ -337,6 +337,14 @@ static bool pa_environment(unsigned cmd, void *data) {
 		}
 		break;
 	}
+	case RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY: { /* 55 */
+		const struct retro_core_option_display *display =
+			(const struct retro_core_option_display *)data;
+
+		if (display)
+			options_set_visible(display->key, display->visible);
+		break;
+	}
 	case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK: { /* 62 */
 		const struct retro_audio_buffer_status_callback *cb =
 			(const struct retro_audio_buffer_status_callback *)data;

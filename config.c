@@ -46,9 +46,9 @@ void config_write(FILE *f)
 	}
 
 	for (size_t i = 0; i < core_options.len; i++) {
-		const char* k = options_get_key(i);
-		if (!options_is_blocked(k))
-			fprintf(f, "%s = %s\n", k, options_get_value(k));
+		struct core_option_entry *entry = &core_options.entries[i];
+		if (!entry->blocked)
+			fprintf(f, "%s = %s\n", entry->key, options_get_value(entry->key));
 	}
 }
 
@@ -106,15 +106,15 @@ void config_read(const char* cfg)
 
 	for (size_t i = 0; i < core_options.len; i++) {
 		char value[256] = {0};
-		const char *key = options_get_key(i);
-		if (options_is_blocked(key))
+		struct core_option_entry *entry = &core_options.entries[i];
+		if (entry->blocked)
 			continue;
 
-		char *tmp = config_find_value(cfg, key);
+		char *tmp = config_find_value(cfg, entry->key);
 		if (!tmp)
 			continue;
 
 		parse_str_val(value, tmp);
-		options_set_value(key, value);
+		options_set_value(entry->key, value);
 	}
 }
