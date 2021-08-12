@@ -22,6 +22,7 @@ extern bool should_quit;
 extern unsigned current_audio_buffer_size;
 extern char core_name[MAX_PATH];
 extern char* content_path;
+extern int config_override;
 
 #ifdef MMENU
 extern void* mmenu;
@@ -55,6 +56,7 @@ static inline bool has_suffix_i(const char *str, const char *suffix) {
 void set_defaults(void);
 int save_config(int is_game);
 void load_config(void);
+int remove_config(int is_game);
 
 void handle_emu_action(emu_action action);
 void pa_log(enum retro_log_level level, const char *fmt, ...);

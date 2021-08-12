@@ -23,6 +23,7 @@ typedef enum
 	MA_MAIN_EXIT,
 	MA_OPT_SAVECFG,
 	MA_OPT_SAVECFG_GAME,
+	MA_OPT_RMCFG_GAME,
 	MA_CTRL_PLAYER1,
 	MA_CTRL_EMU,
 } menu_id;
@@ -175,6 +176,16 @@ static int mh_savecfg(int id, int keys)
 	return 1;
 }
 
+static int mh_rmcfg(int id, int keys)
+{
+	if (remove_config(id == MA_OPT_RMCFG_GAME ? 1 : 0) == 0)
+		menu_update_msg("config removed");
+	else
+		menu_update_msg("failed to remove config");
+
+	return 1;
+}
+
 static int menu_loop_core_options_page(int offset, int keys) {
 	static int sel = 0;
 	menu_entry *e_menu_core_options;
@@ -235,8 +246,9 @@ static int menu_loop_core_options(int id, int keys)
 	return menu_loop_core_options_page(0, keys);
 }
 
-static const char h_restore_def[]     = "Switches back to default / recommended\n"
-	"configuration";
+static const char h_rm_config_game[]  = "Removes game-specific config file";
+
+static const char h_restore_def[]     = "Switches back to default settings";
 
 static const char h_show_fps[]        = "Shows frames and vsyncs per second";
 
@@ -325,17 +337,25 @@ static int menu_loop_keyconfig(int id, int keys)
 	return 0;
 }
 
+const char *config_label(int id, int *offs) {
+	return config_override ? "Loaded: game config" : "Loaded: global config";
+}
+
 static menu_entry e_menu_config_options[] =
 {
 	mee_cust_nosave  ("Save global config",       MA_OPT_SAVECFG,      mh_savecfg, mgn_saveloadcfg),
 	mee_cust_nosave  ("Save game config",         MA_OPT_SAVECFG_GAME, mh_savecfg, mgn_saveloadcfg),
+	mee_handler_id_h ("Delete game config",       MA_OPT_RMCFG_GAME,   mh_rmcfg,   h_rm_config_game),
 	mee_handler_h    ("Restore defaults",         mh_restore_defaults, h_restore_def),
+	mee_label        (""),
+	mee_label_mk     (0,                          config_label),
 	mee_end,
 };
 
 static int menu_loop_config_options(int id, int keys)
 {
 	static int sel = 0;
+	me_enable(e_menu_config_options, MA_OPT_RMCFG_GAME, config_override == 1);
 
 	me_loop(e_menu_config_options, &sel);
 

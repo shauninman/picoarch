@@ -22,6 +22,7 @@ bool should_quit = false;
 unsigned current_audio_buffer_size;
 char core_name[MAX_PATH];
 char* content_path;
+int config_override = 0;
 
 static uint32_t vsyncs;
 static uint32_t renders;
@@ -126,6 +127,10 @@ int save_config(int is_game)
 	config_write_keys(config_file);
 
 	fclose(config_file);
+
+	if (is_game)
+		config_override = 1;
+
 	return 0;
 }
 
@@ -136,7 +141,9 @@ static void alloc_config_buffer(char **config_ptr) {
 
 	config_file_name(config_filename, MAX_PATH, 1);
 	config_file = fopen(config_filename, "rb");
-	if (!config_file) {
+	if (config_file) {
+		config_override = 1;
+	} else {
 		config_file_name(config_filename, MAX_PATH, 0);
 		config_file = fopen(config_filename, "rb");
 	}
@@ -189,6 +196,18 @@ static void load_config_keys(void)
 			}
 		}
 	}
+}
+
+int remove_config(int is_game) {
+	char config_filename[MAX_PATH];
+	int ret;
+
+	config_file_name(config_filename, MAX_PATH, is_game);
+	ret = remove(config_filename);
+	if (ret == 0)
+		config_override = 0;
+
+	return ret;
 }
 
 void handle_emu_action(emu_action action)
