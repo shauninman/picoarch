@@ -212,6 +212,7 @@ error:
 
 static void set_directories(void) {
 	const char *home = getenv("HOME");
+	char cwd[MAX_PATH];
 	char *dst = save_dir;
 	int len = MAX_PATH;
 
@@ -225,7 +226,10 @@ static void set_directories(void) {
 #ifdef MINUI
 	strncpy(system_dir, save_dir, MAX_PATH-1);
 #else
-	if (!getcwd(system_dir, MAX_PATH)) {
+	if (getcwd(cwd, MAX_PATH)) {
+		snprintf(system_dir, MAX_PATH, "%s/system", cwd);
+		mkdir(system_dir, 0755);
+	} else {
 		PA_FATAL("Can't find system directory");
 	}
 #endif

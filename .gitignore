@@ -1,8 +1,9 @@
 *.o
 *.so
+picoarch
 /pkg
 /profile
-picoarch
+/system
 
 /fbalpha2012
 /gambatte
