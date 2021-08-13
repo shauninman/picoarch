@@ -6,6 +6,8 @@
 #include "plat.h"
 #include "scale.h"
 
+static int drew_alt_bg = 0;
+
 #define MENU_ALIGN_LEFT 0
 #define MENU_X2 0
 
@@ -201,6 +203,11 @@ static int mh_rmcfg(int id, int keys)
 		menu_update_msg("failed to remove config");
 
 	return 1;
+}
+
+static void draw_src_bg(void) {
+	memcpy(g_menubg_ptr, g_menubg_src_ptr, g_menubg_src_h * g_menubg_src_pp * sizeof(uint16_t));
+	menu_darken_bg(g_menubg_ptr, g_menubg_src_ptr, g_menubg_src_h * g_menubg_src_pp, 0);
 }
 
 static int menu_loop_core_options_page(int offset, int keys) {
@@ -422,6 +429,39 @@ static menu_entry e_menu_main[] =
 
 static void draw_savestate_bg(int slot)
 {
+	char filename[MAX_PATH];
+	int w, h, bpp;
+	size_t bufsize = SCREEN_PITCH * SCREEN_HEIGHT;
+	void *buf = calloc(bufsize, sizeof(char));
+
+	if (!buf) {
+		PA_WARN("Couldn't allocate savestate background");
+		goto finish;
+	}
+	state_file_name(filename, MAX_PATH, slot);
+
+	if (plat_load_screen(filename, buf, bufsize, &w, &h, &bpp))
+		goto finish;
+
+	if (bpp == sizeof(uint16_t)) {
+		menu_darken_bg(g_menubg_ptr, buf, w * h, 0);
+		drew_alt_bg = 1;
+	}
+
+finish:
+	if (buf)
+		free(buf);
+}
+
+void menu_begin(void)
+{
+	if (!drew_alt_bg)
+		draw_src_bg();
+}
+
+void menu_end(void)
+{
+	drew_alt_bg = 0;
 }
 
 void menu_loop(void)
@@ -440,16 +480,11 @@ void menu_loop(void)
 		me_enable(e_menu_main, MA_MAIN_LOAD_STATE, mmenu == NULL);
 	}
 #endif
-
-	memcpy(g_menubg_ptr, g_menuscreen_ptr, g_menuscreen_h * g_menuscreen_pp * sizeof(uint16_t));
-
-	menu_darken_bg(g_menubg_ptr, g_menubg_ptr, g_menuscreen_h * g_menuscreen_pp, 0);
 	me_loop_d(e_menu_main, &sel, NULL, NULL);
 
 	/* wait until menu, ok, back is released */
 	while (in_menu_wait_any(NULL, 50) & (PBTN_MENU|PBTN_MOK|PBTN_MBACK))
 		;
-	memset(g_menubg_ptr, 0, g_menuscreen_h * g_menuscreen_pp * sizeof(uint16_t));
 
 	/* Force the hud to clear */
 	plat_video_set_msg(" ");
@@ -460,8 +495,8 @@ int menu_init(void)
 {
 	menu_init_base();
 
-	g_menubg_src_ptr = calloc(g_menuscreen_w * g_menuscreen_h * 2, 1);
-	g_menubg_ptr = calloc(g_menuscreen_w * g_menuscreen_h * 2, 1);
+	g_menubg_src_ptr = calloc(g_menubg_src_pp * g_menubg_src_h, sizeof(uint16_t));
+	g_menubg_ptr = calloc(g_menuscreen_w * g_menuscreen_pp, sizeof(uint16_t));
 	if (g_menubg_src_ptr == NULL || g_menubg_ptr == NULL) {
 		fprintf(stderr, "OOM\n");
 		return -1;
@@ -473,10 +508,12 @@ void menu_finish(void)
 {
 	if (g_menubg_src_ptr) {
 		free(g_menubg_src_ptr);
+		g_menubg_src_ptr = NULL;
 	}
 
 	if (g_menubg_ptr) {
 		free(g_menubg_ptr);
+		g_menubg_ptr = NULL;
 	}
 }
 

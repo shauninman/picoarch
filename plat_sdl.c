@@ -1,8 +1,8 @@
 #include <SDL/SDL.h>
 #include "core.h"
 #include "libpicofe/fonts.h"
-#include "libpicofe/menu.h"
 #include "libpicofe/plat.h"
+#include "menu.h"
 #include "plat.h"
 #include "scale.h"
 
@@ -64,32 +64,105 @@ void *plat_prepare_screenshot(int *w, int *h, int *bpp)
 	if (h) *h = SCREEN_HEIGHT;
 	if (bpp) *bpp = SCREEN_BPP;
 
-	return g_menuscreen_ptr;
+	return screen->pixels;
 }
+
+int plat_dump_screen(const char *filename) {
+	char imgname[MAX_PATH];
+	int ret = -1;
+	SDL_Surface *surface = NULL;
+
+	snprintf(imgname, MAX_PATH, "%s.bmp", filename);
+
+	if (g_menuscreen_ptr) {
+		surface = SDL_CreateRGBSurfaceFrom(g_menubg_src_ptr,
+		                                   g_menubg_src_w,
+		                                   g_menubg_src_h,
+		                                   16,
+		                                   g_menubg_src_w * sizeof(uint16_t),
+		                                   0xF800, 0x07E0, 0x001F, 0x0000);
+		if (surface) {
+			ret = SDL_SaveBMP(surface, imgname);
+			SDL_FreeSurface(surface);
+		}
+	} else {
+		ret = SDL_SaveBMP(screen, imgname);
+	}
+
+	return ret;
+}
+
+int plat_load_screen(const char *filename, void *buf, size_t buf_size, int *w, int *h, int *bpp) {
+	int ret = -1;
+	char imgname[MAX_PATH];
+	SDL_Surface *imgsurface = NULL;
+	SDL_Surface *surface = NULL;
+
+	snprintf(imgname, MAX_PATH, "%s.bmp", filename);
+	imgsurface = SDL_LoadBMP(imgname);
+	if (!imgsurface)
+		goto finish;
+
+	surface = SDL_DisplayFormat(imgsurface);
+	if (!surface)
+		goto finish;
+
+	if (surface->pitch > SCREEN_PITCH ||
+	    surface->h > SCREEN_HEIGHT ||
+	    surface->w == 0 ||
+	    surface->h * surface->pitch > buf_size)
+		goto finish;
+
+	memcpy(buf, surface->pixels, surface->pitch * surface->h);
+	*w = surface->w;
+	*h = surface->h;
+	*bpp = surface->pitch / surface->w;
+
+	ret = 0;
+
+finish:
+	if (imgsurface)
+		SDL_FreeSurface(imgsurface);
+	if (surface)
+		SDL_FreeSurface(surface);
+	return ret;
+}
+
 
 void plat_video_menu_enter(int is_rom_loaded)
 {
+	SDL_LockSurface(screen);
+	memcpy(g_menubg_src_ptr, screen->pixels, g_menubg_src_h * g_menubg_src_pp * sizeof(uint16_t));
+	SDL_UnlockSurface(screen);
+	g_menuscreen_ptr = fb_flip();
 }
 
 void plat_video_menu_begin(void)
 {
-	g_menuscreen_ptr = fb_flip();
+	SDL_LockSurface(screen);
+	menu_begin();
 }
 
 void plat_video_menu_end(void)
 {
+	menu_end();
+	SDL_UnlockSurface(screen);
 	g_menuscreen_ptr = fb_flip();
 }
 
 void plat_video_menu_leave(void)
 {
+	memset(g_menubg_src_ptr, 0, g_menuscreen_h * g_menuscreen_pp * sizeof(uint16_t));
+
 	SDL_LockSurface(screen);
-	memset(g_menuscreen_ptr, 0, SCREEN_WIDTH * SCREEN_HEIGHT * SCREEN_BPP);
+	memset(screen->pixels, 0, g_menuscreen_h * g_menuscreen_pp * sizeof(uint16_t));
 	SDL_UnlockSurface(screen);
-	g_menuscreen_ptr = fb_flip();
+	fb_flip();
 	SDL_LockSurface(screen);
-	memset(g_menuscreen_ptr, 0, SCREEN_WIDTH * SCREEN_HEIGHT * SCREEN_BPP);
+	memset(screen->pixels, 0, g_menuscreen_h * g_menuscreen_pp * sizeof(uint16_t));
 	SDL_UnlockSurface(screen);
+
+	g_menuscreen_ptr = NULL;
 }
 
 void plat_video_open(void)
@@ -117,7 +190,7 @@ void plat_video_process(const void *data, unsigned width, unsigned height, size_
 
 void plat_video_flip(void)
 {
-	g_menuscreen_ptr = fb_flip();
+	fb_flip();
 	msg[0] = 0;
 }
 
@@ -253,7 +326,6 @@ int plat_init(void)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, SDL_SWSURFACE);
-
 	if (screen == NULL) {
 		PA_ERROR("%s, failed to set video mode\n", __func__);
 		return -1;
@@ -264,7 +336,11 @@ int plat_init(void)
 	g_menuscreen_w = SCREEN_WIDTH;
 	g_menuscreen_h = SCREEN_HEIGHT;
 	g_menuscreen_pp = SCREEN_WIDTH;
-	g_menuscreen_ptr = fb_flip();
+	g_menuscreen_ptr = NULL;
+
+	g_menubg_src_w = SCREEN_WIDTH;
+	g_menubg_src_h = SCREEN_HEIGHT;
+	g_menubg_src_pp = SCREEN_WIDTH;
 
 	if (in_sdl_init(&in_sdl_platform_data, plat_sdl_event_handler)) {
 		PA_ERROR("SDL input failed to init: %s\n", SDL_GetError());

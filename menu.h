@@ -6,6 +6,8 @@
 
 int menu_init(void);
 void menu_loop(void);
+void menu_begin(void);
+void menu_end(void);
 void menu_finish(void);
 
 #endif

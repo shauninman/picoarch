@@ -13,7 +13,10 @@ struct audio_frame {
 int  plat_init(void);
 void plat_finish(void);
 void plat_minimize(void);
+
 void *plat_prepare_screenshot(int *w, int *h, int *bpp);
+int plat_dump_screen(const char *filename);
+int plat_load_screen(const char *filename, void *buf, size_t buf_size, int *w, int *h, int *bpp);
 
 void plat_video_open(void);
 void plat_video_set_msg(const char *new_msg);

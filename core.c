@@ -203,6 +203,9 @@ int state_write(void) {
 		PA_ERROR("Error writing state data to file\n");
 		goto error;
 	}
+
+	plat_dump_screen(filename);
+
 	ret = 0;
 error:
 	if (state)
