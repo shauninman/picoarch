@@ -29,18 +29,6 @@ static unsigned dst_w, dst_h, dst_offs;
 struct dimensions prev;
 
 #if __ARM_ARCH >= 5
-static inline uint32_t average32(uint32_t c1, uint32_t c2) {
-	uint32_t ret, lowbits = 0x08210821;
-	asm ("eor %0, %2, %3\r\n"
-	     "and %0, %0, %1\r\n"
-	     "add %0, %3, %0\r\n"
-	     "adds %0, %0, %2\r\n"
-	     "lsr %0, %0, #1\r\n"
-	     "orrcs %0, %0, #0x80000000\r\n"
-	     : "=&r" (ret) : "r" (lowbits), "r" (c1), "r" (c2) : "cc" );
-	return ret;
-}
-
 static inline uint32_t average16(uint32_t c1, uint32_t c2) {
 	uint32_t ret, lowbits = 0x0821;
 	asm ("eor %0, %2, %3\r\n"
@@ -52,13 +40,41 @@ static inline uint32_t average16(uint32_t c1, uint32_t c2) {
 	return ret;
 }
 
+static inline uint32_t average32(uint32_t c1, uint32_t c2) {
+	uint32_t ret, lowbits = 0x08210821;
+
+	asm ("eor %0, %3, %1\r\n"
+	     "and %0, %0, %2\r\n"
+	     "adds %0, %1, %0\r\n"
+	     "and %1, %1, #0\r\n"
+	     "movcs %1, #0x80000000\r\n"
+	     "adds %0, %0, %3\r\n"
+	     "rrx %0, %0\r\n"
+	     "orr %0, %0, %1\r\n"
+	     : "=&r" (ret), "+r" (c2) : "r" (lowbits), "r" (c1) : "cc" );
+
+	return ret;
+}
+
 #define AVERAGE16_NOCHK(c1, c2) (average16((c1), (c2)))
 #define AVERAGE32_NOCHK(c1, c2) (average32((c1), (c2)))
 
 #else
 
-#define AVERAGE16_NOCHK(c1, c2) (((c1) + (c2) + (((c1) ^ (c2)) & 0x0821))>>1) //More accurate
-#define AVERAGE32_NOCHK(c1, c2) ((((c1) + (c2) + (((c1) ^ (c2)) & 0x08210821))>>1) | (((c1) + (c2) < (c1)) << 31))
+static inline uint32_t average16(uint32_t c1, uint32_t c2) {
+	return (c1 + c2 + ((c1 ^ c2) & 0x0821))>>1;
+}
+
+static inline uint32_t average32(uint32_t c1, uint32_t c2) {
+	uint32_t sum = c1 + c2;
+	uint32_t ret = sum + ((c1 ^ c2) & 0x08210821);
+	uint32_t of = ((sum < c1) | (ret < sum)) << 31;
+
+	return (ret >> 1) | of;
+}
+
+#define AVERAGE16_NOCHK(c1, c2) (average16((c1), (c2)))
+#define AVERAGE32_NOCHK(c1, c2) (average32((c1), (c2)))
 
 #endif
 
@@ -82,7 +98,7 @@ static void scale_1x(unsigned w, unsigned h, size_t pitch, const void *src, void
 	dst += dst_offs;
 
 	for (unsigned y = 0; y < h; y++) {
-		memcpy(dst + y * SCREEN_PITCH, src + y * pitch, pitch);
+		memcpy(dst + y * SCREEN_PITCH, src + y * pitch, w * SCREEN_BPP);
 	}
 }
 
@@ -156,6 +172,8 @@ static void scale_blend(unsigned w, unsigned h, size_t pitch, const void *src, v
 			int dx = 0;
 
 			uint16_t *pnext = (uint16_t *)(src + pitch);
+			if (!lines)
+				pnext -= (pitch / sizeof(uint16_t));
 
 			if (dy > rat_dst_h - bh[0]) {
 				pblend = pnext;
