@@ -65,7 +65,7 @@ me_bind_action gba_ctrl_actions[] =
 	{ NULL,       0 }
 };
 
-me_bind_action snes_ctrl_actions[] =
+me_bind_action gambatte_ctrl_actions[] =
 {
 	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
 	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
@@ -73,12 +73,11 @@ me_bind_action snes_ctrl_actions[] =
 	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
 	{ "A BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
 	{ "B BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
-	{ "X BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
-	{ "Y BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
+	{ "A TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
+	{ "B TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
 	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
 	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
-	{ "L BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
-	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
+	/* { "FAST FWD ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 }, */
 	{ NULL,       0 }
 };
 
@@ -97,6 +96,23 @@ me_bind_action mame_ctrl_actions[] =
 	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
 	{ "COIN     ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
 	{ "OSD MENU ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 },
+	{ NULL,       0 }
+};
+
+me_bind_action snes_ctrl_actions[] =
+{
+	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
+	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
+	{ "LEFT     ",  1 << RETRO_DEVICE_ID_JOYPAD_LEFT },
+	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
+	{ "A BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
+	{ "B BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
+	{ "X BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
+	{ "Y BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
+	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
+	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
+	{ "L BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
+	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
 	{ NULL,       0 }
 };
 
@@ -297,15 +313,18 @@ static int key_config_loop_wrap(int id, int keys)
 	me_bind_action *emu_actions = emuctrl_actions;
 	size_t emu_action_size = array_size(emuctrl_actions);
 
-	if (!strcmp(core_name, "gpsp")) {
+	if (!strcmp(core_name, "gambatte")) {
+		actions = gambatte_ctrl_actions;
+		action_size = array_size(gambatte_ctrl_actions);
+	} else if (!strcmp(core_name, "gpsp")) {
 		actions = gba_ctrl_actions;
 		action_size = array_size(gba_ctrl_actions);
-	} else if (strstr(core_name, "snes")) {
-		actions = snes_ctrl_actions;
-		action_size = array_size(snes_ctrl_actions);
 	} else if (strstr(core_name, "mame")) {
 		actions = mame_ctrl_actions;
 		action_size = array_size(mame_ctrl_actions);
+	} else if (strstr(core_name, "snes")) {
+		actions = snes_ctrl_actions;
+		action_size = array_size(snes_ctrl_actions);
 	}
 
 	switch (id) {

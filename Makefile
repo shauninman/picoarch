@@ -18,10 +18,9 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 
 # Unpolished or slow cores that build
 # EXTRA_CORES += fbalpha2012
-# EXTRA_CORES += gambatte
 # EXTRA_CORES += mame2003_plus
 
-CORES     = gpsp mame2000 snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = gambatte gpsp mame2000 snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 gambatte_REPO = https://github.com/libretro/gambatte-libretro
 mame2000_REPO = https://github.com/libretro/mame2000-libretro

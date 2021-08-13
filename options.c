@@ -47,7 +47,12 @@ static void wrap(char *string, size_t max_len, size_t max_lines) {
 	return;
 }
 
-static const char *blocked_options[] = { "gpsp_save_method", NULL};
+static const char *blocked_options[] = {
+	"gambatte_rumble_level",
+	"gambatte_show_gb_link_settings",
+	"gpsp_save_method",
+	NULL
+};
 
 static bool option_blocked(const char *key) {
 	for (int i = 0; blocked_options[i]; i++) {
