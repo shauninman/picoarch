@@ -273,6 +273,9 @@ float plat_sound_capacity(void)
 void plat_sound_write(const struct audio_frame *data, int frames)
 {
 	int consumed = 0;
+	if (audio.buf_len == 0)
+		return;
+
 	SDL_LockAudio();
 
 	while (frames > 0) {

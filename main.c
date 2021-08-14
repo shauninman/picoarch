@@ -541,7 +541,9 @@ int main(int argc, char **argv) {
 }
 
 int quit(int code) {
-	sram_write();
+	if (current_core.initialized)
+		sram_write();
+
 	menu_finish();
 	core_unload();
 	plat_finish();

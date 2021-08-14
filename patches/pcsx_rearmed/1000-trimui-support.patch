@@ -12,7 +12,7 @@ index a01c4df..3d08eea 100644
  ifeq ($(platform), $(filter $(platform), vita ctr))
  CFLAGS += -O3 -DNDEBUG
 diff --git a/Makefile.libretro b/Makefile.libretro
-index 1ecd359..7faf5c7 100644
+index 1ecd359..432d700 100644
 --- a/Makefile.libretro
 +++ b/Makefile.libretro
 @@ -347,6 +347,27 @@ else ifeq ($(platform), rpi4_64)
@@ -25,7 +25,7 @@ index 1ecd359..7faf5c7 100644
 +	CXX = $(CROSS_COMPILE)g++
 +
 +	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s
-+	CFLAGS += -DGPULIB_USE_MMAP -DGPU_UNAI_USE_INT_DIV_MULTINV
++	CFLAGS += -DGPULIB_USE_MMAP -DGPU_UNAI_USE_INT_DIV_MULTINV -D_TRIMUI
 +	CFLAGS += -ffast-math -fdata-sections -ffunction-sections -fsingle-precision-constant -flto -fno-PIC
 +	LDFLAGS += -flto
 +	ifeq (,$(DEBUG))
@@ -57,3 +57,29 @@ index 1ecd359..7faf5c7 100644
  # enable large file support if available
  ifeq ($(shell $(CC) -E -dD $(CFLAGS) include/arm_features.h | grep __SIZEOF_LONG__ | awk '{print $$3}'),4)
  CFLAGS += -D_FILE_OFFSET_BITS=64
+diff --git a/frontend/libretro.c b/frontend/libretro.c
+index 59e986e..b2b8a49 100644
+--- a/frontend/libretro.c
++++ b/frontend/libretro.c
+@@ -2802,7 +2802,7 @@ void retro_init(void)
+     * we have to do this because cache misses and some IO penalties
+     * are not emulated. Warning: changing this may break compatibility. */
+    cycle_multiplier = 175;
+-#if defined(HAVE_PRE_ARMV7) && !defined(_3DS)
++#if defined(HAVE_PRE_ARMV7) && !defined(_3DS) && !defined(_TRIMUI)
+    cycle_multiplier = 200;
+ #endif
+    pl_rearmed_cbs.gpu_peops.iUseDither = 1;
+diff --git a/frontend/main.c b/frontend/main.c
+index d3c7d40..7610146 100644
+--- a/frontend/main.c
++++ b/frontend/main.c
+@@ -154,7 +154,7 @@ void emu_set_default_config(void)
+ 	spu_config.iVolume = 768;
+ 	spu_config.iTempo = 0;
+ 	spu_config.iUseThread = 1; // no effect if only 1 core is detected
+-#if defined(HAVE_PRE_ARMV7) && !defined(_3DS) /* XXX GPH hack */
++#if defined(HAVE_PRE_ARMV7) && !defined(_3DS) && !defined(_TRIMUI) /* XXX GPH hack */
+ 	spu_config.iUseReverb = 0;
+ 	spu_config.iUseInterpolation = 0;
+ 	spu_config.iTempo = 1;

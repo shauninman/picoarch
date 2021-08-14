@@ -75,24 +75,26 @@ static void parse_num_val(uint32_t *cval, const char *src)
 	*cval = val;
 }
 
-static char *config_find_value(const char* cfg, const char *key) {
-	char *tmp;
+static const char *config_find_value(const char* cfg, const char *key) {
+	const char *tmp = cfg;
 
-	tmp = strstr(cfg, key);
+	while ((tmp = strstr(tmp, key))) {
+		tmp += strlen(key);
+		if (strncmp(tmp, " = ", 3) == 0)
+			break;
+	};
+
 	if (tmp == NULL)
 		return NULL;
-	tmp += strlen(key);
-	if (strncmp(tmp, " = ", 3) != 0)
-		return NULL;
-	tmp += 3;
 
+	tmp += 3;
 	return tmp;
 }
 
 void config_read(const char* cfg)
 {
 	for (size_t i = 0; i < array_size(config_data); i++) {
-		char *tmp = config_find_value(cfg, config_data[i].name);
+		const char *tmp = config_find_value(cfg, config_data[i].name);
 		if (!tmp)
 			continue;
 
@@ -110,7 +112,7 @@ void config_read(const char* cfg)
 		if (entry->blocked)
 			continue;
 
-		char *tmp = config_find_value(cfg, entry->key);
+		const char *tmp = config_find_value(cfg, entry->key);
 		if (!tmp)
 			continue;
 
