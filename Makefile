@@ -23,11 +23,14 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 CORES     = gambatte gpsp mame2000 snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 gambatte_REPO = https://github.com/libretro/gambatte-libretro
-mame2000_REPO = https://github.com/libretro/mame2000-libretro
-mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
 
 fbalpha2012_BUILD_PATH = fbalpha2012/svn-current/trunk
 fbalpha2012_MAKEFILE = makefile.libretro
+
+mame2000_REPO = https://github.com/libretro/mame2000-libretro
+mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
+
+pcsx_rearmed_MAKEFILE = Makefile.libretro
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
@@ -152,6 +155,15 @@ mame2003_plus_NAME = mame2003+
 mame2003_plus_ROM_DIR = ARCADE
 mame2003_plus_TYPES = zip
 mame2003_plus_PAK_NAME = Arcade (MAME 2003-plus)
+
+pcsx_rearmed_ROM_DIR = PS
+pcsx_rearmed_TYPES = bin,cue,img,mdf,pbp,toc,cbn,m3u,chd
+pcsx_rearmed_PAK_NAME = Sony PlayStation
+define pcsx_rearmed_PAK_EXTRA
+
+needs-swap
+
+endef
 
 snes9x2002_ROM_DIR = SFC
 snes9x2002_TYPES = smc,fig,sfc,gd3,gd7,dx2,bsx,swc,zip

@@ -1,0 +1,59 @@
+diff --git a/Makefile b/Makefile
+index a01c4df..3d08eea 100644
+--- a/Makefile
++++ b/Makefile
+@@ -5,6 +5,8 @@ TARGET ?= pcsx
+ CFLAGS += -Wall -Iinclude -ffast-math
+ ifeq ($(DEBUG), 1)
+ CFLAGS += -O0 -ggdb
++else ifneq (,$(OPTIMIZE))
++CFLAGS += $(OPTIMIZE)
+ else
+ ifeq ($(platform), $(filter $(platform), vita ctr))
+ CFLAGS += -O3 -DNDEBUG
+diff --git a/Makefile.libretro b/Makefile.libretro
+index 1ecd359..7faf5c7 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -347,6 +347,27 @@ else ifeq ($(platform), rpi4_64)
+         fpic := -fPIC
+         CFLAGS += -march=armv8-a+crc+simd -mtune=cortex-a72 -ftree-vectorize
+ 
++else ifeq ($(platform), trimui)
++	TARGET := $(TARGET_NAME)_libretro.so
++	CC = $(CROSS_COMPILE)gcc
++	CXX = $(CROSS_COMPILE)g++
++
++	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s
++	CFLAGS += -DGPULIB_USE_MMAP -DGPU_UNAI_USE_INT_DIV_MULTINV
++	CFLAGS += -ffast-math -fdata-sections -ffunction-sections -fsingle-precision-constant -flto -fno-PIC
++	LDFLAGS += -flto
++	ifeq (,$(DEBUG))
++		LDFLAGS += -s
++	endif
++	CPU_ARCH := arm
++	OPTIMIZE := -Ofast -DNDEBUG
++
++	DRC_CACHE_BASE = 0
++	BUILTIN_GPU = unai
++	DYNAREC = ari64
++	ARCH = arm
++	HAVE_NEON = 0
++
+ # Classic Platforms ####################
+ # Platform affix = classic_<ISA>_<µARCH>
+ # Help at https://modmyclassic.com/comp
+@@ -459,6 +480,13 @@ CFLAGS += $(fpic)
+ MAIN_LDFLAGS += -shared
+ MAIN_LDLIBS += $(LIBPTHREAD) $(LIBM) $(LIBDL) $(LIBZ)
+ 
++ifeq ($(PROFILE), GENERATE)
++	CFLAGS	+= -fprofile-generate=./profile/gpsp
++	LDFLAGS	+= -lgcov
++else ifeq ($(PROFILE), APPLY)
++	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/gpsp -fbranch-probabilities
++endif
++
+ # enable large file support if available
+ ifeq ($(shell $(CC) -E -dD $(CFLAGS) include/arm_features.h | grep __SIZEOF_LONG__ | awk '{print $$3}'),4)
+ CFLAGS += -D_FILE_OFFSET_BITS=64
