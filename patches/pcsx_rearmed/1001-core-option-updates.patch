@@ -1,0 +1,332 @@
+diff --git a/frontend/libretro_core_options.h b/frontend/libretro_core_options.h
+index a1b85d4..bcabc9b 100644
+--- a/frontend/libretro_core_options.h
++++ b/frontend/libretro_core_options.h
+@@ -53,20 +53,20 @@ struct retro_core_option_definition option_defs_us[] = {
+    {
+       "pcsx_rearmed_frameskip_type",
+       "Frameskip",
+-      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Auto (Threshold)' utilises the 'Frameskip Threshold (%)' setting. 'Fixed Interval' utilises the 'Frameskip Interval' setting.",
++      "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness. Will cause graphical glitches.",
+       {
+          { "disabled",       NULL },
+          { "auto",           "Auto" },
+-         { "auto_threshold", "Auto (Threshold)" },
+-         { "fixed_interval", "Fixed Interval" },
++         { "auto_threshold", "Threshold" },
++         { "fixed_interval", "Fixed" },
+          { NULL, NULL },
+       },
+-      "disabled"
++      "auto"
+    },
+    {
+       "pcsx_rearmed_frameskip_threshold",
+-      "Frameskip Threshold (%)",
+-      "When 'Frameskip' is set to 'Auto (Threshold)', specifies the audio buffer occupancy threshold (percentage) below which frames will be skipped. Higher values reduce the risk of crackling by causing frames to be dropped more frequently.",
++      "FS Threshold (%)",
++      "When 'Frameskip' is set to 'Threshold', sets how low the audio buffer can get before frames will be skipped.",
+       {
+          { "15", NULL },
+          { "18", NULL },
+@@ -90,7 +90,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_frameskip",
+-      "Frameskip Interval",
++      "FS Interval",
+       "Specifies the maximum number of frames that can be skipped before a new frame is rendered.",
+       {
+          { "1",  NULL },
+@@ -105,7 +105,7 @@ struct retro_core_option_definition option_defs_us[] = {
+          { "10", NULL },
+          { NULL, NULL },
+       },
+-      "1"
++      "4"
+    },
+    {
+       "pcsx_rearmed_bios",
+@@ -132,7 +132,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_memcard2",
+-      "Enable Second Memory Card (Shared)",
++      "2nd Memory Card",
+       "Enabled the memory card slot 2. This memory card is shared amongst all games.",
+       {
+          { "disabled", NULL },
+@@ -509,14 +509,14 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_dithering",
+-      "Enable Dithering",
+-      "If Off, disables the dithering pattern the PSX applies to combat color banding.",
++      "Dithering",
++      "If disabled, turns off the dithering pattern the PSX applies to combat color banding.",
+       {
+          { "disabled", NULL },
+          { "enabled",  NULL },
+          { NULL, NULL },
+       },
+-#if defined HAVE_LIBNX || defined _3DS
++#if defined HAVE_LIBNX || defined _3DS || defined _TRIMUI
+ 	  "disabled",
+ #else
+       "enabled",
+@@ -541,7 +541,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    {
+       "pcsx_rearmed_psxclock",
+       "PSX CPU Clock",
+-#if defined(HAVE_PRE_ARMV7) && !defined(_3DS)
++#if defined(HAVE_PRE_ARMV7) && !defined(_3DS) && !defined(_TRIMUI)
+       "Overclock or underclock the PSX clock. Default is 50",
+ #else
+       "Overclock or underclock the PSX clock. Default is 57",
+@@ -620,7 +620,7 @@ struct retro_core_option_definition option_defs_us[] = {
+          { "100", NULL },
+          { NULL, NULL },
+       },
+-#if defined(HAVE_PRE_ARMV7) && !defined(_3DS)
++#if defined(HAVE_PRE_ARMV7) && !defined(_3DS) && !defined(_TRIMUI)
+       "50",
+ #else
+       "57",
+@@ -691,7 +691,7 @@ struct retro_core_option_definition option_defs_us[] = {
+ #ifdef GPU_PEOPS
+    {
+       "pcsx_rearmed_show_gpu_peops_settings",
+-      "Advanced GPU P.E.Op.S. Settings",
++      "P.E.Op.S. Settings",
+       "Shows or hides advanced GPU plugin settings. NOTE: Quick Menu must be toggled for this setting to take effect.",
+       {
+          { "disabled", NULL },
+@@ -702,7 +702,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_odd_even_bit",
+-      "(GPU) Odd/Even Bit Hack",
++      "Odd/Even Hack",
+       "Needed for Chrono Cross.",
+       {
+          { "disabled", NULL },
+@@ -713,7 +713,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_expand_screen_width",
+-      "(GPU) Expand Screen Width",
++      "Exp. Screen Width",
+       "Capcom fighting games",
+       {
+          { "disabled", NULL },
+@@ -724,7 +724,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_ignore_brightness",
+-      "(GPU) Ignore Brightness Color",
++      "Ignore Brightness",
+       "Black screens in Lunar Silver Star Story games",
+       {
+          { "disabled", NULL },
+@@ -735,7 +735,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_disable_coord_check",
+-      "(GPU) Disable Coordinate Check",
++      "Coordinate Check",
+       "Compatibility mode",
+       {
+          { "disabled", NULL },
+@@ -746,7 +746,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_lazy_screen_update",
+-      "(GPU) Lazy Screen Update",
++      "Lazy Screen Update",
+       "Pandemonium 2",
+       {
+          { "disabled", NULL },
+@@ -757,7 +757,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_old_frame_skip",
+-      "(GPU) Old Frame Skipping",
++      "Old Frameskip",
+       "Skip every second frame",
+       {
+          { "disabled", NULL },
+@@ -768,7 +768,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_repeated_triangles",
+-      "(GPU) Repeated Flat Tex Triangles",
++      "Rep. Triangles",
+       "Needed by Star Wars: Dark Forces",
+       {
+          { "disabled", NULL },
+@@ -779,7 +779,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_quads_with_triangles",
+-      "(GPU) Draw Quads with Triangles",
++      "Quads w/ Triangles",
+       "Better g-colors, worse textures",
+       {
+          { "disabled", NULL },
+@@ -790,7 +790,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_peops_fake_busy_state",
+-      "(GPU) Fake 'Gpu Busy' States",
++      "Fake 'Busy' States",
+       "Toggle busy flags after drawing",
+       {
+          { "disabled", NULL },
+@@ -805,8 +805,8 @@ struct retro_core_option_definition option_defs_us[] = {
+ #ifdef GPU_UNAI
+    {
+       "pcsx_rearmed_show_gpu_unai_settings",
+-      "Advance GPU UNAI/PCSX4All Settings",
+-      "Shows or hides advanced gpu settings. A core restart might be needed for settings to take effect. NOTE: Quick Menu must be toggled for this setting to take effect.",
++      "GPU UNAI Settings",
++      "Shows or hides advanced gpu settings. Menu must be toggled for this setting to take effect.",
+       {
+          { "disabled", NULL },
+          { "enabled",  NULL },
+@@ -816,7 +816,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_unai_blending",
+-      "(GPU) Enable Blending",
++      "Blending",
+       NULL,
+       {
+          { "disabled", NULL },
+@@ -827,7 +827,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_unai_lighting",
+-      "(GPU) Enable Lighting",
++      "Lighting",
+       NULL,
+       {
+          { "disabled", NULL },
+@@ -838,7 +838,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_unai_fast_lighting",
+-      "(GPU) Enable Fast Lighting",
++      "Fast Lighting",
+       NULL,
+       {
+          { "disabled", NULL },
+@@ -849,7 +849,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_unai_ilace_force",
+-      "(GPU) Enable Forced Interlace",
++      "Forced Interlace",
+       NULL,
+       {
+          { "disabled", NULL },
+@@ -860,7 +860,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_unai_pixel_skip",
+-      "(GPU) Enable Pixel Skip",
++      "Pixel Skip",
+       NULL,
+       {
+          { "disabled", NULL },
+@@ -871,21 +871,21 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gpu_unai_scale_hires",
+-      "(GPU) Enable Hi-Res Downscaling",
++      "Hi-Res Scaling",
+       "When enabled, will scale hi-res modes to 320x240, skipping unrendered pixels.",
+       {
+          { "disabled", NULL },
+          { "enabled",  NULL },
+          { NULL, NULL},
+       },
+-      "disabled",
++      "enabled",
+    },
+ #endif /* GPU UNAI Advanced Settings */
+ #ifdef THREAD_RENDERING
+    {
+       "pcsx_rearmed_gpu_thread_rendering",
+       "Threaded Rendering",
+-      "When enabled, runs GPU commands in a thread. Sync waits for drawing to finish before vsync. Async will not wait unless there's another frame behind it.",
++      "Runs GPU commands in a thread. Sync waits for drawing to finish before vsync. Async will not wait unless there's another frame behind it.",
+       {
+          { "disabled", NULL },
+          { "sync",  NULL },
+@@ -944,8 +944,8 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_pe2_fix",
+-      "Parasite Eve 2/Vandal Hearts 1/2 Fix",
+-      NULL,
++      "PE 2/VH 1/2 Fix",
++      "Fixes Parasite Eve 2 / Vandal Hearts 1 / 2.",
+       {
+          { "disabled", NULL },
+          { "enabled",  NULL },
+@@ -955,7 +955,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_inuyasha_fix",
+-      "InuYasha Sengoku Battle Fix",
++      "InuYasha Battle Fix",
+       NULL,
+       {
+          { "disabled", NULL },
+@@ -967,8 +967,8 @@ struct retro_core_option_definition option_defs_us[] = {
+ #ifndef _WIN32
+    {
+       "pcsx_rearmed_async_cd",
+-      "CD Access Method (Restart)",
+-      "Select method used to read data from content disk images. 'Synchronous' mimics original hardware. 'Asynchronous' can reduce stuttering on devices with slow storage. 'Precache' loads disk image into memory for faster access (CHD only).",
++      "CD Access (Restart)",
++      "Method used to read data from disk. 'Asynchronous' can reduce stuttering on devices with slow storage. 'Precache' loads disk image into memory (CHD only).",
+       {
+          { "sync",     "Synchronous" },
+          { "async",    "Asynchronous" },
+@@ -1003,7 +1003,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_spuirq",
+-      "SPU IRQ Always Enabled",
++      "SPU IRQ Always",
+       "Compatibility tweak, should be left to off in most cases.",
+       {
+          { "disabled", NULL },
+@@ -1016,7 +1016,7 @@ struct retro_core_option_definition option_defs_us[] = {
+ #ifdef NEW_DYNAREC
+    {
+       "pcsx_rearmed_nosmccheck",
+-      "(Speed Hack) Disable SMC Checks",
++      "Disable SMC Checks",
+       "Will cause crashes when loading, break memcards.",
+       {
+          { "disabled", NULL },
+@@ -1027,7 +1027,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_gteregsunneeded",
+-      "(Speed Hack) Assume GTE Regs Unneeded",
++      "Unneeded GTE Regs",
+       "May cause graphical glitches.",
+       {
+          { "disabled", NULL },
+@@ -1038,7 +1038,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    },
+    {
+       "pcsx_rearmed_nogteflags",
+-      "(Speed Hack) Disable GTE Flags",
++      "Disable GTE Flags",
+       "Will cause graphical glitches.",
+       {
+          { "disabled", NULL },

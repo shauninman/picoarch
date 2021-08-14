@@ -67,6 +67,11 @@ static void toggle_fast_forward(int force_off)
 			max_frameskip_was = options_get_value_index("gpsp_frameskip_interval");
 			options_set_value("gpsp_frameskip", "fixed_interval");
 			options_set_value("gpsp_frameskip_interval", "5");
+		} else if (!strcmp(core_name, "pcsx_rearmed")) {
+			frameskip_style_was = options_get_value_index("pcsx_rearmed_frameskip_type");
+			max_frameskip_was = options_get_value_index("pcsx_rearmed_frameskip_interval");
+			options_set_value("pcsx_rearmed_frameskip_type", "fixed_interval");
+			options_set_value("pcsx_rearmed_frameskip_interval", "5");
 		} else if (!strcmp(core_name, "snes9x2002")) {
 			frameskip_style_was = options_get_value_index("snes9x2002_frameskip");
 			max_frameskip_was = options_get_value_index("snes9x2002_frameskip_interval");
@@ -82,6 +87,9 @@ static void toggle_fast_forward(int force_off)
 		if (!strcmp(core_name, "gpsp")) {
 			options_set_value_index("gpsp_frameskip", frameskip_style_was);
 			options_set_value_index("gpsp_frameskip_interval", max_frameskip_was);
+		} else if (!strcmp(core_name, "pcsx_rearmed")) {
+			options_set_value_index("pcsx_rearmed_frameskip_type", frameskip_style_was);
+			options_set_value_index("pcsx_rearmed_frameskip_interval", max_frameskip_was);
 		} else if (!strcmp(core_name, "snes9x2002")) {
 			options_set_value_index("snes9x2002_frameskip", frameskip_style_was);
 			options_set_value_index("snes9x2002_frameskip_interval", max_frameskip_was);

@@ -51,6 +51,11 @@ static const char *blocked_options[] = {
 	"gambatte_rumble_level",
 	"gambatte_show_gb_link_settings",
 	"gpsp_save_method",
+	"pcsx_rearmed_show_other_input_settings",
+	"pcsx_rearmed_input_sensitivity",
+	"pcsx_rearmed_multitap",
+	"pcsx_rearmed_vibration",
+	"pcsx_rearmed_display_internal_fps",
 	NULL
 };
 
