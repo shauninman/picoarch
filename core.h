@@ -47,6 +47,10 @@ void state_file_name(char *name, size_t size, int slot);
 int state_read(void);
 int state_write(void);
 
+unsigned disc_get_count(void);
+unsigned disc_get_index(void);
+bool disc_switch_index(unsigned index);
+
 int core_load(const char *corefile);
 int core_load_content(const char *path);
 void core_unload(void);

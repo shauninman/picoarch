@@ -19,6 +19,7 @@ typedef enum
 	MA_MAIN_RESUME_GAME,
 	MA_MAIN_SAVE_STATE,
 	MA_MAIN_LOAD_STATE,
+	MA_MAIN_DISC_CTRL,
 	MA_MAIN_CORE_OPTS,
 	MA_MAIN_RESET_GAME,
 	MA_MAIN_CREDITS,
@@ -208,6 +209,30 @@ static int mh_rmcfg(int id, int keys)
 static void draw_src_bg(void) {
 	memcpy(g_menubg_ptr, g_menubg_src_ptr, g_menubg_src_h * g_menubg_src_pp * sizeof(uint16_t));
 	menu_darken_bg(g_menubg_ptr, g_menubg_src_ptr, g_menubg_src_h * g_menubg_src_pp, 0);
+}
+
+static int menu_loop_disc(int id, int keys)
+{
+	static int sel = 0;
+	menu_entry e_menu_disc_options[2] = {0};
+	unsigned disc = disc_get_index() + 1;
+	menu_entry *option = &e_menu_disc_options[0];
+
+	option->name = "Disc";
+	option->beh = MB_OPT_RANGE;
+	option->var = &disc;
+	option->min = 1;
+	option->max = disc_get_count();
+	option->enabled = 1;
+	option->need_to_save = 1;
+	option->selectable = 1;
+
+	me_loop(e_menu_disc_options, &sel);
+
+	if (disc_get_index() + 1 != disc)
+		disc_switch_index(disc - 1);
+
+	return 0;
 }
 
 static int menu_loop_core_options_page(int offset, int keys) {
@@ -415,10 +440,11 @@ static int main_menu_handler(int id, int keys)
 static menu_entry e_menu_main[] =
 {
 	mee_handler_id("Resume game",        MA_MAIN_RESUME_GAME, main_menu_handler),
-	mee_handler_id("Save State",         MA_MAIN_SAVE_STATE,  main_menu_handler),
-	mee_handler_id("Load State",         MA_MAIN_LOAD_STATE,  main_menu_handler),
+	mee_handler_id("Save state",         MA_MAIN_SAVE_STATE,  main_menu_handler),
+	mee_handler_id("Load state",         MA_MAIN_LOAD_STATE,  main_menu_handler),
+	mee_handler_id("Disc control",       MA_MAIN_DISC_CTRL,   menu_loop_disc),
 	mee_handler_id("Emulator options",   MA_MAIN_CORE_OPTS,   menu_loop_core_options),
-	mee_handler   ("Audio and Video",    menu_loop_video_options),
+	mee_handler   ("Audio and video",    menu_loop_video_options),
 	mee_handler   ("Controls",           menu_loop_keyconfig),
 	/* mee_handler_id("Cheats",             MA_MAIN_CHEATS,      main_menu_handler), */
 	mee_handler   ("Save config",        menu_loop_config_options),
@@ -467,6 +493,7 @@ void menu_end(void)
 void menu_loop(void)
 {
 	static int sel = 0;
+	bool needs_disc_ctrl = disc_get_count() > 1;
 	plat_video_menu_enter(1);
 
 	me_enable(e_menu_main, MA_MAIN_CORE_OPTS, core_options.visible_len > 0);
@@ -474,10 +501,15 @@ void menu_loop(void)
 	me_enable(e_menu_main, MA_MAIN_SAVE_STATE, state_allowed());
 	me_enable(e_menu_main, MA_MAIN_LOAD_STATE, state_allowed());
 
+	me_enable(e_menu_main, MA_MAIN_DISC_CTRL, needs_disc_ctrl);
+
 #ifdef MMENU
 	if (state_allowed()) {
 		me_enable(e_menu_main, MA_MAIN_SAVE_STATE, mmenu == NULL);
 		me_enable(e_menu_main, MA_MAIN_LOAD_STATE, mmenu == NULL);
+	}
+	if (needs_disc_ctrl) {
+		me_enable(e_menu_main, MA_MAIN_DISC_CTRL, mmenu == NULL);
 	}
 #endif
 	me_loop_d(e_menu_main, &sel, NULL, NULL);

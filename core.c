@@ -28,6 +28,7 @@ static char save_dir[MAX_PATH];
 static char system_dir[MAX_PATH];
 static char temp_rom[MAX_PATH];
 static struct retro_game_info game_info;
+static struct retro_disk_control_ext_callback disk_control_ext;
 
 static uint32_t buttons = 0;
 
@@ -217,6 +218,32 @@ error:
 	return ret;
 }
 
+unsigned disc_get_count(void) {
+	if (disk_control_ext.get_num_images)
+		return disk_control_ext.get_num_images();
+
+	return 0;
+}
+
+unsigned disc_get_index(void) {
+	if (disk_control_ext.get_image_index)
+		return disk_control_ext.get_image_index();
+
+	return 0;
+}
+
+bool disc_switch_index(unsigned index) {
+	bool ret = false;
+	if (!disk_control_ext.set_eject_state || !disk_control_ext.set_image_index)
+		return false;
+
+	disk_control_ext.set_eject_state(true);
+	ret = disk_control_ext.set_image_index(index);
+	disk_control_ext.set_eject_state(false);
+
+	return ret;
+}
+
 static void set_directories(void) {
 	const char *home = getenv("HOME");
 	char cwd[MAX_PATH];
@@ -274,6 +301,16 @@ static bool pa_environment(unsigned cmd, void *data) {
 		if (*format != RETRO_PIXEL_FORMAT_RGB565) {
 			/* 565 is only supported format */
 			return false;
+		}
+		break;
+	}
+	case RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE: { /* 13 */
+		const struct retro_disk_control_callback *var =
+			(const struct retro_disk_control_callback *)data;
+
+		if (var) {
+			memset(&disk_control_ext, 0, sizeof(struct retro_disk_control_ext_callback));
+			memcpy(&disk_control_ext, var, sizeof(struct retro_disk_control_callback));
 		}
 		break;
 	}
@@ -346,6 +383,21 @@ static bool pa_environment(unsigned cmd, void *data) {
 
 		if (display)
 			options_set_visible(display->key, display->visible);
+		break;
+	}
+	case RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION: { /* 57 */
+		unsigned *out =	(unsigned *)data;
+		if (out)
+			*out = 1;
+		break;
+	}
+	case RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE: { /* 58 */
+		const struct retro_disk_control_ext_callback *var =
+			(const struct retro_disk_control_ext_callback *)data;
+
+		if (var) {
+			memcpy(&disk_control_ext, var, sizeof(struct retro_disk_control_ext_callback));
+		}
 		break;
 	}
 	case RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK: { /* 62 */
