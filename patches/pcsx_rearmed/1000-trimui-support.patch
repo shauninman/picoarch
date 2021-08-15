@@ -48,10 +48,10 @@ index 1ecd359..432d700 100644
  MAIN_LDLIBS += $(LIBPTHREAD) $(LIBM) $(LIBDL) $(LIBZ)
  
 +ifeq ($(PROFILE), GENERATE)
-+	CFLAGS	+= -fprofile-generate=./profile/gpsp
++	CFLAGS	+= -fprofile-generate=./profile/pcsx_rearmed
 +	LDFLAGS	+= -lgcov
 +else ifeq ($(PROFILE), APPLY)
-+	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/gpsp -fbranch-probabilities
++	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/pcsx_rearmed -fbranch-probabilities
 +endif
 +
  # enable large file support if available
