@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index b293853..5704da3 100644
+index b293853..bc220bd 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -282,6 +282,20 @@ else ifeq ($(platform), gcw0)
@@ -36,7 +36,7 @@ index b293853..5704da3 100644
 +
 +ifeq ($(PROFILE), GENERATE)
 +	CFLAGS	+= -fprofile-generate=./profile/snes9x2005
-+	LDFLAGS	+= -lgcov
++	LIBS	+= -lgcov
 +else ifeq ($(PROFILE), APPLY)
 +	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/snes9x2005 -fbranch-probabilities
 +endif
