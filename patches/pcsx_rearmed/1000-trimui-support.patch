@@ -70,6 +70,37 @@ index f3e3c2b..8497459 100644
     cycle_multiplier = 200;
  #endif
     pl_rearmed_cbs.gpu_peops.iUseDither = 1;
+diff --git a/frontend/libretro_core_options.h b/frontend/libretro_core_options.h
+index a1b85d4..775ac58 100644
+--- a/frontend/libretro_core_options.h
++++ b/frontend/libretro_core_options.h
+@@ -516,7 +516,7 @@ struct retro_core_option_definition option_defs_us[] = {
+          { "enabled",  NULL },
+          { NULL, NULL },
+       },
+-#if defined HAVE_LIBNX || defined _3DS
++#if defined HAVE_LIBNX || defined _3DS || defined _TRIMUI
+ 	  "disabled",
+ #else
+       "enabled",
+@@ -541,7 +541,7 @@ struct retro_core_option_definition option_defs_us[] = {
+    {
+       "pcsx_rearmed_psxclock",
+       "PSX CPU Clock",
+-#if defined(HAVE_PRE_ARMV7) && !defined(_3DS)
++#if defined(HAVE_PRE_ARMV7) && !defined(_3DS) && !defined(_TRIMUI)
+       "Overclock or underclock the PSX clock. Default is 50",
+ #else
+       "Overclock or underclock the PSX clock. Default is 57",
+@@ -620,7 +620,7 @@ struct retro_core_option_definition option_defs_us[] = {
+          { "100", NULL },
+          { NULL, NULL },
+       },
+-#if defined(HAVE_PRE_ARMV7) && !defined(_3DS)
++#if defined(HAVE_PRE_ARMV7) && !defined(_3DS) && !defined(_TRIMUI)
+       "50",
+ #else
+       "57",
 diff --git a/frontend/main.c b/frontend/main.c
 index d3c7d40..7610146 100644
 --- a/frontend/main.c

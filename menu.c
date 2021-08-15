@@ -3,6 +3,7 @@
 #include "main.h"
 #include "menu.h"
 #include "options.h"
+#include "overrides.h"
 #include "plat.h"
 #include "scale.h"
 
@@ -47,94 +48,6 @@ me_bind_action me_ctrl_actions[] =
 	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
 	{ "L2 BUTTON ", 1 << RETRO_DEVICE_ID_JOYPAD_L2 },
 	{ "R2 BUTTON ", 1 << RETRO_DEVICE_ID_JOYPAD_R2 },
-	{ NULL,       0 }
-};
-
-me_bind_action gba_ctrl_actions[] =
-{
-	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
-	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
-	{ "LEFT     ",  1 << RETRO_DEVICE_ID_JOYPAD_LEFT },
-	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
-	{ "A BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
-	{ "B BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
-	{ "A TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
-	{ "B TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
-	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
-	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
-	{ "L BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
-	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
-	/* { "FAST FWD ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 }, */
-	{ NULL,       0 }
-};
-
-me_bind_action gambatte_ctrl_actions[] =
-{
-	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
-	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
-	{ "LEFT     ",  1 << RETRO_DEVICE_ID_JOYPAD_LEFT },
-	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
-	{ "A BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
-	{ "B BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
-	{ "A TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
-	{ "B TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
-	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
-	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
-	/* { "FAST FWD ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 }, */
-	{ NULL,       0 }
-};
-
-me_bind_action mame_ctrl_actions[] =
-{
-	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
-	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
-	{ "LEFT     ",  1 << RETRO_DEVICE_ID_JOYPAD_LEFT },
-	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
-	{ "BUTTON 1 ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
-	{ "BUTTON 2 ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
-	{ "BUTTON 3 ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
-	{ "BUTTON 4 ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
-	{ "BUTTON 5 ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
-	{ "BUTTON 6 ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
-	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
-	{ "COIN     ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
-	{ "OSD MENU ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 },
-	{ NULL,       0 }
-};
-
-me_bind_action pcsx_ctrl_actions[] =
-{
-	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
-	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
-	{ "LEFT     ",  1 << RETRO_DEVICE_ID_JOYPAD_LEFT },
-	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
-	{ "CIRCLE   ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
-	{ "CROSS    ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
-	{ "TRIANGLE ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
-	{ "SQUARE   ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
-	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
-	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
-	{ "L1 BUTTON",  1 << RETRO_DEVICE_ID_JOYPAD_L },
-	{ "R1 BUTTON",  1 << RETRO_DEVICE_ID_JOYPAD_R },
-	{ "L2 BUTTON",  1 << RETRO_DEVICE_ID_JOYPAD_L2 },
-	{ "R2 BUTTON",  1 << RETRO_DEVICE_ID_JOYPAD_R2 },
-	{ NULL,       0 }
-};
-
-me_bind_action snes_ctrl_actions[] =
-{
-	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
-	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
-	{ "LEFT     ",  1 << RETRO_DEVICE_ID_JOYPAD_LEFT },
-	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
-	{ "A BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
-	{ "B BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
-	{ "X BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
-	{ "Y BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
-	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
-	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
-	{ "L BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
-	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
 	{ NULL,       0 }
 };
 
@@ -359,27 +272,11 @@ static int menu_loop_video_options(int id, int keys)
 
 static int key_config_loop_wrap(int id, int keys)
 {
-	me_bind_action *actions = me_ctrl_actions;
-	size_t action_size = array_size(me_ctrl_actions);
+	const struct core_override *override = get_overrides();
+	me_bind_action *actions = CORE_OVERRIDE(override, actions, me_ctrl_actions);
+	size_t action_size = CORE_OVERRIDE(override, action_size, array_size(me_ctrl_actions));
 	me_bind_action *emu_actions = emuctrl_actions;
 	size_t emu_action_size = array_size(emuctrl_actions);
-
-	if (!strcmp(core_name, "gambatte")) {
-		actions = gambatte_ctrl_actions;
-		action_size = array_size(gambatte_ctrl_actions);
-	} else if (!strcmp(core_name, "gpsp")) {
-		actions = gba_ctrl_actions;
-		action_size = array_size(gba_ctrl_actions);
-	} else if (strstr(core_name, "mame")) {
-		actions = mame_ctrl_actions;
-		action_size = array_size(mame_ctrl_actions);
-	} else if (!strcmp(core_name, "pcsx_rearmed")) {
-		actions = pcsx_ctrl_actions;
-		action_size = array_size(pcsx_ctrl_actions);
-	} else if (strstr(core_name, "snes")) {
-		actions = snes_ctrl_actions;
-		action_size = array_size(snes_ctrl_actions);
-	}
 
 	switch (id) {
 	case MA_CTRL_PLAYER1:

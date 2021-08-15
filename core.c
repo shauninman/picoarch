@@ -10,6 +10,7 @@
 #include "libpicofe/input.h"
 #include "main.h"
 #include "options.h"
+#include "overrides.h"
 #include "plat.h"
 #include "unzip.h"
 
@@ -244,7 +245,7 @@ bool disc_switch_index(unsigned index) {
 	return ret;
 }
 
-static void set_directories(void) {
+static void set_directories(const char *core_name) {
 	const char *home = getenv("HOME");
 	char cwd[MAX_PATH];
 	char *dst = save_dir;
@@ -494,7 +495,8 @@ int core_load(const char *corefile) {
 		return -1;
 	}
 
-	set_directories();
+	set_directories(core_name);
+	set_overrides(core_name);
 
 	current_core.retro_init = dlsym(current_core.handle, "retro_init");
 	current_core.retro_deinit = dlsym(current_core.handle, "retro_deinit");

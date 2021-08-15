@@ -3,6 +3,7 @@
 #include <string.h>
 #include "main.h"
 #include "options.h"
+#include "overrides.h"
 
 int show_fps;
 int limit_frames;
@@ -47,67 +48,40 @@ static void wrap(char *string, size_t max_len, size_t max_lines) {
 	return;
 }
 
-static const char *blocked_options[] = {
-	"gambatte_rumble_level",
-	"gambatte_show_gb_link_settings",
-	"gpsp_save_method",
-	"pcsx_rearmed_show_other_input_settings",
-	"pcsx_rearmed_input_sensitivity",
-	"pcsx_rearmed_multitap",
-	"pcsx_rearmed_vibration",
-	"pcsx_rearmed_display_internal_fps",
-	NULL
-};
-
-static bool option_blocked(const char *key) {
-	for (int i = 0; blocked_options[i]; i++) {
-		if (!strcmp(blocked_options[i], key))
-			return true;
-	}
-	return false;
-}
-
-static int options_default_override(const char *key) {
-	if (!strcmp(key, "snes9x2002_frameskip")) {
-		return 1;
-	} else if (!strcmp(key, "snes9x2002_frameskip_interval")) {
-		return 3;
-	} else if (!strcmp(key, "mame2000-frameskip")) {
-		return 1;
-	} else if (!strcmp(key, "mame2000-frameskip_interval")) {
-		return 1;
-	} else if (!strcmp(key, "mame2000-skip_disclaimer")) {
-		return 1;
-	} else if (!strcmp(key, "mame2000-sample_rate")) {
-		return 1;
-	}
-
-	return -1;
-}
-
-
-static int options_default_index(const char *key, const struct retro_core_option_definition *def) {
+static int options_default_index(const struct core_option_entry* entry, const char *default_value) {
 	const char *value;
-	int default_override = options_default_override(key);
-	if (default_override >= 0)
-		return default_override;
-
-	if (!def)
+	if (!default_value)
 		return 0;
 
-	for(int i = 0; (value = def->values[i].value); i++) {
-		if (!strcmp(value, def->default_value)) {
+	for(int i = 0; (value = entry->values[i]); i++) {
+		if (!strcmp(value, default_value)) {
 			return i;
 		}
 	}
 	return 0;
 }
 
+static const struct core_override_option *get_option_override(const char *key) {
+	const struct core_override *override = NULL;
+	const struct core_override_option *option = NULL;
+	const char *option_key = NULL;
+
+	if (!(override = get_overrides()))
+		return NULL;
+
+	for (int i = 0; (option_key = override->options[i].key); i++) {
+		if (!strcmp(key, option_key))
+			return &override->options[i];
+	}
+
+	return option;
+}
+
 void options_init(const struct retro_core_option_definition *defs) {
 	size_t i;
 
 	for (i = 0; defs[i].key; i++)
-		;
+ 		;
 
 	core_options.visible_len = core_options.len = i;
 
@@ -122,6 +96,9 @@ void options_init(const struct retro_core_option_definition *defs) {
 		int j, len;
 		const struct retro_core_option_definition *def = &defs[i];
 		struct core_option_entry *entry = &core_options.entries[i];
+		const struct core_override_option *override = get_option_override(def->key);
+		const char *desc = CORE_OVERRIDE(override, desc, def->desc);
+		const char *info = CORE_OVERRIDE(override, info, def->info);
 
 		len = strlen(def->key) + 1;
 		entry->key = (char *)calloc(len, sizeof(char));
@@ -132,15 +109,12 @@ void options_init(const struct retro_core_option_definition *defs) {
 		}
 		strncpy(entry->key, def->key, len);
 
-		entry->value = options_default_index(def->key, def);
-		entry->prev_value = entry->value;
-		entry->default_value = entry->value;
-		entry->blocked = option_blocked(def->key);
+		entry->blocked = CORE_OVERRIDE(override, blocked, false);
 		if (entry->blocked)
 			core_options.visible_len--;
 		entry->visible = true;
 
-		len = strlen(def->desc) + 1;
+		len = strlen(desc) + 1;
 		entry->desc = (char *)calloc(len, sizeof(char));
 		if (!entry->desc) {
 			PA_ERROR("Error allocating option entries\n");
@@ -148,18 +122,18 @@ void options_init(const struct retro_core_option_definition *defs) {
 			return;
 		}
 
-		strncpy(entry->desc, def->desc, len);
+		strncpy(entry->desc, desc, len);
 		truncate(entry->desc, MAX_DESC_LEN);
 
-		if (def->info) {
-			len = strlen(def->info) + 1;
+		if (info) {
+			len = strlen(info) + 1;
 			entry->info = (char *)calloc(len, sizeof(char));
 			if (!entry->info) {
 				PA_ERROR("Error allocating description string\n");
 				options_free();
 				return;
 			}
-			strncpy(entry->info, def->info, len);
+			strncpy(entry->info, info, len);
 			wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
 		}
 
@@ -182,9 +156,9 @@ void options_init(const struct retro_core_option_definition *defs) {
 		}
 
 		for (j = 0; def->values[j].value; j++) {
-			const char *value = def->values[j].value;
+			const char *value = CORE_OVERRIDE(override, options[j].value, def->values[j].value);
 			size_t value_len = strlen(value);
-			const char *label = def->values[j].label;
+			const char *label = CORE_OVERRIDE(override, options[j].label, def->values[j].label);
 			size_t label_len = 0;
 
 			entry->values[j] = (char *)calloc(value_len + 1, sizeof(char));
@@ -211,6 +185,13 @@ void options_init(const struct retro_core_option_definition *defs) {
 				entry->labels[j] = entry->values[j];
 			}
 		}
+
+		entry->value = options_default_index(
+			entry,
+			CORE_OVERRIDE(override, default_value, def->default_value));
+
+		entry->prev_value = entry->value;
+		entry->default_value = entry->value;
 	}
 }
 
@@ -234,6 +215,9 @@ void options_init_variables(const struct retro_variable *vars) {
 		int len;
 		struct core_option_entry *entry = &core_options.entries[i];
 		const struct retro_variable *var = &vars[i];
+		const struct core_override_option *override = get_option_override(var->key);
+		const char *info = CORE_OVERRIDE(override, info, NULL);
+		const char *retro_var_value = CORE_OVERRIDE(override, retro_var_value, var->value);
 		char *p;
 		char *opt_ptr;
 		char *value;
@@ -247,15 +231,24 @@ void options_init_variables(const struct retro_variable *vars) {
 		}
 		strncpy(entry->key, var->key, len);
 
-		entry->value = options_default_index(var->key, NULL);
-		entry->prev_value = entry->value;
-		entry->default_value = entry->value;
-		entry->blocked = option_blocked(var->key);
+		if (info) {
+			len = strlen(info) + 1;
+			entry->info = (char *)calloc(len, sizeof(char));
+			if (!entry->info) {
+				PA_ERROR("Error allocating description string\n");
+				options_free();
+				return;
+			}
+			strncpy(entry->info, info, len);
+			wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
+		}
+
+		entry->blocked = CORE_OVERRIDE(override, blocked, false);
 		if (entry->blocked)
 			core_options.visible_len--;
 
 		entry->visible = true;
-		len = strlen(var->value) + 1;
+		len = strlen(retro_var_value) + 1;
 		value = (char *)calloc(len, sizeof(char));
 		if (!value) {
 			PA_ERROR("Error allocating option entries\n");
@@ -265,7 +258,7 @@ void options_init_variables(const struct retro_variable *vars) {
 
 		entry->retro_var_value = value;
 
-		strncpy(value, var->value, len);
+		strncpy(value, retro_var_value, len);
 
 		p = strchr(value, ';');
 		if (p && *(p + 1) == ' ') {
@@ -307,6 +300,10 @@ void options_init_variables(const struct retro_variable *vars) {
 		}
 		entry->values[j] = opt_ptr;
 		entry->labels[j] = opt_ptr;
+
+		entry->value = options_default_index(entry, CORE_OVERRIDE(override, default_value, NULL));
+		entry->prev_value = entry->value;
+		entry->default_value = entry->value;
 	}
 }
 

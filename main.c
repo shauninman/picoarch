@@ -9,6 +9,7 @@
 #include "libpicofe/input.h"
 #include "main.h"
 #include "menu.h"
+#include "overrides.h"
 #include "plat.h"
 
 #ifdef MMENU
@@ -55,6 +56,7 @@ static void toggle_fast_forward(int force_off)
 	static int limit_frames_was;
 	static int enable_audio_was;
 	static int fast_forward;
+	const struct core_override *override = get_overrides();
 
 	if (force_off && !fast_forward)
 		return;
@@ -62,21 +64,18 @@ static void toggle_fast_forward(int force_off)
 	fast_forward = !fast_forward;
 
 	if (fast_forward) {
-		if (!strcmp(core_name, "gpsp")) {
-			frameskip_style_was = options_get_value_index("gpsp_frameskip");
-			max_frameskip_was = options_get_value_index("gpsp_frameskip_interval");
-			options_set_value("gpsp_frameskip", "fixed_interval");
-			options_set_value("gpsp_frameskip_interval", "5");
-		} else if (!strcmp(core_name, "pcsx_rearmed")) {
-			frameskip_style_was = options_get_value_index("pcsx_rearmed_frameskip_type");
-			max_frameskip_was = options_get_value_index("pcsx_rearmed_frameskip_interval");
-			options_set_value("pcsx_rearmed_frameskip_type", "fixed_interval");
-			options_set_value("pcsx_rearmed_frameskip_interval", "5");
-		} else if (!strcmp(core_name, "snes9x2002")) {
-			frameskip_style_was = options_get_value_index("snes9x2002_frameskip");
-			max_frameskip_was = options_get_value_index("snes9x2002_frameskip_interval");
-			options_set_value("snes9x2002_frameskip", "auto");
-			options_set_value("snes9x2002_frameskip_interval", "5");
+		if (override && override->fast_forward) {
+			const char *type_key = override->fast_forward->type_key;
+			const char *interval_key = override->fast_forward->interval_key;
+
+			frameskip_style_was = options_get_value_index(type_key);
+			max_frameskip_was = options_get_value_index(interval_key);
+			options_set_value(
+				type_key,
+				CORE_OVERRIDE(override->fast_forward, type_value, "fixed_interval"));
+			options_set_value(
+				interval_key,
+				CORE_OVERRIDE(override->fast_forward, interval_value, "5"));
 		}
 
 		limit_frames_was = limit_frames;
@@ -84,15 +83,12 @@ static void toggle_fast_forward(int force_off)
 		limit_frames = 0;
 		enable_audio = 0;
 	} else {
-		if (!strcmp(core_name, "gpsp")) {
-			options_set_value_index("gpsp_frameskip", frameskip_style_was);
-			options_set_value_index("gpsp_frameskip_interval", max_frameskip_was);
-		} else if (!strcmp(core_name, "pcsx_rearmed")) {
-			options_set_value_index("pcsx_rearmed_frameskip_type", frameskip_style_was);
-			options_set_value_index("pcsx_rearmed_frameskip_interval", max_frameskip_was);
-		} else if (!strcmp(core_name, "snes9x2002")) {
-			options_set_value_index("snes9x2002_frameskip", frameskip_style_was);
-			options_set_value_index("snes9x2002_frameskip_interval", max_frameskip_was);
+		if (override && override->fast_forward) {
+			const char *type_key = override->fast_forward->type_key;
+			const char *interval_key = override->fast_forward->interval_key;
+
+			options_set_value_index(type_key, frameskip_style_was);
+			options_set_value_index(interval_key, max_frameskip_was);
 		}
 
 		limit_frames = limit_frames_was;
