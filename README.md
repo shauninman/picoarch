@@ -97,24 +97,21 @@ To apply the generated profiles:
 make PROFILE=APPLY
 ```
 
-PGO can lead to major speed improvements with some emulators.
+PGO can give noticeable speed improvements with some emulators.
 
 ## Notes on cores
 
 In order to make development and testing easier, the Makefile will pull and build supported cores.
 
-A few common changes will need to be made when you add cores, since TrimUI is not a supported libretro platform. picoarch has a `patches/` directory containing needed changes to make cores work well in picoarch. Patches are applied in order after checking out the repository.
+You will have to make changes when adding a core, since TrimUI is not a supported libretro platform. picoarch has a `patches/` directory containing needed changes to make cores work well in picoarch. Patches are applied in order after checking out the repository. 
 
-Common changes include:
+At a minimum, you need to add a `platform=trimui` section to the core Makefile.
 
-- Adding a `platform=trimui` target to the core Makefile
-- Modifying `libretro_core_options.h` to shorten text and change defaults for small screen / low power devices
-- Hiding unnecessary core options and forcing different defaults
+Some features and fixes are also included in `patches` -- it would be best to try to upstream them.
 
-picoarch also keeps the running core name in a global variable. This can be used for:
+picoarch keeps the running core name in a global variable. This is used to override defaults and core settings to work more nicely within picoarch. Overrides based on core name are kept in `overrides/` and referenced in `overrides.c`. These are used to:
 
-- Renaming buttons to match the core's system
-- Adding frameskip to make fast-forward faster
-- Displaying extra options or hiding unnecessary options
-
-Some features and fixes are also included in `patches` -- it would be best for them to be upstreamed eventually.
+- Shorten core option text and change defaults for small screen / low power devices
+- Rename buttons to match the core's system
+- Reference frameskip core options to make fast-forward faster
+- Display extra options or hide unnecessary options
