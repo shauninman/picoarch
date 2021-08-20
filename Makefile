@@ -81,10 +81,10 @@ print-%:
 all: $(BIN) cores
 
 libpicofe/.patched:
-	cd libpicofe && patch -p1 < ../patches/libpicofe/0001-key-combos.patch && touch .patched
+	cd libpicofe && git apply -p1 < ../patches/libpicofe/0001-key-combos.patch && touch .patched
 
 clean-libpicofe:
-	test ! -f libpicofe/.patched || (cd libpicofe && patch -p1 -R < ../patches/libpicofe/0001-key-combos.patch && rm .patched)
+	test ! -f libpicofe/.patched || (cd libpicofe && git apply -p1 -R < ../patches/libpicofe/0001-key-combos.patch && rm .patched)
 
 plat_trimui.o: plat_sdl.c
 plat_linux.o: plat_sdl.c
@@ -103,7 +103,7 @@ $1_MAKE = make $(and $($1_MAKEFILE),-f $($1_MAKEFILE)) platform=$(platform) $(an
 $(1):
 	git clone $(if $($1_REVISION),,--depth 1) $$($(1)_REPO) $(1)
 	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
-	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), patch -p1 < ../$(patch) &&) true)
+	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), git apply -p1 < ../$(patch) &&) true)
 
 $(1)_libretro.so: $(1)
 	cd $$($1_BUILD_PATH) && $$($1_MAKE) $(PROCS)
