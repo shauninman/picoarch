@@ -427,9 +427,6 @@ void menu_loop(void)
 		me_enable(e_menu_main, MA_MAIN_SAVE_STATE, mmenu == NULL);
 		me_enable(e_menu_main, MA_MAIN_LOAD_STATE, mmenu == NULL);
 	}
-	if (needs_disc_ctrl) {
-		me_enable(e_menu_main, MA_MAIN_DISC_CTRL, mmenu == NULL);
-	}
 #endif
 	me_loop_d(e_menu_main, &sel, NULL, NULL);
 

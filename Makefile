@@ -158,7 +158,7 @@ mame2003_plus_PAK_NAME = Arcade (MAME 2003-plus)
 
 pcsx_rearmed_ROM_DIR = PS
 pcsx_rearmed_TYPES = bin,cue,img,mdf,pbp,toc,cbn,m3u,chd
-pcsx_rearmed_PAK_NAME = Sony PlayStation
+pcsx_rearmed_PAK_NAME = PlayStation
 define pcsx_rearmed_PAK_EXTRA
 
 needs-swap

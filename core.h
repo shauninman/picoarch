@@ -50,6 +50,7 @@ int state_write(void);
 unsigned disc_get_count(void);
 unsigned disc_get_index(void);
 bool disc_switch_index(unsigned index);
+bool disc_replace_index(unsigned index, const char *content_path);
 
 int core_load(const char *corefile);
 int core_load_content(const char *path);

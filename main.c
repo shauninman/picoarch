@@ -347,19 +347,20 @@ void handle_emu_action(emu_action action)
 			ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
 			SDL_Surface *screen = SDL_GetVideoSurface();
 			MenuReturnStatus status = ShowMenu(content_path, state_allowed() ? save_template_path : NULL, screen, kMenuEventKeyDown);
+			char disc_path[256];
+			ChangeDisc_t ChangeDisc = (ChangeDisc_t)dlsym(mmenu, "ChangeDisc");
 
-			if (status==kStatusExitGame) {
+			if (status == kStatusExitGame) {
 				should_quit = 1;
 				plat_video_menu_leave();
-			}
-			else if (status==kStatusOpenMenu) {
+			} else if (status == kStatusChangeDisc && ChangeDisc(disc_path)) {
+				disc_replace_index(0, disc_path);
+			} else if (status == kStatusOpenMenu) {
 				menu_loop();
-			}
-			else if (status>=kStatusLoadSlot) {
+			} else if (status >= kStatusLoadSlot) {
 				state_slot = status - kStatusLoadSlot;
 				state_read();
-			}
-			else if (status>=kStatusSaveSlot) {
+			} else if (status >= kStatusSaveSlot) {
 				state_slot = status - kStatusSaveSlot;
 				state_write();
 			}

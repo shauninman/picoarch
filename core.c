@@ -28,10 +28,97 @@ static char config_dir[MAX_PATH];
 static char save_dir[MAX_PATH];
 static char system_dir[MAX_PATH];
 static char temp_rom[MAX_PATH];
-static struct retro_game_info game_info;
 static struct retro_disk_control_ext_callback disk_control_ext;
 
 static uint32_t buttons = 0;
+
+#define MAX_EXTENSIONS 24
+
+static void core_handle_zip(const char *path, struct retro_system_info *info, struct retro_game_info *game_info, FILE** file) {
+	const char *extensions[MAX_EXTENSIONS] = {0};
+	char *extensionstr = strdup(info->valid_extensions);
+	char *ext = NULL;
+	char *saveptr = NULL;
+	int index = 0;
+	bool haszip = false;
+	FILE *dest = NULL;
+
+	if (info->valid_extensions && has_suffix_i(path, ".zip")) {
+		while((ext = strtok_r(index == 0 ? extensionstr : NULL, "|", &saveptr))) {
+			if (!strcmp(ext, "zip")) {
+				haszip = true;
+				break;
+			}
+			extensions[index++] = ext;
+			if (index > MAX_EXTENSIONS - 1) break;
+		}
+
+		if (!haszip) {
+			if (!unzip_tmp(*file, extensions, temp_rom, MAX_PATH)) {
+				game_info->path = temp_rom;
+				dest = fopen(temp_rom, "r");
+				if (dest) {
+					fclose(*file);
+					*file = dest;
+				}
+			}
+		}
+	}
+	free(extensionstr);
+}
+
+static int core_load_game_info(const char *path, struct retro_game_info *game_info) {
+	struct retro_system_info info = {0};
+	FILE *file = fopen(path, "rb");
+	int ret = -1;
+
+	if (!file) {
+		PA_ERROR("Couldn't load content: %s\n", strerror(errno));
+		goto finish;
+	}
+
+	PA_INFO("Loading %s\n", path);
+	game_info->path = path;
+
+	current_core.retro_get_system_info(&info);
+
+	core_handle_zip(path, &info, game_info, &file);
+
+	fseek(file, 0, SEEK_END);
+	game_info->size = ftell(file);
+	rewind(file);
+
+	if (!info.need_fullpath) {
+		void *game_data = malloc(game_info->size);
+
+		if (!game_data) {
+			PA_ERROR("Couldn't allocate memory for content\n");
+			goto finish;
+		}
+
+		if (fread(game_data, 1, game_info->size, file) != game_info->size) {
+			PA_ERROR("Couldn't read file: %s\n", strerror(errno));
+			goto finish;
+		}
+
+		game_info->data = game_data;
+	}
+
+	ret = 0;
+finish:
+	if (file)
+		fclose(file);
+
+	return ret;
+}
+
+static void core_free_game_info(struct retro_game_info *game_info) {
+	if (game_info->data) {
+		free((void *)game_info->data);
+		game_info->data = NULL;
+		game_info->size = 0;
+	}
+}
 
 static void gamepak_related_name(char *buf, size_t len, const char *new_extension)
 {
@@ -245,12 +332,30 @@ bool disc_switch_index(unsigned index) {
 	return ret;
 }
 
+bool disc_replace_index(unsigned index, const char *content_path) {
+	bool ret = false;
+	struct retro_game_info info = {0};
+	if (!disk_control_ext.replace_image_index)
+		return false;
+
+	if (core_load_game_info(content_path, &info)) {
+		goto finish;
+	}
+
+	ret = disk_control_ext.replace_image_index(index, &info);
+
+finish:
+	core_free_game_info(&info);
+	return ret;
+}
+
 static void set_directories(const char *core_name) {
 	const char *home = getenv("HOME");
-	char cwd[MAX_PATH];
 	char *dst = save_dir;
 	int len = MAX_PATH;
-
+#ifndef MINUI
+	char cwd[MAX_PATH];
+#endif
 	if (home != NULL) {
 		snprintf(dst, len, "%s/.picoarch-%s/", home, core_name);
 		mkdir(dst, 0755);
@@ -537,79 +642,13 @@ int core_load(const char *corefile) {
 	return 0;
 }
 
-#define MAX_EXTENSIONS 24
-
-static void core_handle_zip(const char *path, struct retro_system_info *info, struct retro_game_info *game_info, FILE** file) {
-	const char *extensions[MAX_EXTENSIONS] = {0};
-	char *extensionstr = strdup(info->valid_extensions);
-	char *ext = NULL;
-	char *saveptr = NULL;
-	int index = 0;
-	bool haszip = false;
-	FILE *dest = NULL;
-
-	if (info->valid_extensions && has_suffix_i(path, ".zip")) {
-		while((ext = strtok_r(index == 0 ? extensionstr : NULL, "|", &saveptr))) {
-			if (!strcmp(ext, "zip")) {
-				haszip = true;
-				break;
-			}
-			extensions[index++] = ext;
-			if (index > MAX_EXTENSIONS - 1) break;
-		}
-
-		if (!haszip) {
-			if (!unzip_tmp(*file, extensions, temp_rom, MAX_PATH)) {
-				game_info->path = temp_rom;
-				dest = fopen(temp_rom, "r");
-				if (dest) {
-					fclose(*file);
-					*file = dest;
-				}
-			}
-		}
-	}
-	free(extensionstr);
-}
-
 int core_load_content(const char *path) {
-	struct retro_system_info info = {0};
+	struct retro_game_info game_info = {0};
 	struct retro_system_av_info av_info = {0};
-	FILE *file = fopen(path, "rb");
 	int ret = -1;
 
-	if (!file) {
-		PA_ERROR("Couldn't load content: %s\n", strerror(errno));
+	if (core_load_game_info(path, &game_info)) {
 		goto finish;
-	}
-
-	memset(&game_info, 0, sizeof(struct retro_game_info));
-
-	PA_INFO("Loading %s\n", path);
-	game_info.path = path;
-
-	current_core.retro_get_system_info(&info);
-
-	core_handle_zip(path, &info, &game_info, &file);
-
-	fseek(file, 0, SEEK_END);
-	game_info.size = ftell(file);
-	rewind(file);
-
-	if (!info.need_fullpath) {
-		void *game_data = malloc(game_info.size);
-
-		if (!game_data) {
-			PA_ERROR("Couldn't allocate memory for content\n");
-			goto finish;
-		}
-
-		if (fread(game_data, 1, game_info.size, file) != game_info.size) {
-			PA_ERROR("Couldn't read file: %s\n", strerror(errno));
-			goto finish;
-		}
-
-		game_info.data = game_data;
 	}
 
 	if (!current_core.retro_load_game(&game_info)) {
@@ -636,9 +675,7 @@ int core_load_content(const char *path) {
 
 	ret = 0;
 finish:
-	if (file)
-		fclose(file);
-
+	core_free_game_info(&game_info);
 	return ret;
 }
 
@@ -648,11 +685,6 @@ void core_unload(void) {
 	if (current_core.initialized) {
 		current_core.retro_deinit();
 		current_core.initialized = false;
-	}
-
-	if (game_info.data) {
-		free((void *)game_info.data);
-		game_info.data = NULL;
 	}
 
 	if (temp_rom[0]) {
