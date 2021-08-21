@@ -381,7 +381,7 @@ void handle_emu_action(emu_action action)
 	case EACTION_TOGGLE_FPS:
 		show_fps = !show_fps;
 		/* Force the hud to clear */
-		plat_video_set_msg(" ");
+		plat_video_set_msg(NULL, 0, 0);
 		break;
 	case EACTION_SAVE_STATE:
 		state_write();
@@ -432,6 +432,13 @@ void pa_log(enum retro_log_level level, const char *fmt, ...) {
 	}
 }
 
+static void show_startup_message(void) {
+	const struct core_override *override = get_overrides();
+	if (override && override->startup_msg) {
+		plat_video_set_msg(override->startup_msg->msg, 2, override->startup_msg->msec);
+	}
+}
+
 void pa_track_render(void) {
 	renders++;
 }
@@ -454,12 +461,13 @@ static void count_fps(void)
 				vsyncs = 0;
 				renders = 0;
 				nextsec = ticks + 1000;
+
+				snprintf(msg, HUD_LEN, "FPS: %.1f (%.0f)", rendersps, vsyncsps);
+				plat_video_set_msg(msg, 1, 1100);
 			}
 		}
 		vsyncs++;
 
-		snprintf(msg, HUD_LEN, "FPS: %.1f (%.0f)", rendersps, vsyncsps);
-		plat_video_set_msg(msg);
 	}
 }
 
@@ -534,6 +542,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 
+	show_startup_message();
 	do {
 		count_fps();
 		adjust_audio();

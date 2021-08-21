@@ -21,9 +21,15 @@ struct core_override_fast_forward {
 	const char *interval_value;
 };
 
+struct core_override_startup_msg {
+	const char *msg;
+	const unsigned msec;
+};
+
 struct core_override {
 	const char *core_name;
 	const struct core_override_fast_forward *fast_forward;
+	const struct core_override_startup_msg *startup_msg;
 	me_bind_action* actions;
 	const size_t action_size;
 	const struct core_override_option* options;

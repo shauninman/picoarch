@@ -4,6 +4,7 @@
 #include "main.h"
 #include "options.h"
 #include "overrides.h"
+#include "util.h"
 
 int show_fps;
 int limit_frames;
@@ -17,36 +18,6 @@ struct core_options core_options;
 #define MAX_DESC_LEN 20
 #define MAX_LINE_LEN 52
 #define MAX_LINES 3
-
-static void truncate(char *string, size_t max_len) {
-	size_t len = strlen(string) + 1;
-	if (len <= max_len) return;
-
-	strncpy(&string[max_len - 4], "...\0", 4);
-}
-
-static void wrap(char *string, size_t max_len, size_t max_lines) {
-	char *line = string;
-
-	for (size_t i = 1; i < max_lines; i++) {
-		char *p = line;
-		char *prev;
-		do {
-			prev = p;
-			p = strchr(prev+1, ' ');
-		} while (p && p - line < (int)max_len);
-
-		if (!p && strlen(line) < max_len) break;
-
-		if (prev && prev != line) {
-			line = prev + 1;
-			*prev = '\n';
-		}
-	}
-	truncate(line, max_len);
-
-	return;
-}
 
 static int options_default_index(const struct core_option_entry* entry, const char *default_value) {
 	const char *value;
@@ -123,7 +94,7 @@ void options_init(const struct retro_core_option_definition *defs) {
 		}
 
 		strncpy(entry->desc, desc, len);
-		truncate(entry->desc, MAX_DESC_LEN);
+		string_truncate(entry->desc, MAX_DESC_LEN);
 
 		if (info) {
 			len = strlen(info) + 1;
@@ -134,7 +105,7 @@ void options_init(const struct retro_core_option_definition *defs) {
 				return;
 			}
 			strncpy(entry->info, info, len);
-			wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
+			string_wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
 		}
 
 		for (j = 0; def->values[j].value; j++)
@@ -240,7 +211,7 @@ void options_init_variables(const struct retro_variable *vars) {
 				return;
 			}
 			strncpy(entry->info, info, len);
-			wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
+			string_wrap(entry->info, MAX_LINE_LEN, MAX_LINES);
 		}
 
 		entry->blocked = CORE_OVERRIDE(override, blocked, false);
@@ -264,7 +235,7 @@ void options_init_variables(const struct retro_variable *vars) {
 		if (p && *(p + 1) == ' ') {
 			*p = '\0';
 			entry->desc = value;
-			truncate(entry->desc, MAX_DESC_LEN);
+			string_truncate(entry->desc, MAX_DESC_LEN);
 			p++;
 			p++;
 		}

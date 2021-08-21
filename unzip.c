@@ -1,7 +1,10 @@
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
 #include "unzip.h"
+#include "util.h"
 #include "zlib.h"
 
 #define HEADER_SIZE 30

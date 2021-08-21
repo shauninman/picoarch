@@ -1,4 +1,3 @@
-#include "main.h"
 #include "overrides.h"
 #include "overrides/gambatte.h"
 #include "overrides/gpsp.h"
@@ -6,6 +5,7 @@
 #include "overrides/pcsx_rearmed.h"
 #include "overrides/snes9x2002.h"
 #include "overrides/snes9x2005.h"
+#include "util.h"
 
 static const struct core_override overrides[] = {
 	gambatte_overrides,

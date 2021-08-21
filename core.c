@@ -13,6 +13,7 @@
 #include "overrides.h"
 #include "plat.h"
 #include "unzip.h"
+#include "util.h"
 
 #define PATH_SEPARATOR_CHAR '/'
 
@@ -390,9 +391,11 @@ static bool pa_environment(unsigned cmd, void *data) {
 		break;
 	}
 	case RETRO_ENVIRONMENT_SET_MESSAGE: { /* 6 */
-		/* Just warn for now. TODO: Display on the screen */
 		const struct retro_message *message = (const struct retro_message*)data;
-		PA_WARN(message->msg);
+		if (message) {
+			PA_INFO("%s\n", message->msg);
+		}
+
 		break;
 	}
 	case RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY: { /* 9 */

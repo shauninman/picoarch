@@ -1,9 +1,10 @@
 #include <SDL/SDL.h>
-#include "main.h"
 #include "libretro.h"
 #include "libpicofe/plat.h"
 #include "libpicofe/input.h"
 #include "libpicofe/in_sdl.h"
+#include "main.h"
+#include "util.h"
 
 #define SAMPLE_RATE 48000
 

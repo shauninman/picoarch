@@ -8,7 +8,7 @@ struct audio_frame {
 	int16_t right;
 };
 
-#define HUD_LEN 39
+#define HUD_LEN 41
 
 int  plat_init(void);
 void plat_finish(void);
@@ -19,7 +19,7 @@ int plat_dump_screen(const char *filename);
 int plat_load_screen(const char *filename, void *buf, size_t buf_size, int *w, int *h, int *bpp);
 
 void plat_video_open(void);
-void plat_video_set_msg(const char *new_msg);
+void plat_video_set_msg(const char *new_msg, unsigned priority, unsigned msec);
 void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch);
 void plat_video_flip(void);
 void plat_video_close(void);

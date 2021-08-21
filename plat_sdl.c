@@ -5,6 +5,7 @@
 #include "menu.h"
 #include "plat.h"
 #include "scale.h"
+#include "util.h"
 
 static SDL_Surface* screen;
 
@@ -22,6 +23,21 @@ struct audio_state {
 struct audio_state audio;
 
 static char msg[HUD_LEN];
+static unsigned msg_priority = 0;
+static unsigned msg_expire = 0;
+
+static void video_expire_msg(void)
+{
+	msg[0] = '\0';
+	msg_priority = 0;
+	msg_expire = 0;
+}
+
+static void video_update_msg(void)
+{
+	if (msg[0] && msg_expire < plat_get_ticks_ms())
+		video_expire_msg();
+}
 
 static void video_clear_msg(uint16_t *dst, uint32_t h, uint32_t pitch)
 {
@@ -169,29 +185,42 @@ void plat_video_open(void)
 {
 }
 
-void plat_video_set_msg(const char *new_msg)
+void plat_video_set_msg(const char *new_msg, unsigned priority, unsigned msec)
 {
-	snprintf(msg, HUD_LEN, "%s", new_msg);
+	if (!new_msg) {
+		video_expire_msg();
+	} else if (priority >= msg_priority) {
+		snprintf(msg, HUD_LEN, "%s", new_msg);
+		string_truncate(msg, HUD_LEN - 1);
+		msg_priority = priority;
+		msg_expire = plat_get_ticks_ms() + msec;
+	}
 }
 
 void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
+	static int had_msg = 0;
 	SDL_LockSurface(screen);
 
-	if (msg[0])
+	if (had_msg) {
 		video_clear_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP);
+		had_msg = 0;
+	}
 
 	scale(width, height, pitch, data, screen->pixels);
 
-	if (msg[0])
+	if (msg[0]) {
 		video_print_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP, msg);
+		had_msg = 1;
+	}
 
 	SDL_UnlockSurface(screen);
+
+	video_update_msg();
 }
 
 void plat_video_flip(void)
 {
 	fb_flip();
-	msg[0] = 0;
 }
 
 void plat_video_close(void)

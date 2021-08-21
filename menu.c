@@ -6,6 +6,7 @@
 #include "overrides.h"
 #include "plat.h"
 #include "scale.h"
+#include "util.h"
 
 static int drew_alt_bg = 0;
 
@@ -435,7 +436,7 @@ void menu_loop(void)
 		;
 
 	/* Force the hud to clear */
-	plat_video_set_msg(" ");
+	plat_video_set_msg(NULL, 0, 0);
 	plat_video_menu_leave();
 }
 

@@ -4,6 +4,7 @@
 #include "main.h"
 #include "options.h"
 #include "scale.h"
+#include "util.h"
 
 typedef enum {
 	CE_TYPE_STR = 0,

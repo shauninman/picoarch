@@ -2,7 +2,6 @@
 #define __MAIN_H__
 
 #include <stdbool.h>
-#include <string.h>
 #include "options.h"
 #include "libretro.h"
 
@@ -29,18 +28,6 @@ extern int config_override;
 extern void* mmenu;
 extern char save_template_path[MAX_PATH];
 #endif
-
-
-#define MAX(a, b) (a) > (b) ? (a) : (b)
-#define MIN(a, b) (a) < (b) ? (a) : (b)
-
-static inline bool has_suffix_i(const char *str, const char *suffix) {
-	const char *p = strrchr(str, suffix[0]);
-	if (!p) p = str;
-	return !strcasecmp(p, suffix);
-}
-
-#define array_size(x) (sizeof(x) / sizeof(x[0]))
 
 #ifdef DEBUG_LOGGING
 #define PA_DEBUG(...) pa_log(RETRO_LOG_DEBUG, __VA_ARGS__)
