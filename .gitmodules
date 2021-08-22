@@ -1,3 +1,6 @@
 [submodule "libpicofe"]
 	path = libpicofe
 	url = https://github.com/notaz/libpicofe
+[submodule "libretro-common"]
+	path = libretro-common
+	url = https://github.com/libretro/libretro-common

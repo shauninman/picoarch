@@ -12,7 +12,7 @@ BIN       = picoarch
 
 CFLAGS     += -Wall
 CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' -flto
-CFLAGS     += -I./ $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
+CFLAGS     += -I./ -I./libretro-common/include/ $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 
 LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 
