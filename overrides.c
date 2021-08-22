@@ -1,4 +1,5 @@
 #include "overrides.h"
+#include "overrides/beetle-pce-fast.h"
 #include "overrides/gambatte.h"
 #include "overrides/gpsp.h"
 #include "overrides/mame2000.h"
@@ -8,6 +9,7 @@
 #include "util.h"
 
 static const struct core_override overrides[] = {
+	beetle_pce_fast_overrides,
 	gambatte_overrides,
 	gpsp_overrides,
 	mame2000_overrides,

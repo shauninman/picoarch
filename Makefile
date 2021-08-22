@@ -20,7 +20,10 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
 
-CORES     = gambatte gpsp mame2000 pcsx_rearmed snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast gambatte gpsp mame2000 pcsx_rearmed snes9x2002 snes9x2005 $(EXTRA_CORES)
+
+beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
+beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
 
 gambatte_REPO = https://github.com/libretro/gambatte-libretro
 
@@ -107,7 +110,7 @@ $(1):
 
 $(1)_libretro.so: $(1)
 	cd $$($1_BUILD_PATH) && $$($1_MAKE) $(PROCS)
-	cp $$($1_BUILD_PATH)/$(1)_libretro.so .
+	cp $$($1_BUILD_PATH)/$(if $($(1)_CORE),$($(1)_CORE),$(1)_libretro.so) $(1)_libretro.so
 
 clean-$(1):
 	test ! -d $(1) || cd $$($1_BUILD_PATH) && $$($1_MAKE) clean
@@ -128,6 +131,11 @@ force-clean: clean
 	rm -rf $(CORES)
 
 ifeq ($(platform), trimui)
+
+beetle-pce-fast_NAME = pce_fast
+beetle-pce-fast_ROM_DIR = PCE
+beetle-pce-fast_TYPES = pce,cue,ccd,chd,toc,m3u
+beetle-pce-fast_PAK_NAME = TurboGrafx-16
 
 fbalpha2012_NAME = fba2012
 fbalpha2012_ROM_DIR = ARCADE
