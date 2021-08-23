@@ -1,0 +1,51 @@
+diff --git a/Makefile.libretro b/Makefile.libretro
+index 2f2bb5a..493149f 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -445,6 +445,22 @@ else ifeq ($(platform), retrofw)
+ 	PLATFORM_DEFINES += -ffast-math -march=mips32 -mtune=mips32 -mhard-float -fomit-frame-pointer
+ 	EXTERNAL_ZLIB = 1
+ 
++# TRIMUI
++else ifeq ($(platform), trimui)
++	TARGET := $(TARGET_NAME)_libretro.so
++	CC = $(CROSS_COMPILE)gcc
++	CXX = $(CROSS_COMPILE)g++
++	AR = $(CROSS_COMPILE)ar
++	SHARED := -shared -Wl,--version-script=src/drivers/libretro/link.T -Wl,-no-undefined
++	LDFLAGS += -fno-PIC -flto
++	CFLAGS += -fomit-frame-pointer -ffast-math -mcpu=arm926ej-s -mtune=arm926ej-s -fno-PIC -flto
++	OPTIMIZE := -Ofast -DNDEBUG
++	EXTERNAL_ZLIB = 1
++	HAVE_NTSC = 0
++	ifeq (,$(DEBUG))
++		LDFLAGS += -s
++	endif
++
+ # Windows MSVC 2017 all architectures
+ else ifneq (,$(findstring windows_msvc2017,$(platform)))
+ 	CC  = cl.exe
+@@ -708,10 +724,23 @@ else
+       CFLAGS     += -MT
+       CXXFLAGS   += -MT
+ 	endif
++	ifneq (,$(OPTIMIZE))
++      CFLAGS += $(OPTIMIZE)
++      CXXFLAGS += $(OPTIMIZE)
++	else
+       CFLAGS     += -O2 -DNDEBUG
+       CXXFLAGS   += -O2 -DNDEBUG
++	endif
+ endif
+ 
++ifeq ($(PROFILE), GENERATE)
++	CFLAGS	+= -fprofile-generate=./profile/fceumm
++	LDFLAGS	+= -lgcov
++else ifeq ($(PROFILE), APPLY)
++	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/fceumm -fbranch-probabilities
++endif
++
++
+ ifneq ($(SANITIZER),)
+ CFLAGS += -fsanitize=$(SANITIZER)
+ CXXFLAGS += -fsanitize=$(SANITIZER)

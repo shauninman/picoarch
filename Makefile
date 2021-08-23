@@ -20,10 +20,13 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
 
-CORES     = beetle-pce-fast gambatte gpsp mame2000 pcsx_rearmed snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast fceumm gambatte gpsp mame2000 pcsx_rearmed snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
+
+fceumm_REPO = https://github.com/libretro/libretro-fceumm
+fceumm_MAKEFILE = Makefile.libretro
 
 gambatte_REPO = https://github.com/libretro/gambatte-libretro
 
@@ -141,6 +144,10 @@ fbalpha2012_NAME = fba2012
 fbalpha2012_ROM_DIR = ARCADE
 fbalpha2012_TYPES = zip
 fbalpha2012_PAK_NAME = Arcade (FBA)
+
+fceumm_ROM_DIR = FC
+fceumm_TYPES = fds,nes,unf,unif
+fceumm_PAK_NAME = Nintendo
 
 gambatte_ROM_DIR = GB
 gambatte_TYPES = gb,gbc,dmg,zip

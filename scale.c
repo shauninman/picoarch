@@ -396,7 +396,10 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 		}
 	}
 
-	if (!scaler && current_aspect_ratio == 4.0f / 3.0f && w == 256) {
+	if (!scaler &&
+	    w == 256 &&
+	    (current_aspect_ratio == 4.0f / 3.0f || scale_size == SCALE_SIZE_FULL))
+	{
 		if (scale_filter == SCALE_FILTER_SHARP) {
 			scaler = scale_sharp_256xXXX_320xXXX;
 			return;
