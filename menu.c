@@ -59,7 +59,7 @@ me_bind_action emuctrl_actions[] =
 {
 	{ "Save State       ", 1 << EACTION_SAVE_STATE },
 	{ "Load State       ", 1 << EACTION_LOAD_STATE },
-	{ "Show/Hide FPS    ", 1 << EACTION_TOGGLE_FPS },
+	{ "Toggle FPS/CPU%  ", 1 << EACTION_TOGGLE_HUD },
 	{ "Toggle FF        ", 1 << EACTION_TOGGLE_FF },
 	{ "Take Screenshot  ", 1 << EACTION_SCREENSHOT },
 	{ NULL,                0 }
@@ -232,6 +232,7 @@ static const char h_rm_config_game[]  = "Removes game-specific config file";
 static const char h_restore_def[]     = "Switches back to default settings";
 
 static const char h_show_fps[]        = "Shows frames and vsyncs per second";
+static const char h_show_cpu[]        = "Shows CPU usage";
 
 static const char h_audio_buffer_size[]        =
 	"The size of the audio buffer, in frames. Higher\n"
@@ -255,6 +256,7 @@ static const char *men_scale_filter[] = { "Nearest", "Sharp", "Smooth", NULL};
 static menu_entry e_menu_video_options[] =
 {
 	mee_onoff_h      ("Show FPS",                 0, show_fps, 1, h_show_fps),
+	mee_onoff_h      ("Show CPU %",               0, show_cpu, 1, h_show_cpu),
 	mee_enum_h       ("Screen size",              0, scale_size, men_scale_size, h_scale_size),
 	mee_enum_h       ("Filter",                   0, scale_filter, men_scale_filter, h_scale_filter),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),

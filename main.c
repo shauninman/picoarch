@@ -30,8 +30,6 @@ static int last_screenshot = 0;
 
 static uint32_t vsyncs;
 static uint32_t renders;
-static float vsyncsps;
-static float rendersps;
 
 static void extract_core_name(const char* core_file) {
 	char *suffix = NULL;
@@ -212,6 +210,8 @@ finish:
 void set_defaults(void)
 {
 	show_fps = 0;
+	show_cpu = 0;
+	show_hud = 1;
 	limit_frames = 1;
 	enable_audio = 1;
 	audio_buffer_size = 5;
@@ -378,8 +378,8 @@ void handle_emu_action(emu_action action)
 		}
 #endif
 		break;
-	case EACTION_TOGGLE_FPS:
-		show_fps = !show_fps;
+	case EACTION_TOGGLE_HUD:
+		show_hud = !show_hud;
 		/* Force the hud to clear */
 		plat_video_set_msg(NULL, 0, 0);
 		break;
@@ -443,26 +443,46 @@ void pa_track_render(void) {
 	renders++;
 }
 
+#define CPU_MSG_LEN 10
 static void count_fps(void)
 {
 	char msg[HUD_LEN];
-
 	static unsigned int nextsec = 0;
+	static unsigned last_cpu_ticks = 0;
 	unsigned int ticks = 0;
 
-	if (show_fps) {
+	if (show_hud && (show_fps || show_cpu)) {
 		ticks = plat_get_ticks_ms();
 		if (ticks > nextsec) {
 			float last_time = (ticks - nextsec + 1000) / 1000.0f;
 
 			if (last_time > 0) {
-				vsyncsps = vsyncs / last_time;
-				rendersps = renders / last_time;
-				vsyncs = 0;
-				renders = 0;
+				char cpu_msg[CPU_MSG_LEN];
+				char fps_msg[HUD_LEN - CPU_MSG_LEN];
+
+				cpu_msg[0] = fps_msg[0] = '\0';
 				nextsec = ticks + 1000;
 
-				snprintf(msg, HUD_LEN, "FPS: %.1f (%.0f)", rendersps, vsyncsps);
+				if (show_fps) {
+					float vsyncsps = vsyncs / last_time;
+					float rendersps = renders / last_time;
+					vsyncs = 0;
+					renders = 0;
+					snprintf(fps_msg, sizeof(fps_msg), "FPS: %.1f (%.0f)", rendersps, vsyncsps);
+				}
+
+				if (show_cpu) {
+					unsigned cpu_ticks = plat_cpu_ticks();
+					if (cpu_ticks && last_cpu_ticks) {
+						float cpu_percent = (cpu_ticks - last_cpu_ticks) / last_time;
+						snprintf(cpu_msg, sizeof(cpu_msg), "%.1f%%", cpu_percent);
+					}
+					last_cpu_ticks = cpu_ticks;
+				}
+
+				snprintf(msg, HUD_LEN, "%-*s%*s",
+				         (HUD_LEN - CPU_MSG_LEN - 1), fps_msg,
+				         CPU_MSG_LEN - 1, cpu_msg);
 				plat_video_set_msg(msg, 1, 1100);
 			}
 		}

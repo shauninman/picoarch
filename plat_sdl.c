@@ -1,4 +1,5 @@
 #include <SDL/SDL.h>
+#include <unistd.h>
 #include "core.h"
 #include "libpicofe/fonts.h"
 #include "libpicofe/plat.h"
@@ -225,6 +226,31 @@ void plat_video_flip(void)
 
 void plat_video_close(void)
 {
+}
+
+unsigned plat_cpu_ticks(void)
+{
+	long unsigned ticks = 0;
+	long ticksps = 0;
+	FILE *file = NULL;
+
+	file = fopen("/proc/self/stat", "r");
+	if (!file)
+		goto finish;
+
+	if (!fscanf(file, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu", &ticks))
+		goto finish;
+
+	ticksps = sysconf(_SC_CLK_TCK);
+
+	if (ticksps)
+		ticks = ticks * 100 / ticksps;
+
+finish:
+	if (file)
+		fclose(file);
+
+	return ticks;
 }
 
 static void plat_sound_callback(void *unused, uint8_t *stream, int len)

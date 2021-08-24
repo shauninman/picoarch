@@ -7,6 +7,8 @@
 #include "util.h"
 
 int show_fps;
+int show_cpu;
+int show_hud;
 int limit_frames;
 int enable_audio;
 unsigned audio_buffer_size;

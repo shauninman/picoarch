@@ -23,6 +23,7 @@ static const struct {
 	void *val;
 } config_data[] = {
 	CE_NUM(show_fps),
+	CE_NUM(show_cpu),
 	CE_NUM(limit_frames),
 	CE_NUM(audio_buffer_size),
 	CE_NUM(scale_size),

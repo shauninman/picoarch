@@ -4,6 +4,8 @@
 #include "scale.h"
 
 extern int show_fps;
+extern int show_cpu;
+extern int show_hud;
 extern int limit_frames;
 extern int enable_audio;
 extern unsigned audio_buffer_size;
