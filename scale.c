@@ -347,7 +347,7 @@ static void scale_sharp_256xXXX_320xXXX(unsigned w, unsigned h, size_t pitch, co
 static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 	double current_aspect_ratio = aspect_ratio > 0 ? aspect_ratio : ((double)w / (double)h);
 
-	/* mame2000 sets resolutions / aspect ration without notifying
+	/* mame2000 sets resolutions / aspect ratio without notifying
 	 * of changes, new should always override old */
 	if (!strcmp(core_name, "mame2000")) {
 		current_aspect_ratio = ((double)w / (double)h);
@@ -448,6 +448,7 @@ void scale(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
 	if (w != prev.w || h != prev.h || pitch != prev.pitch) {
 		PA_INFO("Dimensions changed to %dx%d\n", w, h);
 		scale_select_scaler(w, h, pitch);
+		memset(dst, 0, SCREEN_HEIGHT * SCREEN_PITCH);
 		prev.w = w; prev.h = h; prev.pitch = pitch;
 	}
 
