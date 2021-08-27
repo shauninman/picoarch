@@ -710,6 +710,7 @@ finish:
 }
 
 void core_unload_content(void) {
+	current_core.retro_unload_game();
 	if (temp_rom[0]) {
 		remove(temp_rom);
 		temp_rom[0] = '\0';
@@ -727,16 +728,15 @@ const char **core_extensions(void) {
 void core_unload(void) {
 	PA_INFO("Unloading core...\n");
 
-	core_unload_content();
-
-	string_list_free(extensions);
-	extensions = NULL;
-
 	if (current_core.initialized) {
 		sram_write();
+		core_unload_content();
 		current_core.retro_deinit();
 		current_core.initialized = false;
 	}
+
+	string_list_free(extensions);
+	extensions = NULL;
 
 	options_free();
 

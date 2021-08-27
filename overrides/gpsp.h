@@ -59,6 +59,7 @@ static const struct core_override_option gpsp_core_option_overrides[] = {
 	},
 	{
 		.key = "gpsp_save_method",
+		.default_value = "libretro",
 		.blocked = true
 	},
 	{ NULL }
