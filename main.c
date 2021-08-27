@@ -17,35 +17,17 @@
 #include <mmenu.h>
 #include <SDL/SDL.h>
 void* mmenu = NULL;
-static int resume_slot = -1;
 char save_template_path[MAX_PATH];
 #endif
 
 bool should_quit = false;
 unsigned current_audio_buffer_size;
 char core_name[MAX_PATH];
-char* content_path;
 int config_override = 0;
 static int last_screenshot = 0;
 
 static uint32_t vsyncs;
 static uint32_t renders;
-
-static void extract_core_name(const char* core_file) {
-	char *suffix = NULL;
-
-	strncpy(core_name, basename(core_file), MAX_PATH);
-	core_name[sizeof(core_name) - 1] = 0;
-
-	suffix = strrchr(core_name, '_');
-	if (suffix && !strcmp(suffix, "_libretro.so"))
-		*suffix = 0;
-	else {
-		suffix = strrchr(core_name, '.');
-		if (suffix && !strcmp(suffix, ".so"))
-			*suffix = 0;
-	}
-}
 
 static void toggle_fast_forward(int force_off)
 {
@@ -294,7 +276,7 @@ void load_config(void)
 	}
 }
 
-static void load_config_keys(void)
+void load_config_keys(void)
 {
 	char *config = NULL;
 	int kcount = 0;
@@ -518,34 +500,49 @@ static void adjust_audio(void) {
 }
 
 int main(int argc, char **argv) {
-	if (argc != 3) {
-		printf("Usage: picoarch LIBRETRO_CORE CONTENT");
-		return -1;
-	}
-
-	extract_core_name(argv[1]);
-	content_path = argv[2];
-
-	set_defaults();
-
-	if (core_load(argv[1])) {
-		quit(-1);
-	}
-
-	if (core_load_content(argv[2])) {
-		quit(-1);
+	if (argc > 1) {
+		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+			printf("Usage: picoarch [libretro_core [content]]\n");
+			return 0;
+		}
 	}
 
 	if (plat_init()) {
 		quit(-1);
 	}
 
-	/* Must happen after initializing plat_input */
-	load_config_keys();
-
 	if (menu_init()) {
 		quit(-1);
 	}
+
+	if (argc > 1 && argv[1]) {
+		strncpy(core_path, argv[1], sizeof(core_path) - 1);
+	} else {
+		if (menu_select_core())
+			quit(-1);
+	}
+
+	core_extract_name(core_path, core_name, sizeof(core_name));
+
+	set_defaults();
+
+	if (core_load(core_path)) {
+		quit(-1);
+	}
+
+	if (argc > 2 && argv[2]) {
+		strncpy(content_path, argv[2], sizeof(content_path) - 1);
+	} else {
+		if (menu_select_content())
+			quit(-1);
+	}
+
+	if (core_load_content(content_path)) {
+		quit(-1);
+	}
+
+	load_config_keys();
+	plat_reinit();
 
 #ifdef MMENU
 
@@ -554,13 +551,9 @@ int main(int argc, char **argv) {
 		ResumeSlot_t ResumeSlot = (ResumeSlot_t)dlsym(mmenu, "ResumeSlot");
 		if (ResumeSlot) resume_slot = ResumeSlot();
 	}
-
-	if (state_allowed() && resume_slot!=-1) {
-		state_slot = resume_slot;
-		state_read();
-		resume_slot = -1;
-	}
 #endif
+
+	state_resume();
 
 	show_startup_message();
 	do {
@@ -575,9 +568,6 @@ int main(int argc, char **argv) {
 }
 
 int quit(int code) {
-	if (current_core.initialized)
-		sram_write();
-
 	menu_finish();
 	core_unload();
 	plat_finish();

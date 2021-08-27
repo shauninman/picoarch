@@ -15,15 +15,17 @@
 #include "unzip.h"
 #include "util.h"
 
-#define PATH_SEPARATOR_CHAR '/'
-
 struct core_cbs current_core;
+char core_path[MAX_PATH];
+char content_path[MAX_PATH];
+static struct string_list *extensions;
 
 double sample_rate;
 double frame_rate;
 double aspect_ratio;
 unsigned audio_buffer_size_override;
 int state_slot;
+int resume_slot = -1;
 
 static char config_dir[MAX_PATH];
 static char save_dir[MAX_PATH];
@@ -33,29 +35,22 @@ static struct retro_disk_control_ext_callback disk_control_ext;
 
 static uint32_t buttons = 0;
 
-#define MAX_EXTENSIONS 24
-
-static void core_handle_zip(const char *path, struct retro_system_info *info, struct retro_game_info *game_info, FILE** file) {
-	const char *extensions[MAX_EXTENSIONS] = {0};
-	char *extensionstr = strdup(info->valid_extensions);
-	char *ext = NULL;
-	char *saveptr = NULL;
+static void core_handle_zip(const char *path, struct retro_game_info *game_info, FILE** file) {
+	const char *ext = NULL;
 	int index = 0;
 	bool haszip = false;
 	FILE *dest = NULL;
 
-	if (info->valid_extensions && has_suffix_i(path, ".zip")) {
-		while((ext = strtok_r(index == 0 ? extensionstr : NULL, "|", &saveptr))) {
+	if (extensions && has_suffix_i(path, ".zip")) {
+		while((ext = extensions->list[index++])) {
 			if (!strcmp(ext, "zip")) {
 				haszip = true;
 				break;
 			}
-			extensions[index++] = ext;
-			if (index > MAX_EXTENSIONS - 1) break;
 		}
 
 		if (!haszip) {
-			if (!unzip_tmp(*file, extensions, temp_rom, MAX_PATH)) {
+			if (!unzip_tmp(*file, extensions->list, temp_rom, MAX_PATH)) {
 				game_info->path = temp_rom;
 				dest = fopen(temp_rom, "r");
 				if (dest) {
@@ -65,7 +60,6 @@ static void core_handle_zip(const char *path, struct retro_system_info *info, st
 			}
 		}
 	}
-	free(extensionstr);
 }
 
 static int core_load_game_info(const char *path, struct retro_game_info *game_info) {
@@ -83,7 +77,7 @@ static int core_load_game_info(const char *path, struct retro_game_info *game_in
 
 	current_core.retro_get_system_info(&info);
 
-	core_handle_zip(path, &info, game_info, &file);
+	core_handle_zip(path, game_info, &file);
 
 	fseek(file, 0, SEEK_END);
 	game_info->size = ftell(file);
@@ -138,7 +132,7 @@ static void gamepak_related_name(char *buf, size_t len, const char *new_extensio
 
 void config_file_name(char *buf, size_t len, int is_game)
 {
-	if (is_game && content_path) {
+	if (is_game && content_path[0]) {
 		gamepak_related_name(buf, len, ".cfg");
 	} else {
 		snprintf(buf, len, "%s%s", config_dir, "picoarch.cfg");
@@ -304,6 +298,16 @@ error:
 		fclose(state_file);
 
 	sync();
+	return ret;
+}
+
+int state_resume(void) {
+	int ret = 0;
+	if (resume_slot != -1) {
+		state_slot = resume_slot;
+		ret = state_read();
+		resume_slot = -1;
+	}
 	return ret;
 }
 
@@ -585,7 +589,25 @@ static int16_t pa_input_state(unsigned port, unsigned device, unsigned index, un
 	return 0;
 }
 
+void core_extract_name(const char* core_file, char *buf, size_t len) {
+	char *suffix = NULL;
+
+	strncpy(buf, basename(core_file), MAX_PATH);
+	buf[len - 1] = 0;
+
+	suffix = strrchr(buf, '_');
+	if (suffix && !strcmp(suffix, "_libretro.so"))
+		*suffix = 0;
+	else {
+		suffix = strrchr(buf, '.');
+		if (suffix && !strcmp(suffix, ".so"))
+			*suffix = 0;
+	}
+}
+
 int core_load(const char *corefile) {
+	struct retro_system_info info = {0};
+
 	void (*set_environment)(retro_environment_t) = NULL;
 	void (*set_video_refresh)(retro_video_refresh_t) = NULL;
 	void (*set_audio_sample)(retro_audio_sample_t) = NULL;
@@ -640,6 +662,11 @@ int core_load(const char *corefile) {
 	set_input_state(pa_input_state);
 
 	current_core.retro_init();
+
+	current_core.retro_get_system_info(&info);
+	if (info.valid_extensions)
+		extensions = string_split(info.valid_extensions, '|');
+
 	current_core.initialized = true;
 	PA_INFO("Finished loading core\n");
 	return 0;
@@ -682,18 +709,35 @@ finish:
 	return ret;
 }
 
-void core_unload(void) {
-	PA_INFO("Unloading core...\n");
-
-	if (current_core.initialized) {
-		current_core.retro_deinit();
-		current_core.initialized = false;
-	}
-
+void core_unload_content(void) {
 	if (temp_rom[0]) {
 		remove(temp_rom);
 		temp_rom[0] = '\0';
 	}
+	content_path[0] = '\0';
+}
+
+const char **core_extensions(void) {
+	if (extensions)
+		return extensions->list;
+
+	return NULL;
+}
+
+void core_unload(void) {
+	PA_INFO("Unloading core...\n");
+
+	core_unload_content();
+
+	string_list_free(extensions);
+	extensions = NULL;
+
+	if (current_core.initialized) {
+		sram_write();
+		current_core.retro_deinit();
+		current_core.initialized = false;
+	}
+
 	options_free();
 
 	if (current_core.handle) {

@@ -10,10 +10,14 @@
 
 static int drew_alt_bg = 0;
 
+static char cores_path[MAX_PATH];
+static struct dirent **corelist = NULL;
+static int corelist_len = 0;
+
 #define MENU_ALIGN_LEFT 0
 #define MENU_X2 0
 
-#define CORE_OPTIONS_PER_PAGE 11
+#define MENU_ITEMS_PER_PAGE 11
 
 typedef enum
 {
@@ -22,7 +26,9 @@ typedef enum
 	MA_MAIN_SAVE_STATE,
 	MA_MAIN_LOAD_STATE,
 	MA_MAIN_DISC_CTRL,
+	MA_MAIN_CORE_SEL,
 	MA_MAIN_CORE_OPTS,
+	MA_MAIN_CONTENT_SEL,
 	MA_MAIN_RESET_GAME,
 	MA_MAIN_CREDITS,
 	MA_MAIN_EXIT,
@@ -100,11 +106,6 @@ static unsigned short fname2color(const char *fname)
 
 #include "libpicofe/menu.c"
 
-static const char *menu_loop_romsel(char *curr_path, int len,
-	const char **filter_exts,
-	int (*extra_filter)(struct dirent **namelist, int count,
-	                    const char *basedir))  __attribute__((unused));
-
 static void draw_menu_message(const char *msg, void (*draw_more)(void))  __attribute__((unused));
 
 static const char *mgn_saveloadcfg(int id, int *offs)
@@ -144,6 +145,202 @@ static void draw_src_bg(void) {
 	menu_darken_bg(g_menubg_ptr, g_menubg_src_ptr, g_menubg_src_h * g_menubg_src_pp, 0);
 }
 
+static int mh_set_core(int id, int keys) {
+	if (corelist && id < corelist_len)
+		snprintf(core_path, sizeof(core_path), "%s/%s", cores_path, corelist[id]->d_name);
+
+	return 1;
+}
+
+static int core_selector(const struct dirent *ent) {
+	return has_suffix_i(ent->d_name, "_libretro.so");
+}
+
+static int menu_loop_core_page(int offset, int keys) {
+	static int sel = 0;
+	menu_entry e_menu_cores[MENU_ITEMS_PER_PAGE + 2] = {0}; /* +2 for Next, NULL */
+	size_t menu_idx = 0;
+	int i;
+	char names[MENU_ITEMS_PER_PAGE][MAX_PATH];
+
+	for (i = offset, menu_idx = 0; i < corelist_len && menu_idx < MENU_ITEMS_PER_PAGE; i++) {
+		menu_entry *option;
+		struct dirent *ent = corelist[i];
+		option = &e_menu_cores[menu_idx];
+		core_extract_name(ent->d_name, names[menu_idx], sizeof(names[menu_idx]));
+
+		option->name = names[menu_idx];
+		option->beh = MB_OPT_CUSTOM;
+		option->id = i;
+		option->enabled = 1;
+		option->selectable = 1;
+		option->handler = mh_set_core;
+		menu_idx++;
+	}
+
+	if (i < corelist_len) {
+		menu_entry *option;
+		option = &e_menu_cores[menu_idx];
+		option->name = "Next page";
+		option->beh = MB_OPT_CUSTOM;
+		option->id = i;
+		option->enabled = 1;
+		option->selectable = 1;
+		option->handler = menu_loop_core_page;
+	}
+
+	return me_loop(e_menu_cores, &sel);
+}
+
+int menu_select_core(void) {
+	int ret = -1;
+	getcwd(cores_path, MAX_PATH);
+
+	corelist_len = scandir(cores_path, &corelist, core_selector, alphasort);
+	if (!corelist_len) return -1;
+
+	plat_video_menu_enter(1);
+
+	if (menu_loop_core_page(0, 0) < 0)
+		goto finish;
+
+	if (core_path[0] == '\0')
+		goto finish;
+
+	ret = 0;
+finish:
+	/* wait until menu, ok, back is released */
+	while (in_menu_wait_any(NULL, 50) & (PBTN_MENU|PBTN_MOK|PBTN_MBACK))
+		;
+
+	plat_video_menu_leave();
+
+	if (corelist_len > 0) {
+		while (corelist_len--)
+			free(corelist[corelist_len]);
+		free(corelist);
+		corelist = NULL;
+	}
+	return ret;
+}
+
+int hidden_file_filter(struct dirent **namelist, int count, const char *basedir) {
+	int newcount = 0;
+
+	for (int i = 0; i < count; i++) {
+		if (namelist[i]->d_name[0] == '.' && namelist[i]->d_name[1] != '.') {
+			free(namelist[i]);
+			namelist[i] = NULL;
+		}
+	}
+
+	for (int i = 0; i < count; i++) {
+		if (namelist[i] != NULL)
+			namelist[newcount++] = namelist[i];
+	}
+
+	return newcount;
+}
+
+const char *select_content(void) {
+	const char *fname = NULL;
+	const char **extensions = core_extensions();
+	const char **exts_with_zip = NULL;
+	int i = 0, size = 0;
+
+	if (content_path[0] == '\0') {
+		if (getenv("CONTENT_DIR")) {
+			strncpy(content_path, getenv("CONTENT_DIR"), sizeof(content_path) - 1);
+#ifdef CONTENT_DIR
+		} else {
+			strncpy(content_path, CONTENT_DIR, sizeof(content_path) - 1);
+#else
+		} else if (getenv("HOME")) {
+			strncpy(content_path, getenv("HOME"), sizeof(content_path) - 1);
+#endif
+		}
+	}
+
+	if (extensions) {
+		for (size = 0; extensions[size]; size++)
+			;
+	}
+
+	exts_with_zip = calloc(size + 2, sizeof (char *)); /* add 2 for "zip", NULL */
+
+	if (exts_with_zip) {
+		for (i = 0; extensions[i]; i++) {
+			exts_with_zip[i] = extensions[i];
+		}
+		exts_with_zip[i] = "zip";
+	} else {
+		exts_with_zip = extensions;
+	}
+
+	fname = menu_loop_romsel(content_path, sizeof(content_path), exts_with_zip, hidden_file_filter);
+
+	if (exts_with_zip != extensions)
+		free(exts_with_zip);
+
+	return fname;
+}
+
+int menu_select_content(void) {
+	const char *fname = NULL;
+	int ret = -1;
+
+	plat_video_menu_enter(1);
+	fname = select_content();
+	if (!fname)
+		goto finish;
+
+	strncpy(content_path, fname, sizeof(content_path) - 1);
+	set_defaults();
+	load_config();
+	if (g_autostateld_opt)
+		resume_slot = 0;
+	ret = 0;
+
+finish:
+        /* wait until menu, ok, back is released */
+	while (in_menu_wait_any(NULL, 50) & (PBTN_MENU|PBTN_MOK|PBTN_MBACK))
+		;
+
+	plat_video_menu_leave();
+	return ret;
+}
+
+static int menu_loop_select_content(int id, int keys) {
+	const char *fname = select_content();
+
+	if (fname == NULL)
+		return -1;
+
+	core_unload_content();
+	strncpy(content_path, fname, sizeof(content_path) - 1);
+
+	set_defaults();
+
+	if (core_load_content(fname)) {
+		quit(-1);
+	}
+
+	load_config();
+
+	if (plat_reinit()) {
+		quit(-1);
+	}
+
+	load_config_keys();
+
+	if (g_autostateld_opt) {
+		resume_slot = 0;
+		state_resume();
+	}
+
+	return 1;
+}
+
 static int menu_loop_disc(int id, int keys)
 {
 	static int sel = 0;
@@ -181,7 +378,7 @@ static int menu_loop_core_options_page(int offset, int keys) {
 		return 0;
 	}
 
-	for (i = offset, menu_idx = 0; i < core_options.len && menu_idx < CORE_OPTIONS_PER_PAGE; i++) {
+	for (i = offset, menu_idx = 0; i < core_options.len && menu_idx < MENU_ITEMS_PER_PAGE; i++) {
 		struct core_option_entry *entry = &core_options.entries[i];
 		menu_entry *option;
 		const char *key = entry->key;
@@ -294,22 +491,6 @@ static int key_config_loop_wrap(int id, int keys)
 	return 0;
 }
 
-static menu_entry e_menu_keyconfig[] =
-{
-	mee_handler_id  ("Player controls",    MA_CTRL_PLAYER1,     key_config_loop_wrap),
-	mee_handler_id  ("Emulator controls",  MA_CTRL_EMU,         key_config_loop_wrap),
-	mee_cust_nosave ("Save global config", MA_OPT_SAVECFG,      mh_savecfg, mgn_saveloadcfg),
-	mee_cust_nosave ("Save game config",   MA_OPT_SAVECFG_GAME, mh_savecfg, mgn_saveloadcfg),
-	mee_end,
-};
-
-static int menu_loop_keyconfig(int id, int keys)
-{
-	static int sel = 0;
-	me_loop(e_menu_keyconfig, &sel);
-	return 0;
-}
-
 const char *config_label(int id, int *offs) {
 	return config_override ? "Loaded: game config" : "Loaded: global config";
 }
@@ -331,6 +512,24 @@ static int menu_loop_config_options(int id, int keys)
 	me_enable(e_menu_config_options, MA_OPT_RMCFG_GAME, config_override == 1);
 
 	me_loop(e_menu_config_options, &sel);
+
+	return 0;
+}
+
+static menu_entry e_menu_options[] =
+{
+	mee_handler   ("Audio and video",    menu_loop_video_options),
+	mee_handler_id("Emulator options",   MA_MAIN_CORE_OPTS,   menu_loop_core_options),
+	mee_handler_id("Player controls",    MA_CTRL_PLAYER1,     key_config_loop_wrap),
+	mee_handler_id("Emulator controls",  MA_CTRL_EMU,         key_config_loop_wrap),
+	mee_handler   ("Save config",        menu_loop_config_options),
+	mee_end,
+};
+
+static int menu_loop_options(int id, int keys)
+{
+	static int sel = 0;
+	me_loop(e_menu_options, &sel);
 
 	return 0;
 }
@@ -365,12 +564,10 @@ static menu_entry e_menu_main[] =
 	mee_handler_id("Save state",         MA_MAIN_SAVE_STATE,  main_menu_handler),
 	mee_handler_id("Load state",         MA_MAIN_LOAD_STATE,  main_menu_handler),
 	mee_handler_id("Disc control",       MA_MAIN_DISC_CTRL,   menu_loop_disc),
-	mee_handler_id("Emulator options",   MA_MAIN_CORE_OPTS,   menu_loop_core_options),
-	mee_handler   ("Audio and video",    menu_loop_video_options),
-	mee_handler   ("Controls",           menu_loop_keyconfig),
 	/* mee_handler_id("Cheats",             MA_MAIN_CHEATS,      main_menu_handler), */
-	mee_handler   ("Save config",        menu_loop_config_options),
+	mee_handler   ("Options",            menu_loop_options),
 	mee_handler_id("Reset game",         MA_MAIN_RESET_GAME,  main_menu_handler),
+	mee_handler_id("Load new game",      MA_MAIN_CONTENT_SEL, menu_loop_select_content),
 	mee_handler_id("Exit",               MA_MAIN_EXIT,        main_menu_handler),
 	mee_end,
 };
@@ -431,7 +628,7 @@ void menu_loop(void)
 		me_enable(e_menu_main, MA_MAIN_LOAD_STATE, mmenu == NULL);
 	}
 #endif
-	me_loop_d(e_menu_main, &sel, NULL, NULL);
+	me_loop(e_menu_main, &sel);
 
 	/* wait until menu, ok, back is released */
 	while (in_menu_wait_any(NULL, 50) & (PBTN_MENU|PBTN_MOK|PBTN_MBACK))

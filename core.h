@@ -2,6 +2,7 @@
 #define _CORE_H__
 
 #include "libretro.h"
+#include "main.h"
 
 struct core_cbs {
 	bool initialized;
@@ -29,12 +30,15 @@ struct core_cbs {
 };
 
 extern struct core_cbs current_core;
+extern char core_path[MAX_PATH];
+extern char content_path[MAX_PATH];
 
 extern double sample_rate;
 extern double frame_rate;
 extern double aspect_ratio;
 extern unsigned audio_buffer_size_override;
 extern int state_slot;
+extern int resume_slot;
 
 void config_file_name(char *buf, size_t len, int is_game);
 void save_relative_path(char *buf, size_t len, const char *basename);
@@ -46,14 +50,18 @@ bool state_allowed(void);
 void state_file_name(char *name, size_t size, int slot);
 int state_read(void);
 int state_write(void);
+int state_resume(void);
 
 unsigned disc_get_count(void);
 unsigned disc_get_index(void);
 bool disc_switch_index(unsigned index);
 bool disc_replace_index(unsigned index, const char *content_path);
 
+void core_extract_name(const char* core_file, char *buf, size_t len);
 int core_load(const char *corefile);
 int core_load_content(const char *path);
+void core_unload_content(void);
+const char **core_extensions(void);
 void core_unload(void);
 
 #endif

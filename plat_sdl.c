@@ -413,6 +413,14 @@ int plat_init(void)
 	return 0;
 }
 
+int plat_reinit(void)
+{
+	audio.in_sample_rate = sample_rate;
+	plat_sound_resize_buffer();
+	scale_update_scaler();
+	return 0;
+}
+
 void plat_finish(void)
 {
 	plat_sound_finish();

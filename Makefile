@@ -40,7 +40,7 @@ pcsx_rearmed_MAKEFILE = Makefile.libretro
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
-	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s -fno-PIC
+	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s -fno-PIC -DCONTENT_DIR='"/mnt/SDCARD/Roms"'
 	LDFLAGS += -fno-PIC
 
 else ifeq ($(platform), unix)
@@ -66,7 +66,7 @@ else ifeq ($(PROFILE), GENERATE)
 	CFLAGS	+= -fprofile-generate=./profile/picoarch
 	LDFLAGS	+= -lgcov
 else ifeq ($(PROFILE), APPLY)
-	CFLAGS	+= -fprofile-use -fprofile-dir=./profile/picoarch -fbranch-probabilities
+	CFLAGS	+= -fprofile-use -fprofile-dir=./profile/picoarch -fbranch-probabilities # -Wno-error=coverage-mismatch
 endif
 
 ifeq ($(MINUI), 1)
@@ -192,8 +192,13 @@ snes9x2005_PAK_NAME = Super Nintendo (2005)
 
 dist-gmenu-section:
 	mkdir -p pkg/gmenunx/Apps/picoarch
+	mkdir -p pkg/gmenunx/Apps/gmenunx/sections/emulators
 	mkdir -p pkg/gmenunx/Apps/gmenunx/sections/libretro
 	touch pkg/gmenunx/Apps/gmenunx/sections/libretro/.section
+
+dist-gmenu-picoarch: $(BIN) dist-gmenu-section
+	cp $(BIN) pkg/gmenunx/Apps/picoarch
+	$(file >pkg/gmenunx/Apps/gmenunx/sections/emulators/picoarch,$(picoarch_SHORTCUT))
 
 define CORE_gmenushortcut =
 
@@ -207,15 +212,20 @@ selectordir=/mnt/SDCARD/Roms/$($1_ROM_DIR)
 selectorfilter=$($1_TYPES)
 endef
 
-dist-gmenu-$(1): $(BIN) $(1)_libretro.so dist-gmenu-section
-	cp $(BIN) $1_libretro.so pkg/gmenunx/Apps/picoarch
+dist-gmenu-$(1): $(BIN) $(1)_libretro.so dist-gmenu-picoarch dist-gmenu-section
+	cp $1_libretro.so pkg/gmenunx/Apps/picoarch
 	$$(file >pkg/gmenunx/Apps/gmenunx/sections/libretro/$(1),$$($(1)_SHORTCUT))
 
 endef
 
 $(foreach core, $(CORES),$(eval $(call CORE_gmenushortcut,$(core))))
 
-dist-gmenu: $(foreach core, $(CORES), dist-gmenu-$(core))
+define picoarch_SHORTCUT
+title=$(BIN)
+exec=/mnt/SDCARD/Apps/picoarch/picoarch
+endef
+
+dist-gmenu: $(foreach core, $(CORES), dist-gmenu-$(core)) dist-gmenu-picoarch
 
 # -- MinUI
 
@@ -246,9 +256,30 @@ dist-minui-$(1): $(BIN) $(1)_libretro.so
 
 endef
 
+define picoarch_LAUNCH_SH
+#!/bin/sh
+# picoarch.pak/launch.sh
+
+EMU_EXE=picoarch
+EMU_DIR=$$(dirname "$$0")
+EMU_NAME=$$EMU_EXE
+
+needs-swap
+
+HOME="/mnt/SDCARD/Games/picoarch.pak/"
+cd "$$EMU_DIR"
+"$$EMU_DIR/$$EMU_EXE" &> "/mnt/SDCARD/.minui/logs/$$EMU_NAME.txt"
+endef
+
+dist-minui-picoarch: $(BIN) cores
+	mkdir -p "pkg/MinUI/Games/picoarch.pak"
+	$(file >picoarch_launch.sh,$(picoarch_LAUNCH_SH))
+	mv picoarch_launch.sh "pkg/MinUI/Games/picoarch.pak/launch.sh"
+	cp $(BIN) $(SOFILES) "pkg/MinUI/Games/picoarch.pak"
+
 $(foreach core, $(CORES),$(eval $(call CORE_pak_template,$(core))))
 
-dist-minui: $(foreach core, $(CORES), dist-minui-$(core))
+dist-minui: $(foreach core, $(CORES), dist-minui-$(core)) dist-minui-picoarch
 
 endif # MINUI=1
 

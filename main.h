@@ -21,7 +21,6 @@ typedef enum {
 extern bool should_quit;
 extern unsigned current_audio_buffer_size;
 extern char core_name[MAX_PATH];
-extern char* content_path;
 extern int config_override;
 
 #ifdef MMENU
@@ -45,6 +44,7 @@ int screenshot(void);
 void set_defaults(void);
 int save_config(int is_game);
 void load_config(void);
+void load_config_keys(void);
 int remove_config(int is_game);
 
 void handle_emu_action(emu_action action);
