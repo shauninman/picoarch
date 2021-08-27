@@ -27,11 +27,11 @@ typedef enum
 	MA_MAIN_LOAD_STATE,
 	MA_MAIN_DISC_CTRL,
 	MA_MAIN_CORE_SEL,
-	MA_MAIN_CORE_OPTS,
 	MA_MAIN_CONTENT_SEL,
 	MA_MAIN_RESET_GAME,
 	MA_MAIN_CREDITS,
 	MA_MAIN_EXIT,
+	MA_OPT_CORE_OPTS,
 	MA_OPT_SAVECFG,
 	MA_OPT_SAVECFG_GAME,
 	MA_OPT_RMCFG_GAME,
@@ -519,7 +519,7 @@ static int menu_loop_config_options(int id, int keys)
 static menu_entry e_menu_options[] =
 {
 	mee_handler   ("Audio and video",    menu_loop_video_options),
-	mee_handler_id("Emulator options",   MA_MAIN_CORE_OPTS,   menu_loop_core_options),
+	mee_handler_id("Emulator options",   MA_OPT_CORE_OPTS,    menu_loop_core_options),
 	mee_handler_id("Player controls",    MA_CTRL_PLAYER1,     key_config_loop_wrap),
 	mee_handler_id("Emulator controls",  MA_CTRL_EMU,         key_config_loop_wrap),
 	mee_handler   ("Save config",        menu_loop_config_options),
@@ -615,7 +615,7 @@ void menu_loop(void)
 	bool needs_disc_ctrl = disc_get_count() > 1;
 	plat_video_menu_enter(1);
 
-	me_enable(e_menu_main, MA_MAIN_CORE_OPTS, core_options.visible_len > 0);
+	me_enable(e_menu_options, MA_OPT_CORE_OPTS, core_options.visible_len > 0);
 
 	me_enable(e_menu_main, MA_MAIN_SAVE_STATE, state_allowed());
 	me_enable(e_menu_main, MA_MAIN_LOAD_STATE, state_allowed());

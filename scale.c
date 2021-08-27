@@ -246,6 +246,52 @@ static void scale_blend(unsigned w, unsigned h, size_t pitch, const void *src, v
 	}
 }
 
+#define DARKER(c1, c2) (c1 > c2 ? c2 : c1)
+
+// GB 160x144 to 240x216 (40,12) via eggs
+static void scale_sharp_160x144_240x216(unsigned _w, unsigned _h, size_t pitch, const void *src_bytes, void *dst_bytes) {
+	register uint_fast16_t a,b,c,d,e,f;
+	uint32_t x,y;
+	uint16_t *src = (uint16_t *)src_bytes;
+	uint16_t *dst = (uint16_t *)dst_bytes;
+	size_t pitch16 = pitch / sizeof(uint16_t);
+
+	dst += dst_offs / sizeof(uint16_t);
+
+	for (y=(144/2); y>0 ; y--, src+=(pitch16*2 - 160), dst+=(SCREEN_WIDTH*3 - 240))
+	{
+		for (x=(160/4); x>0; x--, src+=4, dst+=6)
+		{
+			a = *(src+0);
+			b = *(src+1);
+			c = *(src+pitch16);
+			d = *(src+pitch16+1);
+			e = DARKER(a,c);
+			f = DARKER(b,d);
+
+			*(uint32_t*)(dst+             0) = a|(DARKER(a,b)<<16);
+			*(uint32_t*)(dst+SCREEN_WIDTH  ) = e|(DARKER(e,f)<<16);
+			*(uint32_t*)(dst+SCREEN_WIDTH*2) = c|(DARKER(c,d)<<16);
+
+			c = *(src+pitch16+2);
+			a = *(src+2);
+			e = DARKER(a,c);
+
+			*(uint32_t*)(dst+                 2) = b|(a<<16);
+			*(uint32_t*)(dst+SCREEN_WIDTH+    2) = f|(e<<16);
+			*(uint32_t*)(dst+(SCREEN_WIDTH*2)+2) = d|(c<<16);
+
+			b = *(src+3);
+			d = *(src+pitch16+3);
+			f = DARKER(b,d);
+
+			*(uint32_t*)(dst+                 4) = DARKER(a,b)|(b<<16);
+			*(uint32_t*)(dst+SCREEN_WIDTH+    4) = DARKER(e,f)|(f<<16);
+			*(uint32_t*)(dst+(SCREEN_WIDTH*2)+4) = DARKER(c,d)|(d<<16);
+		}
+	}
+}
+
 /* drowsnug's nofilter upscaler, edited by eggs for smoothness */
 static void scale_sharp_240x160_320xXXX(unsigned _w, unsigned _h, size_t _pitch, const void *src_bytes, void *dst_bytes)
 {
@@ -387,6 +433,17 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 		}
 
 		return;
+	}
+
+	if (!scaler && w == 160 && h == 144) {
+		if (scale_size == SCALE_SIZE_ASPECT && scale_filter == SCALE_FILTER_SHARP) {
+			unsigned dst_x = ((320 - 240) * SCREEN_BPP / 2);
+			unsigned dst_y = ((240 - 216) / 2);
+			dst_offs = dst_y * SCREEN_PITCH + dst_x;
+
+			scaler = scale_sharp_160x144_240x216;
+			return;
+		}
 	}
 
 	if (!scaler && w == 240 && h == 160) {
