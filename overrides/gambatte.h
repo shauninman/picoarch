@@ -261,8 +261,9 @@ static const struct core_override_option gambatte_core_option_overrides[] = {
 		.desc = "Blending",
 		.info = "Simulates LCD ghosting effects. 'Simple' performs a 50:50 mix. 'Ghosting' mimics LCD response times with multiple buffered frames.",
 		.options = {
-			[2] = { "lcd_ghosting",      "Ghosting (Accurate)" },
-			[3] = { "lcd_ghosting_fast", "Ghosting (Fast)" },
+			[2] = { "lcd_ghosting",         "Ghosting (Accurate)" },
+			[3] = { "lcd_ghosting_fast",    "Ghosting (Fast)"     },
+			[4] = { "lcd_ghosting_fastest", "Ghosting (Fastest)"  },
 		}
 	},
 	{
