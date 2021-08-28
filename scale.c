@@ -392,6 +392,7 @@ static void scale_sharp_256xXXX_320xXXX(unsigned w, unsigned h, size_t pitch, co
 
 static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 	double current_aspect_ratio = aspect_ratio > 0 ? aspect_ratio : ((double)w / (double)h);
+	if (w == 0 || h == 0 || pitch == 0) return;
 
 	/* mame2000 sets resolutions / aspect ratio without notifying
 	 * of changes, new should always override old */

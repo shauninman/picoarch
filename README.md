@@ -26,7 +26,7 @@ git clone --recurse-submodules https://git.crowdedwood.com/picoarch
 
 To build picoarch itself, you need libSDL 1.2, libpng, and libasound. Different cores may need additional dependencies.
 
-After that, `make` bulids picoarch and all supported cores into this directory.
+After that, `make` builds picoarch and all supported cores into this directory.
 
 ### TrimUI instructions
 
