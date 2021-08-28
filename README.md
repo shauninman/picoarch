@@ -10,7 +10,7 @@ picoarch can be run by specifying the core library and the content to run:
 ./picoarch /path/to/core_name_libretro.so /path/to/game.gba
 ```
 
-It does not have a built-in file browser, so both core and content must be specified on the command line.
+If you do not specify core or content, picoarch will have you select a core from the current directory and content using the built-in file browser.
 
 ## Building
 
