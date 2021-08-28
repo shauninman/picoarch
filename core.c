@@ -710,6 +710,8 @@ finish:
 }
 
 void core_unload_content(void) {
+	sram_write();
+
 	current_core.retro_unload_game();
 	if (temp_rom[0]) {
 		remove(temp_rom);
@@ -729,7 +731,6 @@ void core_unload(void) {
 	PA_INFO("Unloading core...\n");
 
 	if (current_core.initialized) {
-		sram_write();
 		core_unload_content();
 		current_core.retro_deinit();
 		current_core.initialized = false;

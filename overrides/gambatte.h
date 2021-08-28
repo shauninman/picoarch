@@ -294,9 +294,6 @@ me_bind_action gambatte_ctrl_actions[] =
 	{ "B TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
 	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
 	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
-	{ "L BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
-	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
-	/* { "FAST FWD ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 }, */
 	{ NULL,       0 }
 };
 

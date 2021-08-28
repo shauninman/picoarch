@@ -240,6 +240,7 @@ static void alloc_config_buffer(char **config_ptr) {
 	char config_filename[MAX_PATH];
 	FILE *config_file;
 	size_t length;
+	config_override = 0;
 
 	config_file_name(config_filename, MAX_PATH, 1);
 	config_file = fopen(config_filename, "rb");
