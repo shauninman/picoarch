@@ -26,6 +26,7 @@ typedef enum
 	MA_MAIN_SAVE_STATE,
 	MA_MAIN_LOAD_STATE,
 	MA_MAIN_DISC_CTRL,
+	MA_MAIN_CHEATS,
 	MA_MAIN_CORE_SEL,
 	MA_MAIN_CONTENT_SEL,
 	MA_MAIN_RESET_GAME,
@@ -365,6 +366,60 @@ static int menu_loop_disc(int id, int keys)
 	return 0;
 }
 
+static int menu_loop_cheats_page(int offset, int keys) {
+	static int sel = 0;
+	menu_entry *e_menu_cheats;
+	size_t i, menu_idx;
+
+	/* cheats + 2 for possible "Next page" +  NULL */
+	e_menu_cheats = (menu_entry *)calloc(cheats->count + 2, sizeof(menu_entry));
+
+	if (!e_menu_cheats) {
+		PA_ERROR("Error allocating cheats\n");
+		return 0;
+	}
+
+	for (i = offset, menu_idx = 0; i < cheats->count && menu_idx < MENU_ITEMS_PER_PAGE; i++) {
+		struct cheat *cheat = &cheats->cheats[i];
+		menu_entry *option;
+
+		option = &e_menu_cheats[menu_idx];
+
+		option->name = cheat->name;
+		option->beh = MB_OPT_ONOFF;
+		option->var = &cheat->enabled;
+		option->enabled = 1;
+		option->mask = 1;
+		option->need_to_save = 1;
+		option->selectable = 1;
+		option->help = cheat->info;
+		menu_idx++;
+	}
+
+	if (i < cheats->count) {
+		menu_entry *option;
+		option = &e_menu_cheats[menu_idx];
+		option->name = "Next page";
+		option->beh = MB_OPT_CUSTOM;
+		option->id = i;
+		option->enabled = 1;
+		option->selectable = 1;
+		option->handler = menu_loop_cheats_page;
+	}
+
+	me_loop(e_menu_cheats, &sel);
+	free(e_menu_cheats);
+
+	return 0;
+}
+
+static int menu_loop_cheats(int id, int keys)
+{
+	int ret = menu_loop_cheats_page(0, keys);
+	core_apply_cheats(cheats);
+	return ret;
+}
+
 static int menu_loop_core_options_page(int offset, int keys) {
 	static int sel = 0;
 	menu_entry *e_menu_core_options;
@@ -564,7 +619,7 @@ static menu_entry e_menu_main[] =
 	mee_handler_id("Save state",         MA_MAIN_SAVE_STATE,  main_menu_handler),
 	mee_handler_id("Load state",         MA_MAIN_LOAD_STATE,  main_menu_handler),
 	mee_handler_id("Disc control",       MA_MAIN_DISC_CTRL,   menu_loop_disc),
-	/* mee_handler_id("Cheats",             MA_MAIN_CHEATS,      main_menu_handler), */
+	mee_handler_id("Cheats",             MA_MAIN_CHEATS,      menu_loop_cheats),
 	mee_handler   ("Options",            menu_loop_options),
 	mee_handler_id("Reset game",         MA_MAIN_RESET_GAME,  main_menu_handler),
 	mee_handler_id("Load new game",      MA_MAIN_CONTENT_SEL, menu_loop_select_content),
@@ -619,7 +674,8 @@ void menu_loop(void)
 
 	me_enable(e_menu_main, MA_MAIN_SAVE_STATE, state_allowed());
 	me_enable(e_menu_main, MA_MAIN_LOAD_STATE, state_allowed());
-
+	me_enable(e_menu_main, MA_MAIN_CHEATS, cheats != NULL);
+	
 	me_enable(e_menu_main, MA_MAIN_DISC_CTRL, needs_disc_ctrl);
 
 #ifdef MMENU

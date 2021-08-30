@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "cheat.h"
 #include "core.h"
 #include "libpicofe/input.h"
 #include "main.h"
@@ -19,6 +20,7 @@ struct core_cbs current_core;
 char core_path[MAX_PATH];
 char content_path[MAX_PATH];
 static struct string_list *extensions;
+struct cheats *cheats;
 
 double sample_rate;
 double frame_rate;
@@ -115,7 +117,7 @@ static void core_free_game_info(struct retro_game_info *game_info) {
 	}
 }
 
-static void gamepak_related_name(char *buf, size_t len, const char *new_extension)
+static void gamepak_related_name(char *buf, size_t len, const char *subdir, const char *new_extension)
 {
 	char filename[MAX_PATH];
 	char *dot;
@@ -127,13 +129,13 @@ static void gamepak_related_name(char *buf, size_t len, const char *new_extensio
 	if (dot)
 		*dot = 0;
 
-	snprintf(buf, len, "%s%s%s", save_dir, filename, new_extension);
+	snprintf(buf, len, "%s%s%s%s", save_dir, subdir, filename, new_extension);
 }
 
 void config_file_name(char *buf, size_t len, int is_game)
 {
 	if (is_game && content_path[0]) {
-		gamepak_related_name(buf, len, ".cfg");
+		gamepak_related_name(buf, len, "", ".cfg");
 	} else {
 		snprintf(buf, len, "%s%s", config_dir, "picoarch.cfg");
 	}
@@ -153,7 +155,7 @@ void sram_write(void) {
 		return;
 	}
 
-	gamepak_related_name(filename, MAX_PATH, ".sav");
+	gamepak_related_name(filename, MAX_PATH, "", ".sav");
 
 	sram_file = fopen(filename, "w");
 	if (!sram_file) {
@@ -182,7 +184,7 @@ void sram_read(void) {
 		return;
 	}
 
-	gamepak_related_name(filename, MAX_PATH, ".sav");
+	gamepak_related_name(filename, MAX_PATH, "", ".sav");
 
 	sram_file = fopen(filename, "r");
 	if (!sram_file) {
@@ -206,7 +208,7 @@ void state_file_name(char *name, size_t size, int slot) {
 	char extension[5] = {0};
 
 	snprintf(extension, 5, ".st%d", slot);
-	gamepak_related_name(name, MAX_PATH, extension);
+	gamepak_related_name(name, MAX_PATH, "", extension);
 }
 
 int state_read(void) {
@@ -676,6 +678,7 @@ int core_load_content(const char *path) {
 	struct retro_game_info game_info = {0};
 	struct retro_system_av_info av_info = {0};
 	int ret = -1;
+	char cheats_path[MAX_PATH] = {0};
 
 	if (core_load_game_info(path, &game_info)) {
 		goto finish;
@@ -684,6 +687,12 @@ int core_load_content(const char *path) {
 	if (!current_core.retro_load_game(&game_info)) {
 		PA_ERROR("Couldn't load content\n");
 		goto finish;
+	}
+
+	gamepak_related_name(cheats_path, sizeof(cheats_path), "cheats/", ".cht");
+	if (cheats_path[0] != '\0') {
+		cheats = cheats_load(cheats_path);
+		core_apply_cheats(cheats);
 	}
 
 	sram_read();
@@ -700,7 +709,7 @@ int core_load_content(const char *path) {
 	aspect_ratio = av_info.geometry.aspect_ratio;
 
 #ifdef MMENU
-	gamepak_related_name(save_template_path, MAX_PATH, ".st%i");
+	gamepak_related_name(save_template_path, MAX_PATH, "", ".st%i");
 #endif
 
 	ret = 0;
@@ -709,8 +718,26 @@ finish:
 	return ret;
 }
 
+void core_apply_cheats(struct cheats *cheats) {
+	if (!cheats)
+		return;
+
+	if (!current_core.retro_cheat_reset || !current_core.retro_cheat_set)
+		return;
+
+	current_core.retro_cheat_reset();
+	for (int i = 0; i < cheats->count; i++) {
+		if (cheats->cheats[i].enabled) {
+			current_core.retro_cheat_set(i, cheats->cheats[i].enabled, cheats->cheats[i].code);
+		}
+	}
+}
+
 void core_unload_content(void) {
 	sram_write();
+
+	cheats_free(cheats);
+	cheats = NULL;
 
 	current_core.retro_unload_game();
 	if (temp_rom[0]) {

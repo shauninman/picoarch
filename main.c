@@ -553,10 +553,9 @@ int main(int argc, char **argv) {
 		if (ResumeSlot) resume_slot = ResumeSlot();
 	}
 #endif
-
+	show_startup_message();
 	state_resume();
 
-	show_startup_message();
 	do {
 		count_fps();
 		adjust_audio();
