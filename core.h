@@ -2,6 +2,7 @@
 #define _CORE_H__
 
 #include "cheat.h"
+#include "content.h"
 #include "libretro.h"
 #include "main.h"
 
@@ -32,7 +33,7 @@ struct core_cbs {
 
 extern struct core_cbs current_core;
 extern char core_path[MAX_PATH];
-extern char content_path[MAX_PATH];
+extern struct content *content;
 extern struct cheats *cheats;
 
 extern double sample_rate;
@@ -60,8 +61,9 @@ bool disc_switch_index(unsigned index);
 bool disc_replace_index(unsigned index, const char *content_path);
 
 void core_extract_name(const char* core_file, char *buf, size_t len);
-int core_load(const char *corefile);
-int core_load_content(const char *path);
+int core_open(const char *corefile);
+void core_load(void);
+int core_load_content(struct content *content);
 void core_apply_cheats(struct cheats *cheats);
 void core_unload_content(void);
 const char **core_extensions(void);

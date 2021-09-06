@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "core.h"
 #include "config.h"
+#include "content.h"
 #include "libpicofe/config_file.h"
 #include "libpicofe/input.h"
 #include "main.h"
@@ -326,10 +327,10 @@ void handle_emu_action(emu_action action)
 		toggle_fast_forward(1); /* Force FF off */
 		sram_write();
 #ifdef MMENU
-		if (mmenu) {
+		if (mmenu && content && content->path) {
 			ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
 			SDL_Surface *screen = SDL_GetVideoSurface();
-			MenuReturnStatus status = ShowMenu(content_path, state_allowed() ? save_template_path : NULL, screen, kMenuEventKeyDown);
+			MenuReturnStatus status = ShowMenu(content->path, state_allowed() ? save_template_path : NULL, screen, kMenuEventKeyDown);
 			char disc_path[256];
 			ChangeDisc_t ChangeDisc = (ChangeDisc_t)dlsym(mmenu, "ChangeDisc");
 
@@ -501,6 +502,8 @@ static void adjust_audio(void) {
 }
 
 int main(int argc, char **argv) {
+	char content_path[MAX_PATH];
+
 	if (argc > 1) {
 		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
 			printf("Usage: picoarch [libretro_core [content]]\n");
@@ -525,20 +528,28 @@ int main(int argc, char **argv) {
 
 	core_extract_name(core_path, core_name, sizeof(core_name));
 
-	set_defaults();
-
-	if (core_load(core_path)) {
+	if (core_open(core_path)) {
 		quit(-1);
 	}
 
 	if (argc > 2 && argv[2]) {
 		strncpy(content_path, argv[2], sizeof(content_path) - 1);
 	} else {
-		if (menu_select_content())
+		if (menu_select_content(content_path, sizeof(content_path)))
 			quit(-1);
 	}
 
-	if (core_load_content(content_path)) {
+	content = content_init(content_path);
+	if (!content) {
+		PA_ERROR("Couldn't allocate memory for content path\n");
+		quit(-1);
+	}
+
+	set_defaults();
+	load_config();
+	core_load();
+
+	if (core_load_content(content)) {
 		quit(-1);
 	}
 

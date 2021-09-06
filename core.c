@@ -13,12 +13,11 @@
 #include "options.h"
 #include "overrides.h"
 #include "plat.h"
-#include "unzip.h"
 #include "util.h"
 
 struct core_cbs current_core;
 char core_path[MAX_PATH];
-char content_path[MAX_PATH];
+struct content *content;
 static struct string_list *extensions;
 struct cheats *cheats;
 
@@ -32,110 +31,21 @@ int resume_slot = -1;
 static char config_dir[MAX_PATH];
 static char save_dir[MAX_PATH];
 static char system_dir[MAX_PATH];
-static char temp_rom[MAX_PATH];
 static struct retro_disk_control_ext_callback disk_control_ext;
 
 static uint32_t buttons = 0;
 
-static void core_handle_zip(const char *path, struct retro_game_info *game_info, FILE** file) {
-	const char *ext = NULL;
-	int index = 0;
-	bool haszip = false;
-	FILE *dest = NULL;
-
-	if (extensions && has_suffix_i(path, ".zip")) {
-		while((ext = extensions->list[index++])) {
-			if (!strcmp(ext, "zip")) {
-				haszip = true;
-				break;
-			}
-		}
-
-		if (!haszip) {
-			if (!unzip_tmp(*file, extensions->list, temp_rom, MAX_PATH)) {
-				game_info->path = temp_rom;
-				dest = fopen(temp_rom, "r");
-				if (dest) {
-					fclose(*file);
-					*file = dest;
-				}
-			}
-		}
-	}
-}
-
-static int core_load_game_info(const char *path, struct retro_game_info *game_info) {
-	struct retro_system_info info = {0};
-	FILE *file = fopen(path, "rb");
-	int ret = -1;
-
-	if (!file) {
-		PA_ERROR("Couldn't load content: %s\n", strerror(errno));
-		goto finish;
-	}
-
-	PA_INFO("Loading %s\n", path);
-	game_info->path = path;
-
+static int core_load_game_info(struct content *content, struct retro_game_info *game_info) {
+	struct retro_system_info info = {};
 	current_core.retro_get_system_info(&info);
 
-	core_handle_zip(path, game_info, &file);
-
-	fseek(file, 0, SEEK_END);
-	game_info->size = ftell(file);
-	rewind(file);
-
-	if (!info.need_fullpath) {
-		void *game_data = malloc(game_info->size);
-
-		if (!game_data) {
-			PA_ERROR("Couldn't allocate memory for content\n");
-			goto finish;
-		}
-
-		if (fread(game_data, 1, game_info->size, file) != game_info->size) {
-			PA_ERROR("Couldn't read file: %s\n", strerror(errno));
-			goto finish;
-		}
-
-		game_info->data = game_data;
-	}
-
-	ret = 0;
-finish:
-	if (file)
-		fclose(file);
-
-	return ret;
-}
-
-static void core_free_game_info(struct retro_game_info *game_info) {
-	if (game_info->data) {
-		free((void *)game_info->data);
-		game_info->data = NULL;
-		game_info->size = 0;
-	}
-}
-
-static void gamepak_related_name(char *buf, size_t len, const char *subdir, const char *new_extension)
-{
-	char filename[MAX_PATH];
-	char *dot;
-
-	strncpy(filename, basename(content_path), sizeof(filename));
-	filename[sizeof(filename) - 1] = 0;
-
-	dot = strrchr(filename, '.');
-	if (dot)
-		*dot = 0;
-
-	snprintf(buf, len, "%s%s%s%s", save_dir, subdir, filename, new_extension);
+	return content_load_game_info(content, game_info, info.need_fullpath);
 }
 
 void config_file_name(char *buf, size_t len, int is_game)
 {
-	if (is_game && content_path[0]) {
-		gamepak_related_name(buf, len, "", ".cfg");
+	if (is_game && content) {
+		content_based_name(content, buf, len, save_dir, NULL, ".cfg");
 	} else {
 		snprintf(buf, len, "%s%s", config_dir, "picoarch.cfg");
 	}
@@ -155,7 +65,7 @@ void sram_write(void) {
 		return;
 	}
 
-	gamepak_related_name(filename, MAX_PATH, "", ".sav");
+	content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".sav");
 
 	sram_file = fopen(filename, "w");
 	if (!sram_file) {
@@ -184,7 +94,7 @@ void sram_read(void) {
 		return;
 	}
 
-	gamepak_related_name(filename, MAX_PATH, "", ".sav");
+	content_based_name(content, filename, MAX_PATH, save_dir, NULL, ".sav");
 
 	sram_file = fopen(filename, "r");
 	if (!sram_file) {
@@ -208,7 +118,7 @@ void state_file_name(char *name, size_t size, int slot) {
 	char extension[5] = {0};
 
 	snprintf(extension, 5, ".st%d", slot);
-	gamepak_related_name(name, MAX_PATH, "", extension);
+	content_based_name(content, name, MAX_PATH, save_dir, NULL, extension);
 }
 
 int state_read(void) {
@@ -341,18 +251,22 @@ bool disc_switch_index(unsigned index) {
 
 bool disc_replace_index(unsigned index, const char *content_path) {
 	bool ret = false;
-	struct retro_game_info info = {0};
+	struct retro_game_info info = {};
+	struct content *content;
 	if (!disk_control_ext.replace_image_index)
 		return false;
 
-	if (core_load_game_info(content_path, &info)) {
+	content = content_init(content_path);
+	if (!content)
 		goto finish;
-	}
+
+	if (core_load_game_info(content, &info))
+		goto finish;
 
 	ret = disk_control_ext.replace_image_index(index, &info);
 
 finish:
-	core_free_game_info(&info);
+	content_free(content);
 	return ret;
 }
 
@@ -607,8 +521,8 @@ void core_extract_name(const char* core_file, char *buf, size_t len) {
 	}
 }
 
-int core_load(const char *corefile) {
-	struct retro_system_info info = {0};
+int core_open(const char *corefile) {
+	struct retro_system_info info = {};
 
 	void (*set_environment)(retro_environment_t) = NULL;
 	void (*set_video_refresh)(retro_video_refresh_t) = NULL;
@@ -663,24 +577,26 @@ int core_load(const char *corefile) {
 	set_input_poll(pa_input_poll);
 	set_input_state(pa_input_state);
 
-	current_core.retro_init();
-
 	current_core.retro_get_system_info(&info);
 	if (info.valid_extensions)
 		extensions = string_split(info.valid_extensions, '|');
 
-	current_core.initialized = true;
-	PA_INFO("Finished loading core\n");
 	return 0;
 }
 
-int core_load_content(const char *path) {
-	struct retro_game_info game_info = {0};
-	struct retro_system_av_info av_info = {0};
+void core_load(void) {
+	current_core.retro_init();
+	current_core.initialized = true;
+	PA_INFO("Finished loading core\n");
+}
+
+int core_load_content(struct content *content) {
+	struct retro_game_info game_info = {};
+	struct retro_system_av_info av_info = {};
 	int ret = -1;
 	char cheats_path[MAX_PATH] = {0};
 
-	if (core_load_game_info(path, &game_info)) {
+	if (core_load_game_info(content, &game_info)) {
 		goto finish;
 	}
 
@@ -689,7 +605,7 @@ int core_load_content(const char *path) {
 		goto finish;
 	}
 
-	gamepak_related_name(cheats_path, sizeof(cheats_path), "cheats/", ".cht");
+	content_based_name(content, cheats_path, sizeof(cheats_path), save_dir, "cheats/", ".cht");
 	if (cheats_path[0] != '\0') {
 		cheats = cheats_load(cheats_path);
 		core_apply_cheats(cheats);
@@ -709,12 +625,11 @@ int core_load_content(const char *path) {
 	aspect_ratio = av_info.geometry.aspect_ratio;
 
 #ifdef MMENU
-	gamepak_related_name(save_template_path, MAX_PATH, "", ".st%i");
+	content_based_name(content, save_template_path, MAX_PATH, save_dir, NULL, ".st%i");
 #endif
 
 	ret = 0;
 finish:
-	core_free_game_info(&game_info);
 	return ret;
 }
 
@@ -740,11 +655,8 @@ void core_unload_content(void) {
 	cheats = NULL;
 
 	current_core.retro_unload_game();
-	if (temp_rom[0]) {
-		remove(temp_rom);
-		temp_rom[0] = '\0';
-	}
-	content_path[0] = '\0';
+	content_free(content);
+	content = NULL;
 }
 
 const char **core_extensions(void) {

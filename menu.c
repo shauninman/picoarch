@@ -245,21 +245,22 @@ int hidden_file_filter(struct dirent **namelist, int count, const char *basedir)
 
 const char *select_content(void) {
 	const char *fname = NULL;
+	char content_path[MAX_PATH];
 	const char **extensions = core_extensions();
 	const char **exts_with_zip = NULL;
 	int i = 0, size = 0;
 
-	if (content_path[0] == '\0') {
-		if (getenv("CONTENT_DIR")) {
-			strncpy(content_path, getenv("CONTENT_DIR"), sizeof(content_path) - 1);
+	if (content && content->path) {
+		strncpy(content_path, content->path, sizeof(content_path) - 1);
+	} else if (getenv("CONTENT_DIR")) {
+		strncpy(content_path, getenv("CONTENT_DIR"), sizeof(content_path) - 1);
 #ifdef CONTENT_DIR
-		} else {
-			strncpy(content_path, CONTENT_DIR, sizeof(content_path) - 1);
+	} else {
+		strncpy(content_path, CONTENT_DIR, sizeof(content_path) - 1);
 #else
-		} else if (getenv("HOME")) {
-			strncpy(content_path, getenv("HOME"), sizeof(content_path) - 1);
+	} else if (getenv("HOME")) {
+		strncpy(content_path, getenv("HOME"), sizeof(content_path) - 1);
 #endif
-		}
 	}
 
 	if (extensions) {
@@ -286,7 +287,7 @@ const char *select_content(void) {
 	return fname;
 }
 
-int menu_select_content(void) {
+int menu_select_content(char *filename, size_t len) {
 	const char *fname = NULL;
 	int ret = -1;
 
@@ -295,9 +296,7 @@ int menu_select_content(void) {
 	if (!fname)
 		goto finish;
 
-	strncpy(content_path, fname, sizeof(content_path) - 1);
-	set_defaults();
-	load_config();
+	strncpy(filename, fname, len - 1);
 	if (g_autostateld_opt)
 		resume_slot = 0;
 	ret = 0;
@@ -318,11 +317,16 @@ static int menu_loop_select_content(int id, int keys) {
 		return -1;
 
 	core_unload_content();
-	strncpy(content_path, fname, sizeof(content_path) - 1);
+
+	content = content_init(fname);
+	if (!content) {
+		PA_ERROR("Couldn't allocate memory for content\n");
+		quit(-1);
+	}
 
 	set_defaults();
 
-	if (core_load_content(fname)) {
+	if (core_load_content(content)) {
 		quit(-1);
 	}
 
