@@ -424,5 +424,7 @@ int plat_reinit(void)
 void plat_finish(void)
 {
 	plat_sound_finish();
+	SDL_FreeSurface(screen);
+	screen = NULL;
 	SDL_Quit();
 }

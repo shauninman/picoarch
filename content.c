@@ -1,8 +1,12 @@
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "core.h"
 #include "content.h"
 #include "patch.h"
@@ -73,6 +77,9 @@ static int content_load_zip(struct content *content) {
 				goto finish;
 			}
 
+			if (content->tmpfile)
+				remove(content->tmpfile);
+
 			free(content->tmpfile);
 
 			content->tmpfile = calloc(MAX_PATH, sizeof(*content->tmpfile));
@@ -118,7 +125,7 @@ static int content_patch_compare(const struct dirent **d1, const struct dirent *
 	return strcasecmp((*d1)->d_name, (*d2)->d_name);
 }
 
-static int content_patch(const struct content *content, void **out, size_t *out_size) {
+static int content_patch(const struct content *content, void *data, size_t size, void **out, size_t *out_size) {
 	struct dirent **namelist;
 	char pattern[MAX_PATH];
 	char patch_path[MAX_PATH];
@@ -126,8 +133,8 @@ static int content_patch(const struct content *content, void **out, size_t *out_
 	char *path = strdup(content->path);
 	char *dir;
 
-	const void *in = content->data;
-	size_t in_size = content->size;
+	const void *in = data;
+	size_t in_size = size;
 	void *patch_data = NULL;
 	size_t patch_size = 0;
 	void *patched = NULL;
@@ -161,7 +168,7 @@ static int content_patch(const struct content *content, void **out, size_t *out_
 		}
 
 		if (patched) {
-			if (in != content->data)
+			if (in != data)
 				free((void *)in);
 
 			in = patched;
@@ -186,11 +193,87 @@ finish:
 	}
 	free(namelist);
 
-	if (in != content->data)
+	if (in != data)
 		free((void *)in);
 
 	free(patch_data);
 	free(path);
+	return ret;
+}
+
+static int content_patch_file(struct content *content, const char *path) {
+	int fd, outfd;
+	int ret = -1;
+	struct stat stat;
+	void *addr;
+	void *out = NULL;
+	size_t out_size = 0;
+	char *content_path = strdup(content->path);
+	char *content_name;
+	FILE *outfile = NULL;
+
+	fd = open(path, O_RDONLY);
+	if (fd == -1) {
+		PA_ERROR("Couldn't open content file\n");
+		goto finish;
+	}
+
+	if (fstat(fd, &stat) == -1) {
+		PA_ERROR("Couldn't read content file size\n");
+		goto finish;
+	}
+
+	addr = mmap(NULL, stat.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+	if (addr == MAP_FAILED) {
+		PA_ERROR("Couldn't read content file\n");
+		goto finish;
+	}
+
+	if (content_patch(content, addr, stat.st_size, &out, &out_size)) {
+		goto finish;
+	}
+
+	if (content->tmpfile)
+		remove(content->tmpfile);
+
+	free(content->tmpfile);
+
+	content->tmpfile = calloc(MAX_PATH, sizeof(*content->tmpfile));
+	if (!content->tmpfile) {
+		PA_ERROR("Couldn't allocate memory for patched path\n");
+		goto finish;
+	}
+
+	content_name = basename(content_path);
+	snprintf(content->tmpfile, MAX_PATH, "/tmp/pa-XXXXXX%s", content_name);
+
+	outfd = mkstemps(content->tmpfile, strlen(content_name));
+	outfile = fdopen(outfd, "w");
+	if (!outfile) {
+		PA_ERROR("Error creating temporary file for patching: %s\n", strerror(errno));
+		goto finish;
+	}
+
+	if (out_size != fwrite(out, 1, out_size, outfile)) {
+		PA_ERROR("Error writing file %s: %s\n", path, strerror(errno));
+		goto finish;
+	}
+
+	ret = 0;
+
+finish:
+	if (addr != MAP_FAILED)
+		munmap(addr, stat.st_size);
+
+	if (fd >= 0)
+		close(fd);
+
+	if (outfile)
+		fclose(outfile);
+
+	free(out);
+	free(content_path);
+
 	return ret;
 }
 
@@ -242,27 +325,32 @@ int content_load_game_info(struct content *content, struct retro_game_info *info
 	path = content->tmpfile ? content->tmpfile : content->path;
 
 	if (needs_fullpath) {
+		content_patch_file(content, path);
+		path = content->tmpfile ? content->tmpfile : content->path;
 		info->path = path;
 	} else {
+		void *data = NULL;
+		size_t size = 0;
 		void *patched_data = NULL;
 		size_t patched_size = 0;
 
 		free(content->data);
+		content->data = NULL;
 
-		if (alloc_readfile(path, &content->data, &content->size)) {
+		if (alloc_readfile(path, &data, &size)) {
 			PA_ERROR("Error reading content file: %s\n", path);
 			goto finish;
 		}
 
-		if (!content_patch(content, &patched_data, &patched_size) && patched_data) {
-			free(content->data);
-			content->data = patched_data;
-			content->size = patched_size;
+		if (!content_patch(content, data, size, &patched_data, &patched_size) && patched_data) {
+			free(data);
+			data = patched_data;
+			size = patched_size;
 		}
 
 		info->path = path;
-		info->data = content->data;
-		info->size = content->size;
+		info->data = content->data = data;
+		info->size = content->size = size;
 	}
 	ret = 0;
 

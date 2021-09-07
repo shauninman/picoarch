@@ -12,7 +12,7 @@
 
 static size_t parse_count(FILE *file) {
 	size_t count = 0;
-	fscanf(file, " cheats = %ld\n", &count);
+	fscanf(file, " cheats = %lu\n", (unsigned long *)&count);
 	return count;
 }
 

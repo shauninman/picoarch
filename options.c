@@ -405,14 +405,10 @@ void options_free(void) {
 					free(entry->desc);
 			}
 
-			if (entry->labels)
-				free(entry->labels);
-
-			if (entry->values)
-				free(entry->values);
-
-			if (entry->key)
-				free(entry->key);
+			free(entry->info);
+			free(entry->labels);
+			free(entry->values);
+			free(entry->key);
 		}
 		free(core_options.entries);
 	}
