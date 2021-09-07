@@ -672,6 +672,8 @@ void menu_loop(void)
 {
 	static int sel = 0;
 	bool needs_disc_ctrl = disc_get_count() > 1;
+	const struct core_override *override = get_overrides();
+
 	plat_video_menu_enter(1);
 
 	me_enable(e_menu_options, MA_OPT_CORE_OPTS, core_options.visible_len > 0);
@@ -681,6 +683,9 @@ void menu_loop(void)
 	me_enable(e_menu_main, MA_MAIN_CHEATS, cheats != NULL);
 	
 	me_enable(e_menu_main, MA_MAIN_DISC_CTRL, needs_disc_ctrl);
+
+	if (override)
+		me_enable(e_menu_main, MA_MAIN_CONTENT_SEL, !override->block_load_content);
 
 #ifdef MMENU
 	if (state_allowed()) {

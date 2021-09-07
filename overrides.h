@@ -33,6 +33,7 @@ struct core_override {
 	me_bind_action* actions;
 	const size_t action_size;
 	const struct core_override_option* options;
+	int block_load_content;
 };
 
 #define CORE_OVERRIDE(override, key, fallback) ((override && override->key) ? (override->key) : (fallback))

@@ -68,5 +68,6 @@ const struct core_override_fast_forward mame2000_fast_forward = {
 	.fast_forward = &mame2000_fast_forward,           \
 	.actions = mame2000_ctrl_actions,                 \
 	.action_size = array_size(mame2000_ctrl_actions), \
-	.options = mame2000_core_option_overrides         \
+	.options = mame2000_core_option_overrides,        \
+	.block_load_content = 1                           \
 }
