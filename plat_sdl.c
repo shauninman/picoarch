@@ -360,7 +360,10 @@ void plat_sound_write(const struct audio_frame *data, int frames)
 
 void plat_sound_resize_buffer(void) {
 	size_t buf_size;
-	audio.buf_len = current_audio_buffer_size * audio.in_sample_rate / frame_rate;
+	audio.buf_len = frame_rate > 0
+		? current_audio_buffer_size * audio.in_sample_rate / frame_rate
+		: 2;
+
 	buf_size = audio.buf_len * sizeof(struct audio_frame);
 	audio.buf = realloc(audio.buf, buf_size);
 

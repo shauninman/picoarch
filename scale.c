@@ -89,6 +89,8 @@ static inline int gcd(int a, int b) {
 	return b ? gcd(b, a % b) : a;
 }
 
+static void scale_null(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {}
+
 static void scale_memcpy(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
 	dst += dst_offs;
 	memcpy(dst, src, h * pitch);
@@ -391,8 +393,14 @@ static void scale_sharp_256xXXX_320xXXX(unsigned w, unsigned h, size_t pitch, co
 }
 
 static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
-	double current_aspect_ratio = aspect_ratio > 0 ? aspect_ratio : ((double)w / (double)h);
-	if (w == 0 || h == 0 || pitch == 0) return;
+	double current_aspect_ratio;
+
+	if (w == 0 || h == 0 || pitch == 0) {
+		scaler = scale_null;
+		return;
+	};
+
+	current_aspect_ratio = aspect_ratio > 0 ? aspect_ratio : ((double)w / (double)h);
 
 	/* mame2000 sets resolutions / aspect ratio without notifying
 	 * of changes, new should always override old */
