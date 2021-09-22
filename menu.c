@@ -331,11 +331,6 @@ static int menu_loop_select_content(int id, int keys) {
 	}
 
 	load_config();
-
-	if (plat_reinit()) {
-		quit(-1);
-	}
-
 	load_config_keys();
 
 	if (g_autostateld_opt) {

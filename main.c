@@ -276,6 +276,7 @@ void load_config(void)
 		config_read(config);
 		free(config);
 	}
+	plat_reinit();
 }
 
 void load_config_keys(void)
@@ -554,7 +555,6 @@ int main(int argc, char **argv) {
 	}
 
 	load_config_keys();
-	plat_reinit();
 
 #ifdef MMENU
 

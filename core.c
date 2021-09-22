@@ -623,6 +623,7 @@ int core_load_content(struct content *content) {
 	sample_rate = av_info.timing.sample_rate;
 	frame_rate = av_info.timing.fps;
 	aspect_ratio = av_info.geometry.aspect_ratio;
+	plat_reinit();
 
 #ifdef MMENU
 	content_based_name(content, save_template_path, MAX_PATH, save_dir, NULL, ".st%i");

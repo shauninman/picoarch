@@ -16,7 +16,6 @@ struct audio_state {
 	unsigned buf_r;
 	size_t buf_len;
 	struct audio_frame *buf;
-	int freq;
 	int in_sample_rate;
 	int out_sample_rate;
 };
@@ -256,6 +255,9 @@ finish:
 static void plat_sound_callback(void *unused, uint8_t *stream, int len)
 {
 	int16_t *p = (int16_t *)stream;
+	if (audio.buf_len == 0)
+		return;
+
 	len /= (sizeof(int16_t) * 2);
 
 	while (audio.buf_r != audio.buf_w && len > 0) {
@@ -315,6 +317,9 @@ static int plat_sound_init(void)
 float plat_sound_capacity(void)
 {
 	int buffered = 0;
+	if (audio.buf_len == 0)
+		return 1.0;
+
 	if (audio.buf_w != audio.buf_r) {
 		buffered = audio.buf_w > audio.buf_r ?
 			audio.buf_w - audio.buf_r :
@@ -360,14 +365,22 @@ void plat_sound_write(const struct audio_frame *data, int frames)
 
 void plat_sound_resize_buffer(void) {
 	size_t buf_size;
+	SDL_LockAudio();
+
 	audio.buf_len = frame_rate > 0
 		? current_audio_buffer_size * audio.in_sample_rate / frame_rate
-		: 2;
+		: 0;
+
+	if (audio.buf_len == 0) {
+		SDL_UnlockAudio();
+		return;
+	}
 
 	buf_size = audio.buf_len * sizeof(struct audio_frame);
 	audio.buf = realloc(audio.buf, buf_size);
 
 	if (!audio.buf) {
+		SDL_UnlockAudio();
 		PA_ERROR("Error initializing sound buffer\n");
 		plat_sound_finish();
 		return;
@@ -377,6 +390,7 @@ void plat_sound_resize_buffer(void) {
 	audio.buf_w = 0;
 	audio.buf_r = 0;
 	audio.max_buf_w = audio.buf_len - 1;
+	SDL_UnlockAudio();
 }
 
 void plat_sdl_event_handler(void *event_)
