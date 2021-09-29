@@ -12,6 +12,7 @@
 #include "menu.h"
 #include "overrides.h"
 #include "plat.h"
+#include "util.h"
 
 #ifdef MMENU
 #include <dlfcn.h>
@@ -480,12 +481,9 @@ static void adjust_audio(void) {
 	static unsigned prev_audio_buffer_size = 0;
 
 	if (!prev_audio_buffer_size)
-		prev_audio_buffer_size = audio_buffer_size;
+		prev_audio_buffer_size = current_audio_buffer_size;
 
-	current_audio_buffer_size =
-		audio_buffer_size > audio_buffer_size_override
-		? audio_buffer_size
-		: audio_buffer_size_override;
+	current_audio_buffer_size = MAX(audio_buffer_size, audio_buffer_size_override);
 
 	if (prev_audio_buffer_size != current_audio_buffer_size) {
 		PA_INFO("Resizing audio buffer from %d to %d frames\n",

@@ -443,7 +443,7 @@ static bool pa_environment(unsigned cmd, void *data) {
 		const unsigned *latency_ms = (const unsigned *)data;
 		if (latency_ms) {
 			unsigned frames = *latency_ms * frame_rate / 1000;
-			if (frames > audio_buffer_size && frames < 30)
+			if (frames < 30)
 				audio_buffer_size_override = frames;
 			else
 				PA_WARN("Audio buffer change out of range (%d), ignored\n", frames);
