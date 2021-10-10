@@ -1,5 +1,5 @@
 diff --git a/Makefile b/Makefile
-index f043a85..b2a5562 100644
+index ecefd12..91fc859 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -451,6 +451,20 @@ else ifeq ($(platform), rs90)
@@ -23,10 +23,10 @@ index f043a85..b2a5562 100644
  # Windows
  else
  	TARGET := $(TARGET_NAME)_libretro.dll
-@@ -479,7 +493,14 @@ ifeq ($(DEBUG), 1)
+@@ -477,7 +491,14 @@ endif
+ ifeq ($(DEBUG), 1)
  	OPTIMIZE      := -O0 -g
  else
- 	OPTIMIZE_SAFE := -O2 -DNDEBUG
 -	OPTIMIZE      := -O3 -DNDEBUG
 +	OPTIMIZE      ?= -O3 -DNDEBUG
 +endif
@@ -40,7 +40,7 @@ index f043a85..b2a5562 100644
  
  DEFINES := -DHAVE_STRINGS_H -DHAVE_STDINT_H -DHAVE_INTTYPES_H -D__LIBRETRO__ -DINLINE=inline -Wall
 diff --git a/arm/arm_stub.S b/arm/arm_stub.S
-index 4058b22..03e9996 100644
+index cb68726..6593cf2 100644
 --- a/arm/arm_stub.S
 +++ b/arm/arm_stub.S
 @@ -79,8 +79,26 @@ _##symbol:
@@ -71,7 +71,7 @@ index 4058b22..03e9996 100644
  
  @ Will load the register set from memory into the appropriate cached registers.
  @ See arm_emit.h for listing explanation.
-@@ -539,7 +557,7 @@ return_to_main:
+@@ -538,7 +556,7 @@ return_to_main:
  #define execute_store_builder(store_type, str_op, str_op16, load_op, tnum)   ;\
                                                                               ;\
  defsymbl(execute_store_u##store_type)                                        ;\
@@ -80,7 +80,7 @@ index 4058b22..03e9996 100644
    add r2, r2, #((STORE_TBL_OFF + 16*4*tnum) >> 2)    /* add table offset   */;\
    ldr pc, [reg_base, r2, lsl #2]          /* load handler addr             */;\
    nop                                                                        ;\
-@@ -628,7 +646,7 @@ execute_store_builder(32, str,  str,  ldr,  2)
+@@ -627,7 +645,7 @@ execute_store_builder(32, str,  str,  ldr,  2)
  @ This is a store that is executed in a strm case (so no SMC checks in-between)
  
  defsymbl(execute_store_u32_safe)
@@ -89,7 +89,7 @@ index 4058b22..03e9996 100644
    add r2, r2, #((STORE_TBL_OFF + 16*4*3) >> 2)
    ldr pc, [reg_base, r2, lsl #2]
    nop
-@@ -773,9 +791,9 @@ lookup_pc_arm:
+@@ -772,9 +790,9 @@ lookup_pc_arm:
  defsymbl(execute_load_##load_type)                                           ;\
  .if albits >= 1                                                              ;\
    ror r1, r0, #(albits)                   /* move alignment bits to MSB    */;\
