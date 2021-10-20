@@ -5,6 +5,7 @@
 #include "overrides/gpsp.h"
 #include "overrides/mame2000.h"
 #include "overrides/pcsx_rearmed.h"
+#include "overrides/quicknes.h"
 #include "overrides/snes9x2002.h"
 #include "overrides/snes9x2005.h"
 #include "util.h"
@@ -16,6 +17,7 @@ static const struct core_override overrides[] = {
 	gpsp_overrides,
 	mame2000_overrides,
 	pcsx_rearmed_overrides,
+	quicknes_overrides,
 	snes9x2002_overrides,
 	snes9x2005_overrides,
 };

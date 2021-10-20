@@ -20,7 +20,7 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
 
-CORES     = beetle-pce-fast fceumm gambatte gpsp mame2000 pcsx_rearmed snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast fceumm gambatte gpsp mame2000 pcsx_rearmed quicknes snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
@@ -37,6 +37,8 @@ mame2000_REPO = https://github.com/libretro/mame2000-libretro
 mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
 
 pcsx_rearmed_MAKEFILE = Makefile.libretro
+
+quicknes_REPO = https://github.com/libretro/QuickNES_Core
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
@@ -147,7 +149,7 @@ fbalpha2012_PAK_NAME = Arcade (FBA)
 
 fceumm_ROM_DIR = FC
 fceumm_TYPES = fds,nes,unf,unif
-fceumm_PAK_NAME = Nintendo
+fceumm_PAK_NAME = Nintendo (fceumm)
 
 gambatte_ROM_DIR = GB
 gambatte_TYPES = gb,gbc,dmg,zip
@@ -179,6 +181,10 @@ define pcsx_rearmed_PAK_EXTRA
 needs-swap
 
 endef
+
+quicknes_ROM_DIR = FC
+quicknes_TYPES = nes
+quicknes_PAK_NAME = Nintendo
 
 snes9x2002_ROM_DIR = SFC
 snes9x2002_TYPES = smc,fig,sfc,gd3,gd7,dx2,bsx,swc,zip
