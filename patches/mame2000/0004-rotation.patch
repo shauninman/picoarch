@@ -1,9 +1,9 @@
 diff --git a/src/libretro/libretro.c b/src/libretro/libretro.c
-index f9b3cfe..0171ac1 100644
+index adb09c4..53fc5e2 100644
 --- a/src/libretro/libretro.c
 +++ b/src/libretro/libretro.c
 @@ -68,6 +68,8 @@ int should_skip_frame                    = 0;
- static int sample_rate                   = 32000;
+ static int sample_rate                   = 22050;
  static int stereo_enabled                = true;
  
 +static int rotate                        = false;
@@ -33,7 +33,7 @@ index f9b3cfe..0171ac1 100644
         ((frameskip_type     != prev_frameskip_type)))
 @@ -312,6 +327,7 @@ void retro_set_environment(retro_environment_t cb)
        { "mame2000-show_gameinfo", "Show Game Information; disabled|enabled" },
-       { "mame2000-sample_rate", "Audio Rate (Restart); 32000|11025|22050|32000|44100" },
+       { "mame2000-sample_rate", "Audio Rate (Restart); 22050|11025|22050|32000|44100" },
        { "mame2000-stereo", "Stereo (Restart); enabled|disabled" },
 +      { "mame2000-rotate", "Rotate (Restart); disabled|enabled" },
        { NULL, NULL },

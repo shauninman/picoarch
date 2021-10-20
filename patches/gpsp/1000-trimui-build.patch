@@ -10,7 +10,7 @@ index ecefd12..91fc859 100644
 +  TARGET := $(TARGET_NAME)_libretro.so
 +	CC = $(CROSS_COMPILE)gcc
 +  SHARED := -shared -Wl,--version-script=link.T -mcpu=arm926ej-s -mtune=arm926ej-s
-+	CFLAGS += -ffast-math -fdata-sections -ffunction-sections -flto -fno-PIC
++	CFLAGS += -ffast-math -fdata-sections -ffunction-sections -flto -fno-PIC -DOVERCLOCK_60FPS
 +	LDFLAGS += -flto
 +	ifeq (,$(DEBUG))
 +		LDFLAGS += -s
