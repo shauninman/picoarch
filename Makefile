@@ -20,18 +20,20 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
 
-CORES     = beetle-pce-fast fceumm gambatte gpsp mame2000 pcsx_rearmed quicknes snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast fceumm gambatte gme gpsp mame2000 pcsx_rearmed quicknes snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
+
+fbalpha2012_BUILD_PATH = fbalpha2012/svn-current/trunk
+fbalpha2012_MAKEFILE = makefile.libretro
 
 fceumm_REPO = https://github.com/libretro/libretro-fceumm
 fceumm_MAKEFILE = Makefile.libretro
 
 gambatte_REPO = https://github.com/libretro/gambatte-libretro
 
-fbalpha2012_BUILD_PATH = fbalpha2012/svn-current/trunk
-fbalpha2012_MAKEFILE = makefile.libretro
+gme_REPO = https://github.com/libretro/libretro-gme
 
 mame2000_REPO = https://github.com/libretro/mame2000-libretro
 mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
@@ -163,6 +165,10 @@ define gpsp_PAK_EXTRA
 needs-swap
 
 endef
+
+gme_ROM_DIR = MUSIC
+gme_TYPES = ay,gbs,gym,hes,kss,nsf,nsfe,sap,spc,vgm,vgz,zip
+gme_PAK_NAME = Game Music
 
 mame2000_ROM_DIR = ARCADE
 mame2000_TYPES = zip

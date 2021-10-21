@@ -1,0 +1,26 @@
+diff --git a/src/libretro.c b/src/libretro.c
+index 1e2b37f..d393a5a 100644
+--- a/src/libretro.c
++++ b/src/libretro.c
+@@ -180,7 +180,7 @@ void retro_run(void)
+    draw_ui();
+    video_cb(framebuffer->pixel_data, framebuffer->width, framebuffer->height, framebuffer->bytes_per_pixel * framebuffer->width);
+    //audio handling
+-   audio_batch_cb(play(),1470);
++   audio_batch_cb(play(),735);
+ }
+ 
+ // File Loading
+diff --git a/src/player.c b/src/player.c
+index 1daf980..e7c69be 100644
+--- a/src/player.c
++++ b/src/player.c
+@@ -86,7 +86,7 @@ short *play(void)
+             is_playing_ = false;
+       }
+       else
+-         gme_play( emu, 2048, audio_buffer );
++         gme_play( emu, 1470, audio_buffer );
+    }
+    else
+       memset(audio_buffer,0,8192 * sizeof(short));
