@@ -74,8 +74,8 @@ me_bind_action quicknes_ctrl_actions[] =
 	{ "B        ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
 	{ "A TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
 	{ "B TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
-	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
-	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
+	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },
+	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
 	{ NULL,       0 }
 };
 

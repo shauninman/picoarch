@@ -19,8 +19,7 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # Unpolished or slow cores that build
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
-
-CORES     = beetle-pce-fast fceumm gambatte gme gpsp mame2000 pcsx_rearmed quicknes snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast fceumm gambatte gme gpsp mame2000 pcsx_rearmed quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
@@ -41,6 +40,9 @@ mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
 pcsx_rearmed_MAKEFILE = Makefile.libretro
 
 quicknes_REPO = https://github.com/libretro/QuickNES_Core
+
+smsplus-gx_MAKEFILE = Makefile.libretro
+smsplus-gx_CORE = smsplus_libretro.so
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
@@ -191,6 +193,10 @@ endef
 quicknes_ROM_DIR = FC
 quicknes_TYPES = nes
 quicknes_PAK_NAME = Nintendo
+
+smsplus_ROM_DIR = MS
+smsplus_TYPES = sms,bin,rom,col,gg,sg
+smsplus_PAK_NAME = Game Gear
 
 snes9x2002_ROM_DIR = SFC
 snes9x2002_TYPES = smc,fig,sfc,gd3,gd7,dx2,bsx,swc,zip
