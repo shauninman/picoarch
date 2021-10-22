@@ -19,7 +19,7 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # Unpolished or slow cores that build
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
-CORES     = beetle-pce-fast fceumm gambatte gme gpsp mame2000 pcsx_rearmed quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast fceumm gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
@@ -38,6 +38,8 @@ mame2000_REPO = https://github.com/libretro/mame2000-libretro
 mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
 
 pcsx_rearmed_MAKEFILE = Makefile.libretro
+
+picodrive_MAKEFILE = Makefile.libretro
 
 quicknes_REPO = https://github.com/libretro/QuickNES_Core
 
@@ -113,7 +115,7 @@ $1_BUILD_PATH ?= $(1)
 $1_MAKE = make $(and $($1_MAKEFILE),-f $($1_MAKEFILE)) platform=$(platform) $(and $(DEBUG),DEBUG=$(DEBUG)) $(and $(PROFILE),PROFILE=$(PROFILE)) $($(1)_FLAGS)
 
 $(1):
-	git clone $(if $($1_REVISION),,--depth 1) $$($(1)_REPO) $(1)
+	git clone $(if $($1_REVISION),,--depth 1) --recursive $$($(1)_REPO) $(1)
 	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
 	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), git apply -p1 < ../$(patch) &&) true)
 
@@ -180,6 +182,10 @@ mame2003_plus_NAME = mame2003+
 mame2003_plus_ROM_DIR = ARCADE
 mame2003_plus_TYPES = zip
 mame2003_plus_PAK_NAME = Arcade (MAME 2003-plus)
+
+picodrive_ROM_DIR = MD
+picodrive_TYPES = bin,gen,smd,md,32x,cue,iso,chd,sms,m3u,68k,sgd
+picodrive_PAK_NAME = Genesis
 
 pcsx_rearmed_ROM_DIR = PS
 pcsx_rearmed_TYPES = bin,cue,img,mdf,pbp,toc,cbn,m3u,chd
