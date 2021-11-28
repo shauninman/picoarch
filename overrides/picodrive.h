@@ -2,6 +2,30 @@
 
 static const struct core_override_option picodrive_core_option_overrides[] = {
 	{
+		.key = "picodrive_region",
+		.info = "Specify which region the system is from. 'PAL'/'Europe' is 50hz while 'NTSC'/'US' is 60hz."
+	},
+	{
+		.key = "picodrive_smsmapper",
+		.desc = "SMS ROM Mapping",
+	},
+	{
+		.key = "picodrive_renderer",
+		.info = "Specify video rendering method. 'Good' and 'Fast' are incompatible with games that rely on mid-frame palette/sprite updates.",
+	},
+	{
+		.key = "picodrive_sound_rate",
+		.desc = "Sample Rate",
+	},
+	{
+		.key = "picodrive_smsfm",
+		.desc = "SMS FM Sound",
+	},
+	{
+		.key = "picodrive_dacnoise",
+		.desc = "FM DAC Noise",
+	},
+	{
 		.key = "picodrive_overscan",
 		.info = "Crop out the potentially random glitchy video output that would have been hidden by the TV bezel."
 	},
@@ -21,6 +45,10 @@ static const struct core_override_option picodrive_core_option_overrides[] = {
 		.key = "picodrive_frameskip_threshold",
 		.desc = "FS Threshold (%)",
 		.info = "When 'Frameskip' is set to 'Threshold', sets how low the audio buffer can get before frames will be skipped.",
+	},
+	{
+		.key = "picodrive_sprlim",
+		.info = "Removes the original sprite-per-scanline hardware limit. This reduces flickering but can cause visual glitches during special effects.",
 	},
 	{
 		.key = "picodrive_aspect",

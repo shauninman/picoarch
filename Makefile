@@ -191,7 +191,7 @@ mame2003_plus_TYPES = zip
 mame2003_plus_PAK_NAME = Arcade (MAME 2003-plus)
 
 picodrive_ROM_DIR = MD
-picodrive_TYPES = bin,gen,smd,md,32x,cue,iso,chd,sms,m3u,68k,sgd
+picodrive_TYPES = bin,gen,smd,md,32x,cue,iso,chd,sms,gg,m3u,68k,sgd
 picodrive_PAK_NAME = Genesis
 
 pcsx_rearmed_ROM_DIR = PS

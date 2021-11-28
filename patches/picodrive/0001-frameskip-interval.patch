@@ -1,5 +1,5 @@
 diff --git a/platform/libretro/libretro.c b/platform/libretro/libretro.c
-index 3574c32..ac96c4f 100644
+index 3c0f726..84aa5f1 100644
 --- a/platform/libretro/libretro.c
 +++ b/platform/libretro/libretro.c
 @@ -137,13 +137,11 @@ char **g_argv;
@@ -17,7 +17,7 @@ index 3574c32..ac96c4f 100644
  
  static unsigned audio_latency              = 0;
  static bool update_audio_latency           = false;
-@@ -1926,7 +1924,7 @@ static void update_variables(bool first_run)
+@@ -1982,7 +1980,7 @@ static void update_variables(bool first_run)
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
        if (strcmp(var.value, "auto") == 0)
           frameskip_type = 1;
@@ -26,20 +26,19 @@ index 3574c32..ac96c4f 100644
           frameskip_type = 2;
     }
  
-@@ -1936,6 +1934,12 @@ static void update_variables(bool first_run)
+@@ -1991,6 +1989,11 @@ static void update_variables(bool first_run)
+    var.value           = NULL;
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
        frameskip_threshold = strtol(var.value, NULL, 10);
- 
 +   frameskip_interval  = 4;
 +   var.key             = "picodrive_frameskip_interval";
 +   var.value           = NULL;
 +   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
 +      frameskip_interval = strtol(var.value, NULL, 10);
-+
+ 
     old_vout_format = vout_format;
     var.value = NULL;
-    var.key = "picodrive_renderer";
-@@ -2041,7 +2045,7 @@ void retro_run(void)
+@@ -2099,7 +2102,7 @@ void retro_run(void)
              break;
        }
  
@@ -48,7 +47,7 @@ index 3574c32..ac96c4f 100644
           PicoIn.skipFrame  = 0;
           frameskip_counter = 0;
        } else
-@@ -2211,6 +2215,7 @@ void retro_init(void)
+@@ -2284,6 +2287,7 @@ void retro_init(void)
     frameskip_type             = 0;
     frameskip_threshold        = 0;
     frameskip_counter          = 0;
@@ -57,15 +56,17 @@ index 3574c32..ac96c4f 100644
     retro_audio_buff_occupancy = 0;
     retro_audio_buff_underrun  = false;
 diff --git a/platform/libretro/libretro_core_options.h b/platform/libretro/libretro_core_options.h
-index 23ca416..2512eac 100644
+index 9cd2f85..d2ebede 100644
 --- a/platform/libretro/libretro_core_options.h
 +++ b/platform/libretro/libretro_core_options.h
-@@ -203,11 +203,11 @@ struct retro_core_option_definition option_defs_us[] = {
-    {
+@@ -340,13 +340,13 @@ struct retro_core_option_v2_definition option_defs_us[] = {
        "picodrive_frameskip",
        "Frameskip",
+       NULL,
 -      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Manual' utilises the 'Frameskip Threshold (%)' setting.",
 +      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Threshold' utilises the 'Frameskip Threshold (%)' setting.",
+       NULL,
+       "performance",
        {
 -         { "disabled", NULL },
 -         { "auto",     "Auto" },
@@ -76,23 +77,26 @@ index 23ca416..2512eac 100644
           { NULL, NULL },
        },
        "disabled"
-@@ -215,7 +215,7 @@ struct retro_core_option_definition option_defs_us[] = {
-    {
+@@ -355,7 +355,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
        "picodrive_frameskip_threshold",
        "Frameskip Threshold (%)",
+       NULL,
 -      "When 'Frameskip' is set to 'Manual', specifies the audio buffer occupancy threshold (percentage) below which frames will be skipped. Higher values reduce the risk of crackling by causing frames to be dropped more frequently.",
 +      "When 'Frameskip' is set to 'Threshold', specifies the audio buffer occupancy threshold (percentage) below which frames will be skipped. Higher values reduce the risk of crackling by causing frames to be dropped more frequently.",
+       NULL,
+       "performance",
        {
-          { "15", NULL },
-          { "18", NULL },
-@@ -237,6 +237,25 @@ struct retro_core_option_definition option_defs_us[] = {
+@@ -379,6 +379,28 @@ struct retro_core_option_v2_definition option_defs_us[] = {
        },
        "33"
     },
 +   {
 +      "picodrive_frameskip_interval",
 +      "Frameskip Interval",
++      NULL,
 +      "The maximum number of frames that can be skipped before a new frame is rendered.",
++      NULL,
++      "performance",
 +      {
 +         { "1",  NULL },
 +         { "2",  NULL },
@@ -109,5 +113,5 @@ index 23ca416..2512eac 100644
 +      "3"
 +   },
     {
-       "picodrive_renderer",
-       "Renderer",
+       "picodrive_sprlim",
+       "No Sprite Limit",
