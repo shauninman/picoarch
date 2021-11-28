@@ -19,7 +19,7 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # Unpolished or slow cores that build
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
-CORES     = beetle-pce-fast bluemsx fceumm gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
@@ -31,6 +31,8 @@ fbalpha2012_MAKEFILE = makefile.libretro
 
 fceumm_REPO = https://github.com/libretro/libretro-fceumm
 fceumm_MAKEFILE = Makefile.libretro
+
+fmsx_REPO = https://github.com/libretro/fmsx-libretro
 
 gambatte_REPO = https://github.com/libretro/gambatte-libretro
 
@@ -76,7 +78,7 @@ else ifeq ($(PROFILE), GENERATE)
 	CFLAGS	+= -fprofile-generate=./profile/picoarch
 	LDFLAGS	+= -lgcov
 else ifeq ($(PROFILE), APPLY)
-	CFLAGS	+= -fprofile-use -fprofile-dir=./profile/picoarch -fbranch-probabilities # -Wno-error=coverage-mismatch
+	CFLAGS	+= -fprofile-use -fprofile-dir=./profile/picoarch -fbranch-probabilities
 endif
 
 ifeq ($(MINUI), 1)
@@ -88,6 +90,8 @@ ifeq ($(MMENU), 1)
 	CFLAGS += -DMMENU
 	LDFLAGS += -lSDL_image -lSDL_ttf -ldl
 endif
+
+CFLAGS += $(EXTRA_CFLAGS)
 
 SOFILES = $(foreach core,$(CORES),$(core)_libretro.so)
 
@@ -153,7 +157,7 @@ beetle-pce-fast_PAK_NAME = TurboGrafx-16
 bluemsx_NAME = blueMSX
 bluemsx_ROM_DIR = MSX
 bluemsx_TYPES = rom,ri,mx1,mx2,dsk,col,sg,sc,cas,m3u
-bluemsx_PAK_NAME = MSX
+bluemsx_PAK_NAME = MSX (blueMSX)
 
 fbalpha2012_NAME = fba2012
 fbalpha2012_ROM_DIR = ARCADE
@@ -163,6 +167,11 @@ fbalpha2012_PAK_NAME = Arcade (FBA)
 fceumm_ROM_DIR = FC
 fceumm_TYPES = fds,nes,unf,unif
 fceumm_PAK_NAME = Nintendo (fceumm)
+
+fmsx_NAME = fMSX
+fmsx_ROM_DIR = MSX
+fmsx_TYPES = rom,mx1,mx2,dsk,cas
+fmsx_PAK_NAME = MSX
 
 gambatte_ROM_DIR = GB
 gambatte_TYPES = gb,gbc,dmg,zip
@@ -257,6 +266,7 @@ exec=/mnt/SDCARD/Apps/picoarch/picoarch
 endef
 
 dist-gmenu: $(foreach core, $(CORES), dist-gmenu-$(core)) dist-gmenu-picoarch
+	cp README.trimui.md pkg/
 
 # -- MinUI
 
@@ -311,7 +321,14 @@ dist-minui-picoarch: $(BIN) cores
 $(foreach core, $(CORES),$(eval $(call CORE_pak_template,$(core))))
 
 dist-minui: $(foreach core, $(CORES), dist-minui-$(core)) dist-minui-picoarch
+	cp README.trimui.md pkg/
 
 endif # MINUI=1
+
+picoarch.zip:
+	make platform=trimui PROFILE=APPLY clean-all dist-gmenu
+	rm -f $(OBJS) $(BIN)
+	make platform=trimui PROFILE=APPLY EXTRA_CFLAGS=-Wno-error=coverage-mismatch MINUI=1 dist-minui
+	cd pkg && zip -r ../picoarch.zip *
 
 endif # platform=trimui

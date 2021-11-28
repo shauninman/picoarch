@@ -613,6 +613,11 @@ int core_load_content(struct content *content) {
 
 	sram_read();
 
+	if (!strcmp(core_name, "fmsx") && current_core.retro_set_controller_port_device) {
+		/* fMSX works best with joypad + keyboard */
+		current_core.retro_set_controller_port_device(0, RETRO_DEVICE_SUBCLASS(RETRO_DEVICE_JOYPAD, 0));
+	}
+
 	current_core.retro_get_system_av_info(&av_info);
 
 	PA_INFO("Screen: %dx%d\n", av_info.geometry.base_width, av_info.geometry.base_height);
