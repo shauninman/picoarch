@@ -1,5 +1,6 @@
 #include "overrides.h"
 #include "overrides/beetle-pce-fast.h"
+#include "overrides/bluemsx.h"
 #include "overrides/fceumm.h"
 #include "overrides/gambatte.h"
 #include "overrides/gme.h"
@@ -15,6 +16,7 @@
 
 static const struct core_override overrides[] = {
 	beetle_pce_fast_overrides,
+	bluemsx_overrides,
 	fceumm_overrides,
 	gambatte_overrides,
 	gme_overrides,

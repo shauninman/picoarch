@@ -19,10 +19,12 @@ LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
 # Unpolished or slow cores that build
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
-CORES     = beetle-pce-fast fceumm gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES     = beetle-pce-fast bluemsx fceumm gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
+
+bluemsx_REPO = https://github.com/libretro/blueMSX-libretro
 
 fbalpha2012_BUILD_PATH = fbalpha2012/svn-current/trunk
 fbalpha2012_MAKEFILE = makefile.libretro
@@ -147,6 +149,11 @@ beetle-pce-fast_NAME = pce_fast
 beetle-pce-fast_ROM_DIR = PCE
 beetle-pce-fast_TYPES = pce,cue,ccd,chd,toc,m3u
 beetle-pce-fast_PAK_NAME = TurboGrafx-16
+
+bluemsx_NAME = blueMSX
+bluemsx_ROM_DIR = MSX
+bluemsx_TYPES = rom,ri,mx1,mx2,dsk,col,sg,sc,cas,m3u
+bluemsx_PAK_NAME = MSX
 
 fbalpha2012_NAME = fba2012
 fbalpha2012_ROM_DIR = ARCADE
