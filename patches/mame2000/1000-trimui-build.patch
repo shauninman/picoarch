@@ -1,8 +1,8 @@
 diff --git a/Makefile b/Makefile
-index 4b0667a..34df34e 100644
+index 8112d85..8f3555e 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -335,6 +335,26 @@ else ifeq ($(platform), gcw0)
+@@ -321,6 +321,26 @@ else ifeq ($(platform), gcw0)
     DISABLE_ERROR_LOGGING := 1
     CFLAGS += -march=mips32 -mtune=mips32r2 -mhard-float
  
@@ -29,7 +29,7 @@ index 4b0667a..34df34e 100644
  # Windows MSVC 2010 x64
  else ifeq ($(platform), windows_msvc2010_x64)
  	CC  = cl.exe
-@@ -522,6 +542,8 @@ endif
+@@ -508,6 +528,8 @@ endif
  
  ifeq ($(DEBUG), 1)
  CFLAGS += -O0 -g
@@ -37,18 +37,4 @@ index 4b0667a..34df34e 100644
 +CFLAGS += $(OPTIMIZE)
  else
  CFLAGS += -O2 -DNDEBUG
- endif
-@@ -531,6 +553,13 @@ RM = rm -f
- LIBS = -lm
- OBJ = obj
- 
-+ifeq ($(PROFILE), GENERATE)
-+	CFLAGS	+= -fprofile-generate=./profile/mame2000
-+	LIBS	+= -lgcov
-+else ifeq ($(PROFILE), APPLY)
-+	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/mame2000 -fbranch-probabilities
-+endif
-+
- ifeq ($(HAVE_RZLIB),)
- ZLIB_INCLUDE := -Isrc/zlib
  endif

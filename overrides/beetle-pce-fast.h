@@ -20,36 +20,36 @@ static const struct core_override_option beetle_pce_fast_core_option_overrides[]
 		.desc = "FS Interval",
 	},
 	{
-		.key = "pce_hoverscan",
+		.key = "pce_fast_hoverscan",
 		.desc = "Horiz. Overscan",
 		.info = "Modify the horizontal overscan. (352 Width Mode Only)",
 	},
 	{
-		.key = "pce_turbo_toggling",
+		.key = "pce_fast_turbo_toggling",
 		.info = "Change III / IV to Toggle Turbo II / Toggle Turbo I",
 	},
 	{
-		.key = "pce_sound_channel_0_volume",
+		.key = "pce_fast_sound_channel_0_volume",
 		.desc = "Channel 0 Volume",
 	},
 	{
-		.key = "pce_sound_channel_1_volume",
+		.key = "pce_fast_sound_channel_1_volume",
 		.desc = "Channel 1 Volume",
 	},
 	{
-		.key = "pce_sound_channel_2_volume",
+		.key = "pce_fast_sound_channel_2_volume",
 		.desc = "Channel 2 Volume",
 	},
 	{
-		.key = "pce_sound_channel_3_volume",
+		.key = "pce_fast_sound_channel_3_volume",
 		.desc = "Channel 3 Volume",
 	},
 	{
-		.key = "pce_sound_channel_4_volume",
+		.key = "pce_fast_sound_channel_4_volume",
 		.desc = "Channel 4 Volume",
 	},
 	{
-		.key = "pce_sound_channel_5_volume",
+		.key = "pce_fast_sound_channel_5_volume",
 		.desc = "Channel 5 Volume",
 	},
 	{
@@ -57,20 +57,24 @@ static const struct core_override_option beetle_pce_fast_core_option_overrides[]
 		.desc = "CD Cache (Restart)",
 	},
 	{
-		.key = "pce_ocmultiplier",
+		.key = "pce_fast_cdbios",
+		.desc = "CD BIOS (Restart)",
+	},
+	{
+		.key = "pce_fast_ocmultiplier",
 		.desc = "Overclock (Restart)",
 		.info = "Overclock the emulated CPU by selected multiplier.",
 	},
 	{
-		.key = "pce_disable_softreset",
+		.key = "pce_fast_disable_softreset",
 		.desc = "Disable Soft Reset",
 	},
 	{
-		.key = "pce_mouse_sensitivity",
+		.key = "pce_fast_mouse_sensitivity",
 		.blocked = true,
 	},
 	{
-		.key = "pce_turbo_toggle_hotkey",
+		.key = "pce_fast_turbo_toggle_hotkey",
 		.blocked = true,
 	},
 	{ NULL }

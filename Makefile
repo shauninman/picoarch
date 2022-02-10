@@ -50,6 +50,9 @@ quicknes_REPO = https://github.com/libretro/QuickNES_Core
 smsplus-gx_MAKEFILE = Makefile.libretro
 smsplus-gx_CORE = smsplus_libretro.so
 
+snes9x2005_REPO = https://git.crowdedwood.com/snes9x2005
+snes9x2005_REVISION = performance
+
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
 	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s -fno-PIC -DCONTENT_DIR='"/mnt/SDCARD/Roms"'
@@ -62,6 +65,7 @@ endif
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += -Og -g
+	LDFLAGS += -g
 else
 	CFLAGS += -Ofast -DNDEBUG
 
@@ -125,8 +129,10 @@ $(1):
 	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
 	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), git apply -p1 < ../$(patch) &&) true)
 
-$(1)_libretro.so: $(1)
+$(1)/$(1)_libretro.so: $(1)
 	cd $$($1_BUILD_PATH) && $$($1_MAKE) $(PROCS)
+
+$(1)_libretro.so: $(1)/$(1)_libretro.so
 	cp $$($1_BUILD_PATH)/$(if $($(1)_CORE),$($(1)_CORE),$(1)_libretro.so) $(1)_libretro.so
 
 clean-$(1):

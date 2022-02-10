@@ -50,6 +50,10 @@ static const struct core_override_option fceumm_core_option_overrides[] = {
 		.desc = "Show Snd Options",
 	},
 	{
+		.key = "fceumm_game_genie",
+		.blocked = true
+	},
+	{
 		.key = "fceumm_zapper_mode",
 		.blocked = true
 	},

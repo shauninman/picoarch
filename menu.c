@@ -529,8 +529,8 @@ static int key_config_loop_wrap(int id, int keys)
 	const struct core_override *override = get_overrides();
 	me_bind_action *actions = CORE_OVERRIDE(override, actions, me_ctrl_actions);
 	size_t action_size = CORE_OVERRIDE(override, action_size, array_size(me_ctrl_actions));
-	me_bind_action *emu_actions = emuctrl_actions;
-	size_t emu_action_size = array_size(emuctrl_actions);
+	me_bind_action *emu_actions = CORE_OVERRIDE(override, emu_actions, emuctrl_actions);
+	size_t emu_action_size = CORE_OVERRIDE(override, emu_action_size, array_size(emuctrl_actions));
 
 	switch (id) {
 	case MA_CTRL_PLAYER1:

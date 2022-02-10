@@ -287,9 +287,6 @@ bool options_changed(void) {
 }
 
 void options_update_changed(void) {
-	if (core_options.changed)
-		return;
-
 	for(size_t i = 0; i < core_options.len; i++) {
 		struct core_option_entry* entry = &core_options.entries[i];
 		if (entry->value != entry->prev_value) {
