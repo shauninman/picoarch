@@ -31,4 +31,6 @@ float plat_sound_capacity(void);
 void plat_sound_write(const struct audio_frame *data, int frames);
 void plat_sound_resize_buffer(void);
 
+void* plat_clean_screen(void);
+
 #endif /* __PLAT_H__ */

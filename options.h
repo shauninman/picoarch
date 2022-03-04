@@ -10,7 +10,11 @@ extern int limit_frames;
 extern int enable_audio;
 extern unsigned audio_buffer_size;
 extern enum scale_size scale_size;
-extern enum scale_filter scale_filter;
+// extern enum scale_filter scale_filter;
+extern enum scale_effect scale_effect;
+extern enum scale_effect default_scale_effect;
+extern int optimize_text;
+// extern int max_upscale;
 
 struct core_option_entry {
 	char *key;

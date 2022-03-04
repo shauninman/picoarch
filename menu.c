@@ -495,21 +495,42 @@ static const char h_scale_size[]        =
 	"does no stretching. Aspect uses the correct aspect\n"
 	"ratio. Full uses the whole screen.";
 
-static const char h_scale_filter[]        =
-	"When stretching, how missing pixels are filled.\n"
-	"Nearest copies the last pixel. Sharp keeps pixels\n"
-	"aligned where possible. Smooth adds a blur effect.";
+// static const char h_max_upscale[]       =
+// 	"When stretching the screen, the maximum integer\n"
+// 	"step to scale up to before hardware scaling. Higher\n"
+// 	"values produce crisper scaled pixels but increase\n"
+// 	"the risk of audio crackling and frameskip.";
 
+// static const char h_scale_filter[]        =
+// 	"When stretching, how missing pixels are filled.\n"
+// 	"Nearest copies the last pixel. Sharp keeps pixels\n"
+// 	"aligned where possible. Smooth adds a blur effect.";
+
+static const char h_scale_effect[]        =
+	"When scaling is required, which visual effect\n"
+	"to apply. None is simple integer scaling. DMG is\n"
+	"for Gameboy. LCD simulates RGB pixels. Scanline\n"
+	"interleaves black rows. Some effects are only\n"
+	"available at certain scales and resolutions.";
+
+static const char h_optimize_text[]        =
+	"When non-integer scaling is required,\n"
+	"prioritize a consistent stroke size for\n"
+	"text. May affect non-text content.";
 
 static const char *men_scale_size[] = { "Native", "Aspect", "Full", NULL};
-static const char *men_scale_filter[] = { "Nearest", "Sharp", "Smooth", NULL};
+// static const char *men_scale_filter[] = { "Nearest", "Sharp", "Smooth", NULL};
+static const char *men_scale_effect[] = { "None", "DMG", "LCD", "Scanline", NULL};
 
 static menu_entry e_menu_video_options[] =
 {
 	mee_onoff_h      ("Show FPS",                 0, show_fps, 1, h_show_fps),
 	mee_onoff_h      ("Show CPU %",               0, show_cpu, 1, h_show_cpu),
 	mee_enum_h       ("Screen size",              0, scale_size, men_scale_size, h_scale_size),
-	mee_enum_h       ("Filter",                   0, scale_filter, men_scale_filter, h_scale_filter),
+	// mee_enum_h       ("Filter",                   0, scale_filter, men_scale_filter, h_scale_filter),
+	// mee_range_h      ("Max upscale",              0, max_upscale, 1, 8, h_max_upscale),
+	mee_enum_h       ("Screen effect",            0, scale_effect, men_scale_effect, h_scale_effect),
+	mee_onoff_h      ("Optimize text",            0, optimize_text, 1, h_optimize_text),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),
 	mee_end,
 };

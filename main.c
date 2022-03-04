@@ -201,7 +201,11 @@ void set_defaults(void)
 	enable_audio = 1;
 	audio_buffer_size = 5;
 	scale_size = SCALE_SIZE_NONE;
-	scale_filter = SCALE_FILTER_NEAREST;
+	// scale_filter = SCALE_FILTER_NEAREST;
+	scale_effect = default_scale_effect;
+	optimize_text = 1;
+	// max_upscale = 8;
+	
 	scale_update_scaler();
 
 	if (current_audio_buffer_size < audio_buffer_size)
@@ -332,8 +336,7 @@ void handle_emu_action(emu_action action)
 #ifdef MMENU
 		if (mmenu && content && content->path) {
 			ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
-			SDL_Surface *screen = SDL_GetVideoSurface();
-			MenuReturnStatus status = ShowMenu(content->path, state_allowed() ? save_template_path : NULL, screen, kMenuEventKeyDown);
+			MenuReturnStatus status = ShowMenu(content->path, state_allowed() ? save_template_path : NULL, plat_clean_screen());
 			char disc_path[256];
 			ChangeDisc_t ChangeDisc = (ChangeDisc_t)dlsym(mmenu, "ChangeDisc");
 
@@ -343,6 +346,7 @@ void handle_emu_action(emu_action action)
 			} else if (status == kStatusChangeDisc && ChangeDisc(disc_path)) {
 				disc_replace_index(0, disc_path);
 			} else if (status == kStatusOpenMenu) {
+				plat_video_flip();
 				menu_loop();
 			} else if (status >= kStatusLoadSlot) {
 				state_slot = status - kStatusLoadSlot;
@@ -529,7 +533,7 @@ int main(int argc, char **argv) {
 
 	if (argc > 1) {
 		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
-			printf("Usage: picoarch [libretro_core [content]]\n");
+			printf("Usage: picoarch libretro_core content [NONE DMG LCD SCANLINE]\n");
 			return 0;
 		}
 	}
@@ -554,6 +558,12 @@ int main(int argc, char **argv) {
 		quit(-1);
 	}
 	
+	if (argc > 3 && argv[3]) {
+		if (!strcmp(argv[3],"NONE")) default_scale_effect = SCALE_EFFECT_NONE;
+		else if (!strcmp(argv[3],"DMG")) default_scale_effect = SCALE_EFFECT_DMG;
+		else if (!strcmp(argv[3],"LCD")) default_scale_effect = SCALE_EFFECT_LCD;
+		else default_scale_effect = SCALE_EFFECT_SCANLINE;
+	}
 	
 	get_tag_name(content_path, tag_name);
 

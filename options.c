@@ -13,7 +13,11 @@ int limit_frames;
 int enable_audio;
 unsigned audio_buffer_size;
 enum scale_size scale_size;
-enum scale_filter scale_filter;
+// enum scale_filter scale_filter;
+enum scale_effect scale_effect;
+enum scale_effect default_scale_effect = SCALE_EFFECT_SCANLINE;
+int optimize_text;
+// int max_upscale;
 
 struct core_options core_options;
 

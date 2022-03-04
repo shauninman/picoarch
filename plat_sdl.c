@@ -1,5 +1,6 @@
 #include <SDL/SDL.h>
 #include <unistd.h>
+#include <math.h>
 #include "core.h"
 #include "libpicofe/fonts.h"
 #include "libpicofe/plat.h"
@@ -9,6 +10,351 @@
 #include "util.h"
 
 static SDL_Surface* screen;
+
+// begin miyoo hardware scaling support
+// loosely based on eggs' picogpsp gfx.c
+#include <mi_sys.h>
+#include <mi_gfx.h>
+#define	pixelsPa	unused1
+#define ALIGN4K(val)	((val+4095)&(~4095))
+
+//
+//	Get GFX_ColorFmt from SDL_Surface
+//
+MI_GFX_ColorFmt_e	GFX_ColorFmt(SDL_Surface *surface) {
+	if (surface != NULL) {
+		if (surface->format->BytesPerPixel == 2) {
+			if (surface->format->Amask == 0) return E_MI_GFX_FMT_RGB565;
+			if (surface->format->Amask == 0x8000) return E_MI_GFX_FMT_ARGB1555;
+			if (surface->format->Amask == 0xF000) {
+				if (surface->format->Bmask == 0x000F) return E_MI_GFX_FMT_ARGB4444;
+				return E_MI_GFX_FMT_ABGR4444;
+			}
+			if (surface->format->Amask == 0x000F) {
+				if (surface->format->Bmask == 0x00F0) return E_MI_GFX_FMT_RGBA4444;
+				return E_MI_GFX_FMT_BGRA4444;
+			}
+			return E_MI_GFX_FMT_RGB565;
+		}
+		if (surface->format->Bmask == 0x000000FF) return E_MI_GFX_FMT_ARGB8888;
+		if (surface->format->Amask == 0x000000FF) {
+			if (surface->format->Bmask == 0x0000FF00) return E_MI_GFX_FMT_RGBA8888;
+			return E_MI_GFX_FMT_BGRA8888;
+		}
+		if (surface->format->Rmask == 0x000000FF) return E_MI_GFX_FMT_ABGR8888;
+	}
+	return E_MI_GFX_FMT_ARGB8888;
+}
+
+//
+//	GFX BlitSurface (MI_GFX ver) / in place of SDL_BlitSurface
+//		with scale/bpp convert and rotate/mirror
+//		rotate : 1 = 90 / 2 = 180 / 3 = 270
+//		mirror : 1 = Horizontal / 2 = Vertical / 3 = Both
+//		nowait : 0 = wait until done / 1 = no wait
+//
+void GFX_BlitSurfaceExec(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect,
+			 uint32_t rotate, uint32_t mirror, uint32_t nowait) {
+	if ((src != NULL)&&(dst != NULL)&&(src->pixelsPa)&&(dst->pixelsPa)) {
+		MI_GFX_Surface_t Src;
+		MI_GFX_Surface_t Dst;
+		MI_GFX_Rect_t SrcRect;
+		MI_GFX_Rect_t DstRect;
+		MI_GFX_Opt_t Opt;
+		MI_U16 Fence;
+
+		memset(&Opt, 0, sizeof(Opt));
+		Opt.eSrcDfbBldOp = E_MI_GFX_DFB_BLD_ONE;
+		Opt.eRotate = (MI_GFX_Rotate_e)rotate;
+		Opt.eMirror = (MI_GFX_Mirror_e)mirror;
+
+		Src.phyAddr = src->pixelsPa;
+		Src.u32Width = src->w;
+		Src.u32Height = src->h;
+		Src.u32Stride = src->pitch;
+		Src.eColorFmt = GFX_ColorFmt(src);
+		if (srcrect != NULL) {
+			SrcRect.s32Xpos = srcrect->x;
+			SrcRect.s32Ypos = srcrect->y;
+			SrcRect.u32Width = srcrect->w;
+			SrcRect.u32Height = srcrect->h;
+		} else {
+			SrcRect.s32Xpos = 0;
+			SrcRect.s32Ypos = 0;
+			SrcRect.u32Width = Src.u32Width;
+			SrcRect.u32Height = Src.u32Height;
+		}
+
+		Dst.phyAddr = dst->pixelsPa;
+		Dst.u32Width = dst->w;
+		Dst.u32Height = dst->h;
+		Dst.u32Stride = dst->pitch;
+		Dst.eColorFmt = GFX_ColorFmt(dst);
+		if (dstrect != NULL) {
+			DstRect.s32Xpos = dstrect->x;
+			DstRect.s32Ypos = dstrect->y;
+			if ((dstrect->w==0)||(dstrect->h==0)) {
+				DstRect.u32Width = SrcRect.u32Width;
+				DstRect.u32Height = SrcRect.u32Height;
+			} else {
+				DstRect.u32Width = dstrect->w;
+				DstRect.u32Height = dstrect->h;
+			}
+		} else {
+			DstRect.s32Xpos = 0;
+			DstRect.s32Ypos = 0;
+			DstRect.u32Width = Dst.u32Width;
+			DstRect.u32Height = Dst.u32Height;
+		}
+
+		MI_SYS_FlushInvCache(src->pixels, ALIGN4K(src->pitch * src->h));
+		MI_SYS_FlushInvCache(dst->pixels, ALIGN4K(dst->pitch * dst->h));
+		MI_GFX_BitBlit(&Src, &SrcRect, &Dst, &DstRect, &Opt, &Fence);
+		if (!nowait) MI_GFX_WaitAllDone(FALSE, Fence);
+	} else SDL_BlitSurface(src, srcrect, dst, dstrect);
+}
+
+struct GFX_Buffer {
+	MI_PHY		phyAddr;
+	void*		virAddr;
+	int 		width;
+	int 		height;
+	int 		depth;
+	int 		pitch;
+	uint32_t 	size;
+};
+struct GFX_Scaler {
+	int src_w;
+	int src_h;
+	int src_p;
+	
+	int dst_w;
+	int dst_h;
+	int dst_p;
+	
+	int asp_x;
+	int asp_y;
+	int asp_w;
+	int asp_h;
+};
+static struct GFX_Buffer buffer;
+static struct GFX_Scaler scaler;
+static SDL_Surface* scaled = NULL;
+
+static uint16_t* dst_buf = NULL;
+static size_t dst_buf_p = 0;
+static void buffer_upscale(unsigned src_w, unsigned src_h, size_t src_p, const void* src,
+			 unsigned dst_w, unsigned dst_h, size_t dst_p, void* dst) {
+	
+	unsigned scale = dst_w / src_w;
+	if (scale==1) {
+		memcpy(dst,src,dst_h*dst_p);
+		return;
+	}
+	
+	if (dst_p!=dst_buf_p) {
+		if (dst_buf) free(dst_buf);
+		dst_buf_p = dst_p;
+		dst_buf = malloc(dst_p);
+	}
+	
+	unsigned _src_w = src_w;
+	unsigned _scale = scale;
+	while (src_h) {
+		const uint16_t* src_row = src;
+		uint16_t* dst_row = dst_buf;
+		while (src_w) {
+			uint16_t s = *(src_row++);
+			while (scale) {
+				*(dst_row++) = s;
+				scale -= 1;
+			}
+			scale = _scale;
+			src_w -= 1;
+		}
+		src_w = _src_w;
+		
+		while (scale) {
+			memcpy(dst, dst_buf, dst_p);
+			dst += dst_p;
+			scale -= 1;
+		}
+		scale = _scale;
+		src_h -= 1;
+		
+		src += src_p;
+	}
+}
+
+static void buffer_init(void) {
+	buffer.width  = 1280;
+	buffer.height =  960;
+	buffer.depth  =   16;
+	buffer.pitch  = buffer.width * SCREEN_BPP;
+	buffer.size = buffer.pitch * buffer.height;
+
+	if (MI_SYS_MMA_Alloc(NULL, ALIGN4K(buffer.size), &buffer.phyAddr)) return;
+	MI_SYS_MemsetPa(buffer.phyAddr, 0, buffer.size);
+	MI_SYS_Mmap(buffer.phyAddr, ALIGN4K(buffer.size), &buffer.virAddr, TRUE);
+	
+	PA_INFO("buffer_init()\n"); fflush(stdout);
+	
+	memset(&scaler, 0, sizeof(struct GFX_Scaler));
+}
+static void buffer_quit(void) {
+	if (buffer.phyAddr) {
+		MI_SYS_Munmap(buffer.virAddr, ALIGN4K(buffer.size));
+		MI_SYS_MMA_Free(buffer.phyAddr);
+	}
+	if (scaled) {
+		scaled->pixelsPa = 0;
+		SDL_FreeSurface(scaled);
+		scaled = NULL;
+	}
+	
+	if (dst_buf) free(dst_buf);
+}
+static void buffer_clear(void) {
+	PA_INFO("buffer_clear()\n"); fflush(stdout);
+	MI_SYS_FlushInvCache(buffer.virAddr, ALIGN4K(buffer.size));
+	MI_SYS_MemsetPa(buffer.phyAddr, 0, buffer.size);
+}
+static void buffer_renew_surface(int src_w, int src_h, int src_p) {
+	if (scaled) {
+		PA_INFO("freed %ix%i surface\n", scaled->w, scaled->h); fflush(stdout);
+		scaled->pixelsPa = 0;
+		SDL_FreeSurface(scaled);
+		scaled = NULL;
+	}
+	
+	scaler.src_w = src_w;
+	scaler.src_h = src_h;
+	scaler.src_p = src_p;
+	
+	// minimum
+	// snes can barely keep up
+	int sx = ceilf((float)SCREEN_WIDTH / src_w);
+	int sy = ceilf((float)SCREEN_HEIGHT / src_h);
+	int s = sx>sy ? sx : sy;
+	// if (s>4) s = 4;
+	
+	// maximum
+	// snes can't keep up (so we added max_upscale)
+	// int sx = 2 * SCREEN_WIDTH / src_w;
+	// int sy = 2 * SCREEN_HEIGHT / src_h;
+	// int s = sx<sy ? sx : sy;
+	
+	// if (s>max_upscale) s = max_upscale;
+	
+	scaler.dst_w = src_w * s;
+	scaler.dst_h = src_h * s;
+	scaler.dst_p = scaler.dst_w * SCREEN_BPP;
+	
+	scaled = SDL_CreateRGBSurfaceFrom(buffer.virAddr,scaler.dst_w,scaler.dst_h,buffer.depth,scaler.dst_p,0,0,0,0);
+	if (scaled != NULL) scaled->pixelsPa = buffer.phyAddr;
+	PA_INFO("created %ix%i surface (%ix)\n", scaler.dst_w, scaler.dst_h, s); fflush(stdout);
+	// buffer_clear();
+}
+static void buffer_upscale_nn(const void* src) {
+	// TODO: switch to eggs neon scaler?
+	void* dst = buffer.virAddr;
+
+	int dy = -scaler.dst_h;
+	unsigned lines = scaler.src_h;
+	bool copy = false;
+
+	size_t cpy_w = scaler.dst_w * SCREEN_BPP;
+	
+	while (lines) {
+		int dx = -scaler.dst_w;
+		const uint16_t *psrc16 = src;
+		uint16_t *pdst16 = dst;
+
+		if (copy) {
+			copy = false;
+			memcpy(dst, dst - scaler.dst_p, cpy_w);
+			dst += scaler.dst_p;
+			dy += scaler.src_h;
+		} else if (dy < 0) {
+			int col = scaler.src_w;
+			while(col--) {
+				while (dx < 0) {
+					*pdst16++ = *psrc16;
+					dx += scaler.src_w;
+				}
+
+				dx -= scaler.dst_w;
+				psrc16++;
+			}
+
+			dst += scaler.dst_p;
+			dy += scaler.src_h;
+		}
+
+		if (dy >= 0) {
+			dy -= scaler.dst_h;
+			src += scaler.src_p;
+			lines--;
+		} else {
+			copy = true;
+		}
+	}
+}
+static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) {
+	bool update_asp = false;
+	// static int scaler_max_upscale;
+	if (w!=scaler.src_w || h!=scaler.src_h || pitch!=scaler.src_p) { //  || scaler_max_upscale!=max_upscale
+		// scaler_max_upscale = max_upscale;
+		buffer_renew_surface(w,h,pitch);
+		update_asp = true;
+	}
+	
+	static int scaler_mode;
+	if (scaler_mode!=scale_size) {
+		scaler_mode = scale_size;
+		update_asp = true;
+	}
+	
+	if (update_asp) {
+		PA_INFO("update aspect ratio\n"); fflush(stdout);
+		buffer_clear();
+		
+		if (aspect_ratio<=0) aspect_ratio = (float)scaler.src_w / scaler.src_h;
+	
+		if (scale_size==SCALE_SIZE_ASPECT) {
+			scaler.asp_w = SCREEN_HEIGHT * aspect_ratio;
+			scaler.asp_h = SCREEN_HEIGHT;
+			if (scaler.asp_w>SCREEN_WIDTH) {
+				scaler.asp_w = SCREEN_WIDTH;
+				scaler.asp_h = SCREEN_WIDTH / aspect_ratio;
+			}
+		
+			scaler.asp_x = (SCREEN_WIDTH - scaler.asp_w) / 2;
+			scaler.asp_y = (SCREEN_HEIGHT - scaler.asp_h) / 2;
+		}
+	}
+	
+	// buffer_upscale_nn(src);
+	buffer_upscale(scaler.src_w,scaler.src_h,scaler.src_p,src,
+			scaler.dst_w,scaler.dst_h,scaler.dst_p,buffer.virAddr);
+	
+	if (scale_size==SCALE_SIZE_ASPECT) {
+		GFX_BlitSurfaceExec(scaled, NULL, screen, &(SDL_Rect){scaler.asp_x, scaler.asp_y, scaler.asp_w, scaler.asp_h},0,0,0);
+	}
+	else {
+		GFX_BlitSurfaceExec(scaled, NULL, screen, NULL,0,0,0);
+	}
+	
+	// just awful
+	// void* dst = screen->pixels;
+	// if (scale_effect==SCALE_EFFECT_SCANLINE) {
+	// 	for (int i=1; i<480; i+=2) {
+	// 		memset(dst+i*SCREEN_PITCH, 0, SCREEN_PITCH);
+	// 	}
+	// }
+}
+
+// end miyoo hardware scaling support
 
 struct audio_state {
 	unsigned buf_w;
@@ -197,24 +543,39 @@ void plat_video_set_msg(const char *new_msg, unsigned priority, unsigned msec)
 	}
 }
 
+
+static SDL_Surface* clean_screen = NULL;
+static const void* framebuffer; // NOTE: we don't own this
+void* plat_clean_screen(void) {
+	return scale_clean(framebuffer, clean_screen->pixels) ? clean_screen : NULL;
+}
+
 void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
+	framebuffer = data;
+	printf("video data: %p\n", data);
+	
 	static int had_msg = 0;
 	SDL_LockSurface(screen);
-
+	
 	if (had_msg) {
 		video_clear_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP);
 		had_msg = 0;
 	}
-
-	scale(width, height, pitch, data, screen->pixels);
-
+	
+	if (scale_size==SCALE_SIZE_NONE) {
+		scale(width, height, pitch, data, screen->pixels);
+	}
+	else {
+		buffer_scale(width, height, pitch, data);
+	}
+	
 	if (msg[0]) {
 		video_print_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP, msg);
 		had_msg = 1;
 	}
-
+	
 	SDL_UnlockSurface(screen);
-
+	
 	video_update_msg();
 }
 
@@ -225,6 +586,7 @@ void plat_video_flip(void)
 
 void plat_video_close(void)
 {
+	
 }
 
 unsigned plat_cpu_ticks(void)
@@ -406,7 +768,11 @@ int plat_init(void)
 		PA_ERROR("%s, failed to set video mode\n", __func__);
 		return -1;
 	}
-
+	
+	clean_screen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, 0,0,0,0);
+	
+	buffer_init();
+	
 	SDL_ShowCursor(0);
 
 	g_menuscreen_w = SCREEN_WIDTH;
@@ -442,6 +808,8 @@ int plat_reinit(void)
 void plat_finish(void)
 {
 	plat_sound_finish();
+	buffer_quit();
+	SDL_FreeSurface(clean_screen);
 	SDL_FreeSurface(screen);
 	screen = NULL;
 	SDL_Quit();
