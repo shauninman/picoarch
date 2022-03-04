@@ -6,7 +6,7 @@
 
 struct content {
 	const char path[MAX_PATH];
-
+	bool hasm3u; 
 	char *tmpfile;
 	void *data;
 	size_t size;

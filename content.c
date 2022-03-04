@@ -277,11 +277,39 @@ finish:
 	return ret;
 }
 
+static void content_has_m3u(struct content *content) {
+	char* tmp;
+	char m3u_path[256];
+	char base_path[256];
+	char dir_name[256];
+
+	strcpy(m3u_path, content->path);
+	tmp = strrchr(m3u_path, '/') + 1;
+	tmp[0] = '\0';
+	
+	strcpy(base_path, m3u_path);
+	
+	tmp = strrchr(m3u_path, '/');
+	tmp[0] = '\0';
+
+	tmp = strrchr(m3u_path, '/');
+	strcpy(dir_name, tmp);
+	
+	tmp = m3u_path + strlen(m3u_path); 
+	strcpy(tmp, dir_name);
+	
+	tmp = m3u_path + strlen(m3u_path);
+	strcpy(tmp, ".m3u");
+	
+	content->hasm3u = (access(m3u_path, F_OK)==0);
+}
+
 struct content *content_init(const char *path) {
 	struct content* content = calloc(1, sizeof(struct content));
 
 	if (content) {
 		strncpy((char *)content->path, path, sizeof(content->path) - 1);
+		content_has_m3u(content);
 	}
 	return content;
 }
@@ -293,6 +321,12 @@ void content_based_name(const struct content *content,
 	char filename[MAX_PATH];
 	char *path = strdup(content->path);
 	char *dot;
+	
+	if (content->hasm3u) {
+		dot = strrchr(path, '/');
+		if (dot)
+			*dot = 0;
+	}
 
 	if (basedir) {
 		if (!subdir)
