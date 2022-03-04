@@ -1,0 +1,33 @@
+diff --git a/Makefile.libretro b/Makefile.libretro
+index 482418a6045cac6d11923c97d16e9e185dcba4b2..47f6f276fdb96aba8a93afbcfe31e3a1bed95064 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -423,6 +423,28 @@ else ifeq ($(platform), miyoo)
+    CFLAGS += -fno-common -ftree-vectorize -funswitch-loops
+    DEFINES += -std=c99
+ 
++# MIYOOMINI
++else ifeq ($(platform), miyoomini)
++   TARGET := $(TARGET_NAME)_libretro.so
++   CC = $(CROSS_COMPILE)gcc
++   CXX = $(CROSS_COMPILE)g++
++   AR = $(CROSS_COMPILE)ar
++   SHARED := -shared -Wl,--version-script=link.T
++   fpic := -fPIC
++   PLATFORM_DEFINES += -D_GNU_SOURCE -DHAVE_STRTOF_L -DHAVE_LOCALE
++   CFLAGS += -fomit-frame-pointer -ffast-math
++   CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
++   CFLAGS += -fno-common -ftree-vectorize -funswitch-loops
++   HAVE_NEON = 1
++   ARCH = arm
++   BUILTIN_GPU = neon
++   CPU_ARCH := arm
++   MMAP_JIT_CACHE = 1
++   HAVE_DYNAREC = 1
++   DEFINES += -std=c99
++
++
++
+ # Windows
+ else
+    TARGET := $(TARGET_NAME)_libretro.dll

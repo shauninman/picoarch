@@ -1,0 +1,27 @@
+diff --git a/Makefile b/Makefile
+index 774d4c6a080450c9aec39c106a3cddb4c1aa72c1..5d8d227fa774ae7d951a506eb8e65f3930857cbc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -495,6 +495,22 @@ else ifeq ($(platform), trimui)
+ 	CPU_ARCH := arm
+ 	OPTIMIZE := -Ofast -DNDEBUG
+ 
++else ifeq ($(platform), miyoomini)
++	TARGET := $(TARGET_NAME)_libretro.so
++	CC = $(CROSS_COMPILE)gcc
++	CXX = $(CROSS_COMPILE)g++
++	AR = $(CROSS_COMPILE)ar
++	SHARED := -shared -Wl,--version-script=link.T
++	fpic := -fPIC -DPIC
++	CFLAGS += -fomit-frame-pointer -ffast-math
++	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
++	HAVE_NEON = 1
++	ARCH = arm
++	BUILTIN_GPU = neon
++	CPU_ARCH := arm
++	MMAP_JIT_CACHE = 1
++	HAVE_DYNAREC = 1
++
+ # Windows
+ else
+ 	TARGET := $(TARGET_NAME)_libretro.dll

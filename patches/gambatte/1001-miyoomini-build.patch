@@ -1,0 +1,23 @@
+diff --git a/Makefile.libretro b/Makefile.libretro
+index f8a34d5a6c6e50addc2581c35820f6c8e2615155..a419ad224b37a9cef72301daeb997bd82e4c907b 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -397,6 +397,18 @@ else ifeq ($(platform), trimui)
+ 		LDFLAGS += -s
+ 	endif
+ 
++else ifeq ($(platform), miyoomini)
++	TARGET := $(TARGET_NAME)_libretro.so
++	CC = $(CROSS_COMPILE)gcc
++	CXX = $(CROSS_COMPILE)g++
++	AR = $(CROSS_COMPILE)ar
++	SHARED := -shared -Wl,--version-script=$(version_script)
++	LDFLAGS += -fPIC -flto
++	PLATFORM_DEFINES := -DCC_RESAMPLER -DCC_RESAMPLER_NO_HIGHPASS
++	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
++	CFLAGS += -fomit-frame-pointer -ffast-math -fPIC -flto
++	CXXFLAGS += $(CFLAGS)
++
+ # RETROFW
+ else ifeq ($(platform), retrofw)
+    TARGET := $(TARGET_NAME)_libretro.so

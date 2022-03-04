@@ -1,0 +1,35 @@
+diff --git a/Makefile b/Makefile
+index 472160d8dcb9e3f32a927beb859bbec08b32288b..22f1ec1456a229e597b6e8abcd7f421cc585f657 100644
+--- a/Makefile
++++ b/Makefile
+@@ -296,6 +296,30 @@ else ifeq ($(platform), trimui)
+ 		LDFLAGS += -s
+ 	endif
+ 
++else ifeq ($(platform), miyoomini)
++	TARGET := $(TARGET_NAME)_libretro.so
++	CC = $(CROSS_COMPILE)gcc
++	CXX = $(CROSS_COMPILE)g++
++	AR = $(CROSS_COMPILE)ar
++	SHARED := -shared -Wl,--version-script=link.T
++	LIBM :=
++	CFLAGS += -Ofast \
++	-flto=4 -fwhole-program -fuse-linker-plugin \
++	-fdata-sections -ffunction-sections -Wl,--gc-sections \
++	-fno-stack-protector -fno-ident -fomit-frame-pointer \
++	-falign-functions=1 -falign-jumps=1 -falign-loops=1 \
++	-fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops \
++	-fmerge-all-constants -fno-math-errno 
++	CFLAGS += -fPIC
++	CFLAGS += -DLSB_FIRST -DFAST_ALIGNED_LSB_WORD_ACCESS -DRIGHTSHIFT_IS_SAR
++	CFLAGS += -std=c99 -fomit-frame-pointer -ffast-math
++	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
++	LDFLAGS += -flto
++	OPTIMIZE += -Ofast -DNDEBUG=1
++	ifeq (,$(DEBUG))
++		LDFLAGS += -s
++	endif
++
+ # MIYOO
+ else ifeq ($(platform), miyoo)
+ 	TARGET := $(TARGET_NAME)_libretro.so
