@@ -301,6 +301,35 @@ static void set_directories(const char *core_name, const char *tag_name) {
 // #endif
 }
 
+// based on eggs pokemini miyoominin rumble
+static bool pa_set_rumble_state(unsigned port, enum retro_rumble_effect effect, uint16_t strength) {
+	// PA_INFO("Rumble (strength: %u)\n", (unsigned int)strength);
+
+	uint32_t val = strength>0; // TODO: can we do better than just off or on?
+	
+	int fd;
+	const char str_export[] = "48";
+	const char str_direction[] = "out";
+	char value[1];
+	value[0] = ((val&1)^1) + 0x30;
+
+	fd = open("/sys/class/gpio/export",O_WRONLY);
+		if (fd > 0) {
+			write(fd, str_export, 2);
+			close(fd);
+		}
+	fd = open("/sys/class/gpio/gpio48/direction",O_WRONLY);
+		if (fd > 0) {
+			write(fd, str_direction, 3);
+			close(fd);
+		}
+	fd = open("/sys/class/gpio/gpio48/value",O_WRONLY);
+		if (fd > 0) {
+			write(fd, value, 1);
+			close(fd);
+		}
+	
+	return true;
 }
 
 static bool pa_environment(unsigned cmd, void *data) {
@@ -370,6 +399,14 @@ static bool pa_environment(unsigned cmd, void *data) {
 		bool *out = (bool *)data;
 		if (out)
 			*out = options_changed();
+		break;
+	}
+	case RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE: { /* 23 */
+        struct retro_rumble_interface *iface =
+           (struct retro_rumble_interface*)data;
+
+        PA_INFO("Setup rumble interface.\n");
+        iface->set_rumble_state = pa_set_rumble_state;
 		break;
 	}
 	case RETRO_ENVIRONMENT_GET_LOG_INTERFACE: { /* 27 */
