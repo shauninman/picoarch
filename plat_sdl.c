@@ -349,7 +349,7 @@ void plat_sound_write(const struct audio_frame *data, int frames)
 			if (!limit_frames)
 				return;
 
-			plat_sleep_ms(1);
+			SDL_Delay(1);
 			SDL_LockAudio();
 		}
 
@@ -400,6 +400,7 @@ void plat_sdl_event_handler(void *event_)
 int plat_init(void)
 {
 	SDL_Init(SDL_INIT_VIDEO);
+	SDL_putenv("GFX_BLOCKING=1");
 	screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, SDL_SWSURFACE);
 	if (screen == NULL) {
 		PA_ERROR("%s, failed to set video mode\n", __func__);

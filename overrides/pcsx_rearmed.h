@@ -97,6 +97,7 @@ static const struct core_override_option pcsx_rearmed_core_option_overrides[] = 
 	},
 	{
 		.key = "pcsx_rearmed_gpu_unai_scale_hires",
+		// .blocked = true, // TODO: crashes scaler, disable
 		.desc = "Hi-Res Scaling",
 		.default_value = "enabled"
 	},
@@ -181,16 +182,11 @@ const struct core_override_fast_forward pcsx_rearmed_fast_forward = {
 	.interval_key = "pcsx_rearmed_frameskip_interval"
 };
 
-const struct core_override_startup_msg pcsx_rearmed_startup_msg = {
-	.msg = "Loading...",
-	.msec = 3000,
-};
-
 #define pcsx_rearmed_overrides {                               \
 	.core_name = "pcsx_rearmed",                           \
 	.fast_forward = &pcsx_rearmed_fast_forward,            \
-	.startup_msg = &pcsx_rearmed_startup_msg,              \
 	.actions = pcsx_rearmed_ctrl_actions,                  \
 	.action_size = array_size(pcsx_rearmed_ctrl_actions),  \
 	.options = pcsx_rearmed_core_option_overrides,         \
 }
+

@@ -1,0 +1,107 @@
+diff --git a/libretro.c b/libretro.c
+index 9b4599e..c768c42 100644
+--- a/libretro.c
++++ b/libretro.c
+@@ -58,13 +58,11 @@ static int32_t samplerate = (((SNES_CLOCK_SPEED * 6) / (32 * ONE_APU_CYCLE)));
+ static unsigned frameskip_type             = 0;
+ static unsigned frameskip_threshold        = 0;
+ static uint16_t frameskip_counter          = 0;
++static unsigned frameskip_interval         = 0;
+ 
+ static bool retro_audio_buff_active        = false;
+ static unsigned retro_audio_buff_occupancy = 0;
+ static bool retro_audio_buff_underrun      = false;
+-/* Maximum number of consecutive frames that
+- * can be skipped */
+-#define FRAMESKIP_MAX 30
+ 
+ static unsigned retro_audio_latency        = 0;
+ static bool update_audio_latency           = false;
+@@ -345,6 +343,7 @@ void retro_deinit(void)
+    frameskip_type             = 0;
+    frameskip_threshold        = 0;
+    frameskip_counter          = 0;
++   frameskip_interval         = 0;
+    retro_audio_buff_active    = false;
+    retro_audio_buff_occupancy = 0;
+    retro_audio_buff_underrun  = false;
+@@ -418,7 +417,7 @@ static void check_variables(bool first_run)
+    {
+       if (strcmp(var.value, "auto") == 0)
+          frameskip_type = 1;
+-      else if (strcmp(var.value, "manual") == 0)
++      else if (strcmp(var.value, "auto_threshold") == 0)
+          frameskip_type = 2;
+    }
+ 
+@@ -430,6 +429,14 @@ static void check_variables(bool first_run)
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+       frameskip_threshold = strtol(var.value, NULL, 10);
+ 
++   var.key = "snes9x_2005_frameskip_interval";
++   var.value = NULL;
++
++   frameskip_interval = 4;
++
++   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
++      frameskip_interval = strtol(var.value, NULL, 10);
++
+    var.key = "snes9x_2005_overclock_cycles";
+    var.value = NULL;
+ 
+@@ -535,7 +542,7 @@ void retro_run(void)
+ 
+       if (skip_frame)
+       {
+-         if(frameskip_counter < FRAMESKIP_MAX)
++         if(frameskip_counter < frameskip_interval)
+          {
+             IPPU.RenderThisFrame = false;
+             frameskip_counter++;
+diff --git a/libretro_core_options.h b/libretro_core_options.h
+index 9b89154..41d5ff1 100644
+--- a/libretro_core_options.h
++++ b/libretro_core_options.h
+@@ -87,9 +87,9 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+       NULL,
+       NULL,
+       {
+-         { "disabled", NULL },
+-         { "auto",     "Auto" },
+-         { "manual",   "Manual" },
++         { "disabled",       NULL },
++         { "auto",           "Auto" },
++         { "auto_threshold", "Threshold" },
+          { NULL, NULL },
+       },
+       "disabled"
+@@ -122,6 +122,29 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+       },
+       "33"
+    },
++   {
++      "snes9x_2005_frameskip_interval",
++      "Frameskip Interval",
++      NULL,
++      "The maximum number of frames that can be skipped before a new frame is rendered.",
++      NULL,
++      NULL,
++      {
++         { "0",  NULL },
++         { "1",  NULL },
++         { "2",  NULL },
++         { "3",  NULL },
++         { "4",  NULL },
++         { "5",  NULL },
++         { "6",  NULL },
++         { "7",  NULL },
++         { "8",  NULL },
++         { "9",  NULL },
++         { "10", NULL },
++         { NULL, NULL },
++      },
++      "4"
++   },
+    {
+       "snes9x_2005_overclock_cycles",
+       "Reduce Slowdown (Hack, Unsafe, Restart)",

@@ -21,7 +21,7 @@ static const struct core_override_option gpsp_core_option_overrides[] = {
 	{
 		.key = "gpsp_frameskip",
 		.info = "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
-		.default_value = "auto",
+		.default_value = "disabled",
 		.options = {
 			[2] = {"auto_threshold", "Threshold"},
 			[3] = {"fixed_interval", "Fixed"},
@@ -79,7 +79,7 @@ me_bind_action gpsp_ctrl_actions[] =
 	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
 	{ "L BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
 	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
-	/* { "FAST FWD ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 }, */
+	{ "FAST FWD ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 },
 	{ NULL,       0 }
 };
 

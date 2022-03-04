@@ -72,6 +72,7 @@ me_bind_action fceumm_ctrl_actions[] =
 	{ "RIGHT    ",  1 << RETRO_DEVICE_ID_JOYPAD_RIGHT },
 	{ "A        ",  1 << RETRO_DEVICE_ID_JOYPAD_A },
 	{ "B        ",  1 << RETRO_DEVICE_ID_JOYPAD_B },
+	// NOTE: tried to reverse these but all it changed was the labels
 	{ "A TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_X },
 	{ "B TURBO  ",  1 << RETRO_DEVICE_ID_JOYPAD_Y },
 	{ "START    ",  1 << RETRO_DEVICE_ID_JOYPAD_START },

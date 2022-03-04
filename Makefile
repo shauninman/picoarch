@@ -14,12 +14,16 @@ CFLAGS     += -Wall
 CFLAGS     += -fdata-sections -ffunction-sections -DPICO_HOME_DIR='"/.picoarch/"' -flto
 CFLAGS     += -I./ -I./libretro-common/include/ $(shell $(SYSROOT)/usr/bin/sdl-config --cflags)
 
-LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lasound -lpng -lz -Wl,--gc-sections -flto
+LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lpng12 -lz -Wl,--gc-sections -flto
 
 # Unpolished or slow cores that build
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
-CORES     = beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
+# CORES     = pcsx_rearmed beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
+CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed
+
+snes9x2005_plus_REPO = https://github.com/libretro/snes9x2005
+snes9x2005_plus_FLAGS = USE_BLARGG_APU=1
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
@@ -36,6 +40,8 @@ fmsx_REPO = https://github.com/libretro/fmsx-libretro
 
 gambatte_REPO = https://github.com/libretro/gambatte-libretro
 
+snes9x_REPO = https://github.com/libretro/snes9x
+
 gme_REPO = https://github.com/libretro/libretro-gme
 
 mame2000_REPO = https://github.com/libretro/mame2000-libretro
@@ -44,6 +50,9 @@ mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
 pcsx_rearmed_MAKEFILE = Makefile.libretro
 
 picodrive_MAKEFILE = Makefile.libretro
+
+pokemini_REPO = https://github.com/libretro/PokeMini
+pokemini_MAKEFILE = Makefile.libretro
 
 quicknes_REPO = https://github.com/libretro/QuickNES_Core
 
@@ -54,7 +63,11 @@ ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
 	CFLAGS += -mcpu=arm926ej-s -mtune=arm926ej-s -fno-PIC -DCONTENT_DIR='"/mnt/SDCARD/Roms"'
 	LDFLAGS += -fno-PIC
-
+else ifeq ($(platform), miyoomini)
+	OBJS += plat_miyoomini.o
+	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve -fPIC -DCONTENT_DIR='"/mnt/SDCARD/Roms"'
+	LDFLAGS += -fPIC -lmi_sys -lmi_gfx
+	MMENU=1
 else ifeq ($(platform), unix)
 	OBJS += plat_linux.o
 	LDFLAGS += -fPIE
@@ -106,6 +119,7 @@ libpicofe/.patched:
 clean-libpicofe:
 	test ! -f libpicofe/.patched || (cd libpicofe && git apply -p1 -R < ../patches/libpicofe/0001-key-combos.patch && rm .patched)
 
+plat_miyoomini.o: plat_sdl.c
 plat_trimui.o: plat_sdl.c
 plat_linux.o: plat_sdl.c
 
@@ -138,7 +152,7 @@ $(foreach core,$(CORES),$(eval $(call CORE_template,$(core))))
 
 cores: $(SOFILES)
 
-clean: clean-libpicofe
+clean: # clean-libpicofe
 	rm -f $(OBJS) $(BIN) $(SOFILES)
 	rm -rf pkg
 

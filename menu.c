@@ -15,7 +15,7 @@ static struct dirent **corelist = NULL;
 static int corelist_len = 0;
 
 #define MENU_ALIGN_LEFT 0
-#define MENU_X2 0
+#define MENU_X2 1
 
 #define MENU_ITEMS_PER_PAGE 11
 
@@ -68,7 +68,7 @@ me_bind_action emuctrl_actions[] =
 	{ "Load State       ", 1 << EACTION_LOAD_STATE },
 	{ "Toggle FPS/CPU%  ", 1 << EACTION_TOGGLE_HUD },
 	{ "Toggle FF        ", 1 << EACTION_TOGGLE_FF },
-	{ "Take Screenshot  ", 1 << EACTION_SCREENSHOT },
+	// { "Take Screenshot  ", 1 << EACTION_SCREENSHOT },
 	{ NULL,                0 }
 };
 
@@ -667,7 +667,7 @@ void menu_loop(void)
 {
 	static int sel = 0;
 	bool needs_disc_ctrl = disc_get_count() > 1;
-	const struct core_override *override = get_overrides();
+	// const struct core_override *override = get_overrides();
 
 	plat_video_menu_enter(1);
 
@@ -679,8 +679,10 @@ void menu_loop(void)
 	
 	me_enable(e_menu_main, MA_MAIN_DISC_CTRL, needs_disc_ctrl);
 
-	if (override)
-		me_enable(e_menu_main, MA_MAIN_CONTENT_SEL, !override->block_load_content);
+	me_enable(e_menu_main, MA_MAIN_CONTENT_SEL, false);
+
+	// if (override)
+	// 	me_enable(e_menu_main, MA_MAIN_CONTENT_SEL, !override->block_load_content);
 
 #ifdef MMENU
 	if (state_allowed()) {
