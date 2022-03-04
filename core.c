@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include "cheat.h"
 #include "core.h"
@@ -118,7 +119,7 @@ void state_file_name(char *name, size_t size, int slot) {
 	char extension[5] = {0};
 
 	snprintf(extension, 5, ".st%d", slot);
-	content_based_name(content, name, MAX_PATH, save_dir, NULL, extension);
+	content_based_name(content, name, MAX_PATH, config_dir, NULL, extension);
 }
 
 int state_read(void) {
@@ -270,30 +271,36 @@ finish:
 	return ret;
 }
 
-static void set_directories(const char *core_name) {
+static void set_directories(const char *core_name, const char *tag_name) {
 	const char *home = getenv("HOME");
-	char *dst = save_dir;
-	int len = MAX_PATH;
-#ifndef MINUI
-	char cwd[MAX_PATH];
-#endif
+	const char *sdcard_path = getenv("SDCARD_PATH");
+	// char *dst = save_dir;
+	// int len = MAX_PATH;
+// #ifndef MINUI
+// 	char cwd[MAX_PATH];
+// #endif
 	if (home != NULL) {
-		snprintf(dst, len, "%s/.picoarch-%s/", home, core_name);
-		mkdir(dst, 0755);
+		snprintf(config_dir, MAX_PATH, "%s/.picoarch-%s-%s/", home, core_name, tag_name);
+		mkdir(config_dir, 0755);
 	}
 
-	strncpy(config_dir, save_dir, MAX_PATH-1);
+	// strncpy(config_dir, save_dir, MAX_PATH-1);
+	
+	snprintf(save_dir, MAX_PATH, "%s/Saves/%s/", sdcard_path, tag_name);
+	snprintf(system_dir, MAX_PATH, "%s/Bios/%s", sdcard_path, tag_name);
 
-#ifdef MINUI
-	strncpy(system_dir, save_dir, MAX_PATH-1);
-#else
-	if (getcwd(cwd, MAX_PATH)) {
-		snprintf(system_dir, MAX_PATH, "%s/system", cwd);
-		mkdir(system_dir, 0755);
-	} else {
-		PA_FATAL("Can't find system directory");
-	}
-#endif
+// #ifdef MINUI
+// 	strncpy(system_dir, save_dir, MAX_PATH-1);
+// #else
+// 	if (getcwd(cwd, MAX_PATH)) {
+// 		snprintf(system_dir, MAX_PATH, "%s/.picoarch_system", cwd);
+// 		mkdir(system_dir, 0755);
+// 	} else {
+// 		PA_FATAL("Can't find system directory");
+// 	}
+// #endif
+}
+
 }
 
 static bool pa_environment(unsigned cmd, void *data) {
@@ -521,7 +528,7 @@ void core_extract_name(const char* core_file, char *buf, size_t len) {
 	}
 }
 
-int core_open(const char *corefile) {
+int core_open(const char *corefile, const char *tag_name) {
 	struct retro_system_info info = {};
 
 	void (*set_environment)(retro_environment_t) = NULL;
@@ -541,7 +548,7 @@ int core_open(const char *corefile) {
 		return -1;
 	}
 
-	set_directories(core_name);
+	set_directories(core_name, tag_name);
 	set_overrides(core_name);
 
 	current_core.retro_init = dlsym(current_core.handle, "retro_init");
@@ -605,7 +612,7 @@ int core_load_content(struct content *content) {
 		goto finish;
 	}
 
-	content_based_name(content, cheats_path, sizeof(cheats_path), save_dir, "cheats/", ".cht");
+	content_based_name(content, cheats_path, sizeof(cheats_path), config_dir, "cheats/", ".cht");
 	if (cheats_path[0] != '\0') {
 		cheats = cheats_load(cheats_path);
 		core_apply_cheats(cheats);
@@ -631,7 +638,7 @@ int core_load_content(struct content *content) {
 	plat_reinit();
 
 #ifdef MMENU
-	content_based_name(content, save_template_path, MAX_PATH, save_dir, NULL, ".st%i");
+	content_based_name(content, save_template_path, MAX_PATH, config_dir, NULL, ".st%i");
 #endif
 
 	ret = 0;

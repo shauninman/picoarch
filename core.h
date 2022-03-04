@@ -61,7 +61,7 @@ bool disc_switch_index(unsigned index);
 bool disc_replace_index(unsigned index, const char *content_path);
 
 void core_extract_name(const char* core_file, char *buf, size_t len);
-int core_open(const char *corefile);
+int core_open(const char *corefile, const char* tag_name);
 void core_load(void);
 int core_load_content(struct content *content);
 void core_apply_cheats(struct cheats *cheats);

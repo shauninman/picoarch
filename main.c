@@ -501,8 +501,31 @@ static void adjust_audio(void) {
 	}
 }
 
+static void get_tag_name(const char* in_path, char* out_tag) {
+	char* tmp;
+	strcpy(out_tag, in_path);
+	tmp = out_tag;
+	char roms_path[MAX_PATH];
+	sprintf(roms_path, "%s/Roms/", getenv("SDCARD_PATH"));
+	
+	// extract just the Roms folder name
+	tmp += strlen(roms_path) + 1;
+	char* tmp2 = strchr(tmp, '/');
+	if (tmp2) tmp2[0] = '\0';
+
+	// finally extract pak name from parenths if present
+	tmp = strchr(tmp, '(');
+	if (tmp) {
+		tmp += 1;
+		strcpy(out_tag, tmp);
+		tmp = strchr(out_tag,')');
+		tmp[0] = '\0';
+	}
+}
+
 int main(int argc, char **argv) {
 	char content_path[MAX_PATH];
+	char tag_name[MAX_PATH];
 
 	if (argc > 1) {
 		if (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
@@ -522,21 +545,22 @@ int main(int argc, char **argv) {
 	if (argc > 1 && argv[1]) {
 		strncpy(core_path, argv[1], sizeof(core_path) - 1);
 	} else {
-		if (menu_select_core())
-			quit(-1);
-	}
-
-	core_extract_name(core_path, core_name, sizeof(core_name));
-
-	if (core_open(core_path)) {
 		quit(-1);
 	}
-
+	
 	if (argc > 2 && argv[2]) {
 		strncpy(content_path, argv[2], sizeof(content_path) - 1);
 	} else {
-		if (menu_select_content(content_path, sizeof(content_path)))
-			quit(-1);
+		quit(-1);
+	}
+	
+	
+	get_tag_name(content_path, tag_name);
+
+	core_extract_name(core_path, core_name, sizeof(core_name));
+
+	if (core_open(core_path, tag_name)) {
+		quit(-1);
 	}
 
 	content = content_init(content_path);
