@@ -1,18 +1,5 @@
-diff --git a/source/PokeMini.c b/source/PokeMini.c
-index 06140261ba4d4c36e9605ecfee471bcfddba5f25..9b6f6912185cc1017c129c1d5953688fe5e0019a 100644
---- a/source/PokeMini.c
-+++ b/source/PokeMini.c
-@@ -489,7 +489,7 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
- 				memstream_set_buffer(NULL, 0);
- 				return 0;
- 			}
--		} else if (!strcmp(PMiniStr, "LCD-")) {		// Audio
-+		} else if (!strcmp(PMiniStr, "AUD-")) {		// Audio
- 			if (!MinxAudio_LoadStateStream(stream, BSize)) {
- 				memstream_close(stream);
- 				memstream_set_buffer(NULL, 0);
 diff --git a/libretro/libretro.c b/libretro/libretro.c
-index f4980a5844b24a919b49a8795966cdca1d4faae7..435ec7d66e4cc7d4bfddf9cf0240199df4c5b856 100644
+index f4980a5844b24a919b49a8795966cdca1d4faae7..cab4a123dc1e22573a47862a30398dd12d8b456f 100644
 --- a/libretro/libretro.c
 +++ b/libretro/libretro.c
 @@ -889,6 +889,45 @@ void retro_init (void)
@@ -35,20 +22,20 @@ index f4980a5844b24a919b49a8795966cdca1d4faae7..435ec7d66e4cc7d4bfddf9cf0240199d
 +
 +static void defer_unserialize(const void *data, size_t size) {
 +	free_deferred_data();
-+	
++
 +	if (data==NULL || size<=0) return;
 +
 +	if (log_cb) log_cb(RETRO_LOG_INFO, "Deferred save state load.\n");
-+	
++
 +	deferred_data = malloc(size);
 +	memcpy(deferred_data, data, size);
 +	deferred_size = size;
 +}
 +static void update_deferred(void) {
 +	frames += 1;
-+	
++
 +	if (frames<defer_frames || deferred_size==0) return;
-+	
++
 +	retro_unserialize(deferred_data, deferred_size);
 +
 +	if (log_cb) log_cb(RETRO_LOG_INFO, "Loaded deferred save state.\n");
@@ -65,7 +52,7 @@ index f4980a5844b24a919b49a8795966cdca1d4faae7..435ec7d66e4cc7d4bfddf9cf0240199d
  	turbo_period      = TURBO_PERIOD_DEFAULT;
  	turbo_pulse_width = TURBO_PULSE_WIDTH_DEFAULT;
  	turbo_counter     = 0;
-+	
++
 +	free_deferred_data();
  }
  
@@ -75,7 +62,7 @@ index f4980a5844b24a919b49a8795966cdca1d4faae7..435ec7d66e4cc7d4bfddf9cf0240199d
  void retro_run (void)
  {
 +	if (frames<defer_frames) update_deferred();
-+	
++
  	static int16_t audiobuffer[612 * 2]; // 2 Channels -> MinxAudio_SamplesInBuffer() * 2
  	uint16_t audiosamples = 612;
  	
@@ -87,7 +74,20 @@ index f4980a5844b24a919b49a8795966cdca1d4faae7..435ec7d66e4cc7d4bfddf9cf0240199d
 +		defer_unserialize(data,size);
 +		return true;
 +	}
-+	
++
  	if (PokeMini_LoadSSStream((uint8_t*)data, size)) {
  		if (log_cb) log_cb(RETRO_LOG_INFO, "Save state loaded successfully.\n");
  	} else {
+diff --git a/source/PokeMini.c b/source/PokeMini.c
+index 06140261ba4d4c36e9605ecfee471bcfddba5f25..9b6f6912185cc1017c129c1d5953688fe5e0019a 100644
+--- a/source/PokeMini.c
++++ b/source/PokeMini.c
+@@ -489,7 +489,7 @@ int PokeMini_LoadSSStream(uint8_t *buffer, uint64_t size)
+ 				memstream_set_buffer(NULL, 0);
+ 				return 0;
+ 			}
+-		} else if (!strcmp(PMiniStr, "LCD-")) {		// Audio
++		} else if (!strcmp(PMiniStr, "AUD-")) {		// Audio
+ 			if (!MinxAudio_LoadStateStream(stream, BSize)) {
+ 				memstream_close(stream);
+ 				memstream_set_buffer(NULL, 0);

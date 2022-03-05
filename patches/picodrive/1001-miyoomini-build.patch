@@ -1,18 +1,18 @@
-diff --git a/Makefile b/Makefile
-index 2142f6d8aa89776f953439b487b393b6068e8c10..aa4f4fae1282453159ae761c8ab0d15a7ac12a60 100644
---- a/Makefile
-+++ b/Makefile
-@@ -307,6 +307,30 @@ else ifeq ($(platform), trimui)
+diff --git a/Makefile.libretro b/Makefile.libretro
+index f51acb16b78ae7d8886ab5cbe3a73a185a930353..d19acd0bd2de0183d5c39596794a03b5f456734e 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -523,6 +523,31 @@ else ifeq ($(platform), trimui)
  		LDFLAGS += -s
  	endif
  
++# MIYOO MINI
 +else ifeq ($(platform), miyoomini)
 +	TARGET := $(TARGET_NAME)_libretro.so
 +	CC = $(CROSS_COMPILE)gcc
 +	CXX = $(CROSS_COMPILE)g++
 +	AR = $(CROSS_COMPILE)ar
 +	SHARED := -shared -Wl,--version-script=link.T
-+	LIBM :=
 +	CFLAGS += -Ofast \
 +	-flto=4 -fwhole-program -fuse-linker-plugin \
 +	-fdata-sections -ffunction-sections -Wl,--gc-sections \
@@ -20,16 +20,17 @@ index 2142f6d8aa89776f953439b487b393b6068e8c10..aa4f4fae1282453159ae761c8ab0d15a
 +	-falign-functions=1 -falign-jumps=1 -falign-loops=1 \
 +	-fno-unwind-tables -fno-asynchronous-unwind-tables -fno-unroll-loops \
 +	-fmerge-all-constants -fno-math-errno
-+	CFLAGS += -fPIC
++	CFLAGS += -fPIC -flto
 +	CFLAGS += -DLSB_FIRST -DFAST_ALIGNED_LSB_WORD_ACCESS -DRIGHTSHIFT_IS_SAR
-+	CFLAGS += -std=c99 -fomit-frame-pointer -ffast-math
++	CFLAGS += -fomit-frame-pointer -ffast-math
 +	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
 +	LDFLAGS += -flto
-+	OPTIMIZE += -Ofast -DNDEBUG=1
++	HAVE_NEON = 1
++	BUILTIN_GPU = neon
 +	ifeq (,$(DEBUG))
 +		LDFLAGS += -s
 +	endif
 +
- # (armv7 a7, hard point, neon based) ### 
- # NESC, SNESC, C64 mini 
- else ifeq ($(platform), classic_armv7_a7)
+ # Windows MSVC 2017 all architectures
+ else ifneq (,$(findstring windows_msvc2017,$(platform)))
+ 	NO_GCC := 1

@@ -1,11 +1,11 @@
 diff --git a/Makefile.libretro b/Makefile.libretro
-index 7fd53ae2490a643b3d816181d0fd43918d6009b7..668c7a593e0885da38ae8c860b5bbe06e18bb9d6 100644
+index 1cf7c114c60cfbfa516326ee2b23d7601655c3fb..a7e70236252b5123e26cb34a74708cd5c60d4bdc 100644
 --- a/Makefile.libretro
 +++ b/Makefile.libretro
 @@ -466,6 +466,23 @@ else ifeq ($(platform), trimui)
  		LDFLAGS += -s
  	endif
- 	
+ 
 +# MIYOOMINI
 +else ifeq ($(platform), miyoomini)
 +	TARGET := $(TARGET_NAME)_libretro.so
