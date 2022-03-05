@@ -7,6 +7,7 @@
 #include "menu.h"
 #include "plat.h"
 #include "scale.h"
+#include "scaler_neon.h"
 #include "util.h"
 
 static SDL_Surface* screen;
@@ -124,6 +125,8 @@ struct GFX_Buffer {
 	uint32_t 	size;
 };
 struct GFX_Scaler {
+	scale_neon16_t upscale;
+	
 	int src_w;
 	int src_h;
 	int src_p;
@@ -236,15 +239,26 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	int sx = ceilf((float)SCREEN_WIDTH / src_w);
 	int sy = ceilf((float)SCREEN_HEIGHT / src_h);
 	int s = sx>sy ? sx : sy;
-	// if (s>4) s = 4;
 	
 	// maximum
 	// snes can't keep up (so we added max_upscale)
 	// int sx = 2 * SCREEN_WIDTH / src_w;
 	// int sy = 2 * SCREEN_HEIGHT / src_h;
 	// int s = sx<sy ? sx : sy;
-	
+	//
 	// if (s>max_upscale) s = max_upscale;
+	
+	if (s>6) s = 6;
+	switch(s) {
+		case 1: scaler.upscale = scale1x_n16; break;
+		case 2: scaler.upscale = scale2x_n16; break;
+		case 3: scaler.upscale = scale3x_n16; break;
+		case 4: scaler.upscale = scale4x_n16; break;
+		case 5: scaler.upscale = scale5x_n16; break;
+		case 6: scaler.upscale = scale6x_n16; break;
+		// TODO: make an 8x version?
+	}
+	
 	
 	scaler.dst_w = src_w * s;
 	scaler.dst_h = src_h * s;
@@ -254,51 +268,6 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	if (scaled != NULL) scaled->pixelsPa = buffer.phyAddr;
 	PA_INFO("created %ix%i surface (%ix)\n", scaler.dst_w, scaler.dst_h, s); fflush(stdout);
 	// buffer_clear();
-}
-static void buffer_upscale_nn(const void* src) {
-	// TODO: switch to eggs neon scaler?
-	void* dst = buffer.virAddr;
-
-	int dy = -scaler.dst_h;
-	unsigned lines = scaler.src_h;
-	bool copy = false;
-
-	size_t cpy_w = scaler.dst_w * SCREEN_BPP;
-	
-	while (lines) {
-		int dx = -scaler.dst_w;
-		const uint16_t *psrc16 = src;
-		uint16_t *pdst16 = dst;
-
-		if (copy) {
-			copy = false;
-			memcpy(dst, dst - scaler.dst_p, cpy_w);
-			dst += scaler.dst_p;
-			dy += scaler.src_h;
-		} else if (dy < 0) {
-			int col = scaler.src_w;
-			while(col--) {
-				while (dx < 0) {
-					*pdst16++ = *psrc16;
-					dx += scaler.src_w;
-				}
-
-				dx -= scaler.dst_w;
-				psrc16++;
-			}
-
-			dst += scaler.dst_p;
-			dy += scaler.src_h;
-		}
-
-		if (dy >= 0) {
-			dy -= scaler.dst_h;
-			src += scaler.src_p;
-			lines--;
-		} else {
-			copy = true;
-		}
-	}
 }
 static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) {
 	bool update_asp = false;
@@ -335,8 +304,12 @@ static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) 
 	}
 	
 	// buffer_upscale_nn(src);
-	buffer_upscale(scaler.src_w,scaler.src_h,scaler.src_p,src,
-			scaler.dst_w,scaler.dst_h,scaler.dst_p,buffer.virAddr);
+	// buffer_upscale(scaler.src_w,scaler.src_h,scaler.src_p,src,
+	// 		scaler.dst_w,scaler.dst_h,scaler.dst_p,buffer.virAddr);
+	
+	// (void* __restrict src, void* __restrict dst, uint32_t sw, uint32_t sh, uint32_t sp, uint32_t dp);
+	
+	scaler.upscale(src, buffer.virAddr,scaler.src_w,scaler.src_h,scaler.src_p,scaler.dst_p);
 	
 	if (scale_size==SCALE_SIZE_ASPECT) {
 		GFX_BlitSurfaceExec(scaled, NULL, screen, &(SDL_Rect){scaler.asp_x, scaler.asp_y, scaler.asp_w, scaler.asp_h},0,0,0);
@@ -552,7 +525,6 @@ void* plat_clean_screen(void) {
 
 void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
 	framebuffer = data;
-	printf("video data: %p\n", data);
 	
 	static int had_msg = 0;
 	SDL_LockSurface(screen);
