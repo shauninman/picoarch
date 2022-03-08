@@ -125,7 +125,7 @@ struct GFX_Buffer {
 	uint32_t 	size;
 };
 struct GFX_Scaler {
-	scale_neon16_t upscale;
+	scale_neon_t upscale;
 	
 	int src_w;
 	int src_h;
@@ -306,9 +306,6 @@ static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) 
 	// buffer_upscale_nn(src);
 	// buffer_upscale(scaler.src_w,scaler.src_h,scaler.src_p,src,
 	// 		scaler.dst_w,scaler.dst_h,scaler.dst_p,buffer.virAddr);
-	
-	// (void* __restrict src, void* __restrict dst, uint32_t sw, uint32_t sh, uint32_t sp, uint32_t dp);
-	
 	scaler.upscale(src, buffer.virAddr,scaler.src_w,scaler.src_h,scaler.src_p,scaler.dst_p);
 	
 	if (scale_size==SCALE_SIZE_ASPECT) {

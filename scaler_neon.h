@@ -17,7 +17,7 @@
 //	if odd#, then handled by the C scaler
 //
 
-typedef void (*scale_neon16_t)(void* __restrict src, void* __restrict dst, uint32_t sw, uint32_t sh, uint32_t sp, uint32_t dp);
+typedef void (*scale_neon_t)(void* __restrict src, void* __restrict dst, uint32_t sw, uint32_t sh, uint32_t sp, uint32_t dp);
 
 
 //	NEON scalers

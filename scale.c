@@ -6,6 +6,7 @@
 #include "main.h"
 #include "options.h"
 #include "scale.h"
+#include "scaler_neon.h"
 
 typedef void (*scaler_t)(unsigned w, unsigned h, size_t pitch, const void *src, void *dst);
 
@@ -109,6 +110,9 @@ static inline int gcd(int a, int b) {
 
 static void scale_null(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {}
 static void scale1x(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
+	scale1x_n16(src, dst+dst_offs, w, h, pitch, SCREEN_PITCH);
+	return;
+
 	dst += dst_offs;
 	for (unsigned y = 0; y < h; y++) {
 		memcpy(dst + y * SCREEN_PITCH, src + y * pitch, w * SCREEN_BPP);
@@ -116,8 +120,10 @@ static void scale1x(unsigned w, unsigned h, size_t pitch, const void *src, void 
 }
 
 static void scale2x(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
+	scale2x_n16(src, dst+dst_offs, w, h, pitch, SCREEN_PITCH);
+	return;
+	
 	dst += dst_offs;
-
 	for (unsigned y = 0; y < h; y++) {
 		uint16_t* src_row = src + y * pitch;
 		uint16_t* dst_row = dst + y * SCREEN_PITCH * 2;
@@ -184,8 +190,10 @@ static void scale2x_scanline(unsigned w, unsigned h, size_t pitch, const void *s
 }
 
 static void scale3x(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
-	dst += dst_offs;
+	scale3x_n16(src, dst+dst_offs, w, h, pitch, SCREEN_PITCH);
+	return;
 
+	dst += dst_offs;
 	for (unsigned y = 0; y < h; y++) {
 		uint16_t* src_row = src + y * pitch;
 		uint16_t* dst_row = dst + y * SCREEN_PITCH * 3;
@@ -596,6 +604,7 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 	
 	if (aspect_ratio<=0) aspect_ratio = (float)w / h;
 	
+	// pretty sure these non-NONE branches are dead
 	if (scale_size==SCALE_SIZE_FULL) {
 		dst_w = SCREEN_WIDTH;
 		dst_h = SCREEN_HEIGHT;
