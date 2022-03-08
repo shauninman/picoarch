@@ -16,6 +16,8 @@ CFLAGS     += -I./ -I./libretro-common/include/ $(shell $(SYSROOT)/usr/bin/sdl-c
 
 LDFLAGS    = -lc -ldl -lgcc -lm -lSDL -lpng12 -lz -Wl,--gc-sections -flto
 
+PATCH = git apply
+
 # Unpolished or slow cores that build
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
@@ -68,6 +70,7 @@ else ifeq ($(platform), miyoomini)
 	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve -fPIC -DCONTENT_DIR='"/mnt/SDCARD/Roms"'
 	LDFLAGS += -fPIC -lmi_sys -lmi_gfx
 	MMENU=1
+	PATCH=patch
 else ifeq ($(platform), unix)
 	OBJS += plat_linux.o
 	LDFLAGS += -fPIE
@@ -114,10 +117,10 @@ print-%:
 all: $(BIN) cores
 
 libpicofe/.patched:
-	cd libpicofe && git apply -p1 < ../patches/libpicofe/0001-key-combos.patch && touch .patched
+	cd libpicofe && $(PATCH) -p1 < ../patches/libpicofe/0001-key-combos.patch && touch .patched
 
 clean-libpicofe:
-	test ! -f libpicofe/.patched || (cd libpicofe && git apply -p1 -R < ../patches/libpicofe/0001-key-combos.patch && rm .patched)
+	test ! -f libpicofe/.patched || (cd libpicofe && $(PATCH) -p1 -R < ../patches/libpicofe/0001-key-combos.patch && rm .patched)
 
 plat_miyoomini.o: plat_sdl.c
 plat_trimui.o: plat_sdl.c
@@ -137,7 +140,7 @@ $1_MAKE = make $(and $($1_MAKEFILE),-f $($1_MAKEFILE)) platform=$(platform) $(an
 $(1):
 	git clone $(if $($1_REVISION),,--depth 1) --recursive $$($(1)_REPO) $(1)
 	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
-	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), git apply -p1 < ../$(patch) &&) true)
+	(test ! -d patches/$(1)) || (cd $(1) && $(foreach $(PATCH), $(sort $(wildcard patches/$(1)/*.patch)), $(PATCH) -p1 < ../$(patch) &&) true)
 
 $(1)_libretro.so: $(1)
 	cd $$($1_BUILD_PATH) && $$($1_MAKE) $(PROCS)
