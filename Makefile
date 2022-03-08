@@ -22,7 +22,7 @@ PATCH = git apply
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
 # CORES     = pcsx_rearmed beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
-CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed
+CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed picodrive mgba
 
 snes9x2005_plus_REPO = https://github.com/libretro/snes9x2005
 snes9x2005_plus_FLAGS = USE_BLARGG_APU=1
