@@ -137,6 +137,11 @@ $1_BUILD_PATH ?= $(1)
 
 $1_MAKE = make $(and $($1_MAKEFILE),-f $($1_MAKEFILE)) platform=$(platform) $(and $(DEBUG),DEBUG=$(DEBUG)) $(and $(PROFILE),PROFILE=$(PROFILE)) $($(1)_FLAGS)
 
+clone-$(1):
+	git clone $(if $($1_REVISION),,--depth 1) --recursive $$($(1)_REPO) $(1)
+	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
+
+
 $(1):
 	git clone $(if $($1_REVISION),,--depth 1) --recursive $$($(1)_REPO) $(1)
 	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
