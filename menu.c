@@ -38,6 +38,8 @@ typedef enum
 	MA_OPT_RMCFG_GAME,
 	MA_CTRL_PLAYER1,
 	MA_CTRL_EMU,
+	MA_VID_FX,
+	MA_VID_BLANK,
 } menu_id;
 
 me_bind_action me_ctrl_actions[] =
@@ -507,7 +509,7 @@ static const char h_scale_size[]        =
 // 	"aligned where possible. Smooth adds a blur effect.";
 
 static const char h_scale_effect[]        =
-	"When scaling is required, which visual effect\n"
+	"When scaling is possible, which visual effect\n"
 	"to apply. None is simple integer scaling. DMG is\n"
 	"for Gameboy. LCD simulates RGB pixels. Scanline\n"
 	"interleaves black rows. Some effects are only\n"
@@ -529,17 +531,26 @@ static menu_entry e_menu_video_options[] =
 	mee_enum_h       ("Screen size",              0, scale_size, men_scale_size, h_scale_size),
 	// mee_enum_h       ("Filter",                   0, scale_filter, men_scale_filter, h_scale_filter),
 	// mee_range_h      ("Max upscale",              0, max_upscale, 1, 8, h_max_upscale),
-	mee_enum_h       ("Screen effect",            0, scale_effect, men_scale_effect, h_scale_effect),
+	mee_enum_h       ("Screen effect",    MA_VID_FX, scale_effect, men_scale_effect, h_scale_effect),
+	mee_handler_id_h (             "", MA_VID_BLANK, NULL, NULL),
 	mee_onoff_h      ("Optimize text",            0, optimize_text, 1, h_optimize_text),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),
 	mee_end,
 };
 
+	// only show effects on native scale
+static void menu_loop_video_prep(void) {
+	me_enable(e_menu_video_options, MA_VID_FX, scale_size==SCALE_SIZE_NONE);
+	me_enable(e_menu_video_options, MA_VID_BLANK, scale_size!=SCALE_SIZE_NONE);
+}
+
 static int menu_loop_video_options(int id, int keys)
 {
 	static int sel = 0;
 
-	me_loop(e_menu_video_options, &sel);
+	menu_loop_video_prep();
+	
+	me_loop_d(e_menu_video_options, &sel, menu_loop_video_prep, NULL);
 	scale_update_scaler();
 
 	return 0;
