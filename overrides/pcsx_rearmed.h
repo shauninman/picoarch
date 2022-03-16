@@ -30,6 +30,27 @@ static const struct core_override_option pcsx_rearmed_core_option_overrides[] = 
 		.desc = "Dithering",
 		.info = "If disabled, turns off the dithering pattern the PSX applies to combat color banding.",
 	},
+	
+	// TODO: don't apply to TRIMUI
+
+	{
+		.key = "pcsx_rearmed_neon_interlace_enable",
+		.default_value = "disabled",
+		.blocked = true
+	},
+	{
+		.key = "pcsx_rearmed_neon_enhancement_enable",
+		.default_value = "disabled",
+		.blocked = true
+	},
+	{
+		.key = "pcsx_rearmed_neon_enhancement_no_main",
+		.default_value = "disabled",
+		.blocked = true
+	},
+	
+	// TODO: don't apply to MIYOOMINI
+	
 	{
 		.key = "pcsx_rearmed_show_gpu_peops_settings",
 		.desc = "P.E.Op.S. Settings",
@@ -97,14 +118,13 @@ static const struct core_override_option pcsx_rearmed_core_option_overrides[] = 
 	},
 	{
 		.key = "pcsx_rearmed_gpu_unai_scale_hires",
-		// .blocked = true, // TODO: crashes scaler, disable
 		.desc = "Hi-Res Scaling",
-		.default_value = "enabled"
 	},
 	{
 		.key = "pcsx_rearmed_gpu_thread_rendering",
 		.info = "Runs GPU commands in a thread. Sync waits for drawing to finish before vsync. Async will not wait unless there's another frame behind it."
 	},
+	
 	{
 		.key = "pcsx_rearmed_pe2_fix",
 		.desc = "PE 2/VH 1/2 Fix",
