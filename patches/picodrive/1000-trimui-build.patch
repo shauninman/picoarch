@@ -1,10 +1,10 @@
 diff --git a/Makefile.libretro b/Makefile.libretro
-index 919e0c1..e3bcd36 100644
+index 261be5b..5657784 100644
 --- a/Makefile.libretro
 +++ b/Makefile.libretro
-@@ -517,6 +517,23 @@ else ifeq ($(platform), miyoo)
+@@ -505,7 +505,24 @@ else ifeq ($(platform), miyoo)
+ 	HAVE_ARMv6 = 0
  	LOW_MEMORY = 1
- 	NO_ARM_ASM = 1
  
 +# TRIMUI
 +else ifeq ($(platform), trimui)
@@ -26,7 +26,8 @@ index 919e0c1..e3bcd36 100644
  # Windows MSVC 2017 all architectures
  else ifneq (,$(findstring windows_msvc2017,$(platform)))
  	NO_GCC := 1
-@@ -720,6 +737,13 @@ else
+ 
+@@ -702,6 +719,13 @@ else
  	endif
  endif
  

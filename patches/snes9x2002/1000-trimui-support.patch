@@ -1,10 +1,10 @@
 diff --git a/Makefile b/Makefile
-index e42d169..a1f8794 100644
+index a3ef5e2..a7ef5e4 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -244,6 +244,23 @@ else ifeq ($(platform), gcw0)
-    CFLAGS += -fno-builtin -fno-exceptions
-    CFLAGS += -DPATH_MAX=256 -DFAST_LSB_WORD_ACCESS
+@@ -258,6 +258,23 @@ else ifeq ($(platform), miyoo)
+    CFLAGS += -fomit-frame-pointer -ffast-math -fno-unroll-loops -flto -mcpu=arm926ej-s
+    CFLAGS += -DFAST_ALIGNED_LSB_WORD_ACCESS
  
 +else ifeq ($(platform), trimui)
 +	TARGET := $(TARGET_NAME)_libretro.so
@@ -26,7 +26,7 @@ index e42d169..a1f8794 100644
  # Windows MSVC 2010 x64
  else ifeq ($(platform), windows_msvc2010_x64)
  	CC  = cl.exe
-@@ -381,12 +398,21 @@ LIBRETRO_DIR := ./libretro
+@@ -395,12 +412,21 @@ LIBRETRO_DIR := ./libretro
  
  ifeq ($(DEBUG), 1)
  DEFINES += -O0 -g
@@ -39,10 +39,10 @@ index e42d169..a1f8794 100644
  endif
  
 +ifeq ($(PROFILE), GENERATE)
-+	CFLAGS	+= -fprofile-generate=./profile/snes9x2002
++	CFLAGS	+= -fprofile-generate=./profile/$(TARGET_NAME)
 +	LDFLAGS	+= -lgcov
 +else ifeq ($(PROFILE), APPLY)
-+	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/snes9x2002 -fbranch-probabilities
++	CFLAGS	+= -fprofile-use -fprofile-dir=../profile/$(TARGET_NAME) -fbranch-probabilities
 +endif
 +
  ifneq (,$(findstring msvc,$(platform)))
