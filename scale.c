@@ -108,6 +108,7 @@ static void scale_nearest(unsigned w, unsigned h, size_t pitch, const void *src,
 	int dy = -dst_h;
 	unsigned lines = h;
 	bool copy = false;
+	size_t cpy_w = dst_w * SCREEN_BPP;
 
 	dst += dst_offs;
 
@@ -118,7 +119,7 @@ static void scale_nearest(unsigned w, unsigned h, size_t pitch, const void *src,
 
 		if (copy) {
 			copy = false;
-			memcpy(dst, dst - SCREEN_PITCH, SCREEN_PITCH);
+			memcpy(dst, dst - SCREEN_PITCH, cpy_w);
 			dst += SCREEN_PITCH;
 			dy += h;
 		} else if (dy < 0) {
