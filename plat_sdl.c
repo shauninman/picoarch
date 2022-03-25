@@ -29,6 +29,8 @@ static char msg[HUD_LEN];
 static unsigned msg_priority = 0;
 static unsigned msg_expire = 0;
 
+static bool frame_dirty = false;
+
 static void video_expire_msg(void)
 {
 	msg[0] = '\0';
@@ -209,6 +211,7 @@ void plat_video_set_msg(const char *new_msg, unsigned priority, unsigned msec)
 
 void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
 	static int had_msg = 0;
+	frame_dirty = true;
 	SDL_LockSurface(screen);
 
 	if (had_msg) {
@@ -230,7 +233,10 @@ void plat_video_process(const void *data, unsigned width, unsigned height, size_
 
 void plat_video_flip(void)
 {
-	fb_flip();
+	if (frame_dirty)
+		fb_flip();
+
+	frame_dirty = false;
 }
 
 void plat_video_close(void)
