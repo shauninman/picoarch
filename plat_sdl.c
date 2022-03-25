@@ -22,6 +22,9 @@ struct audio_state {
 
 struct audio_state audio;
 
+static void plat_sound_select_resampler(void);
+void (*plat_sound_write)(const struct audio_frame *data, int frames);
+
 static char msg[HUD_LEN];
 static unsigned msg_priority = 0;
 static unsigned msg_expire = 0;
@@ -47,6 +50,13 @@ static void video_clear_msg(uint16_t *dst, uint32_t h, uint32_t pitch)
 static void video_print_msg(uint16_t *dst, uint32_t h, uint32_t pitch, char *msg)
 {
 	basic_text_out16_nf(dst, pitch, 2, h - 10, msg);
+}
+
+static int audio_resample_passthrough(struct audio_frame data) {
+	audio.buf[audio.buf_w++] = data;
+	if (audio.buf_w >= audio.buf_len) audio.buf_w = 0;
+
+	return 1;
 }
 
 static int audio_resample_nearest(struct audio_frame data) {
@@ -295,7 +305,7 @@ static int plat_sound_init(void)
 
 	SDL_AudioSpec spec, received;
 
-	spec.freq = SAMPLE_RATE;
+	spec.freq = MIN(sample_rate, MAX_SAMPLE_RATE);
 	spec.format = AUDIO_S16;
 	spec.channels = 2;
 	spec.samples = 512;
@@ -308,6 +318,7 @@ static int plat_sound_init(void)
 
 	audio.in_sample_rate = sample_rate;
 	audio.out_sample_rate = received.freq;
+	plat_sound_select_resampler();
 	plat_sound_resize_buffer();
 
 	SDL_PauseAudio(0);
@@ -330,7 +341,7 @@ float plat_sound_capacity(void)
 }
 
 #define BATCH_SIZE 100
-void plat_sound_write(const struct audio_frame *data, int frames)
+void plat_sound_write_resample(const struct audio_frame *data, int frames, int (*resample)(struct audio_frame data))
 {
 	int consumed = 0;
 	if (audio.buf_len == 0)
@@ -354,13 +365,23 @@ void plat_sound_write(const struct audio_frame *data, int frames)
 		}
 
 		while (amount && audio.buf_w != audio.max_buf_w) {
-			consumed = audio_resample_nearest(*data);
+			consumed = resample(*data);
 			data += consumed;
 			amount -= consumed;
 			frames -= consumed;
 		}
 	}
 	SDL_UnlockAudio();
+}
+
+void plat_sound_write_passthrough(const struct audio_frame *data, int frames)
+{
+	plat_sound_write_resample(data, frames, audio_resample_passthrough);
+}
+
+void plat_sound_write_nearest(const struct audio_frame *data, int frames)
+{
+	plat_sound_write_resample(data, frames, audio_resample_nearest);
 }
 
 void plat_sound_resize_buffer(void) {
@@ -393,12 +414,25 @@ void plat_sound_resize_buffer(void) {
 	SDL_UnlockAudio();
 }
 
+static void plat_sound_select_resampler(void)
+{
+	if (audio.in_sample_rate == audio.out_sample_rate) {
+		PA_INFO("Using passthrough resampler (in: %d, out: %d)\n", audio.in_sample_rate, audio.out_sample_rate);
+		plat_sound_write = plat_sound_write_passthrough;
+	} else {
+		PA_INFO("Using nearest resampler (in: %d, out: %d)\n", audio.in_sample_rate, audio.out_sample_rate);
+		plat_sound_write = plat_sound_write_nearest;
+	}
+}
+
 void plat_sdl_event_handler(void *event_)
 {
 }
 
 int plat_init(void)
 {
+	plat_sound_write = plat_sound_write_nearest;
+
 	SDL_Init(SDL_INIT_VIDEO);
 	screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, SDL_SWSURFACE);
 	if (screen == NULL) {
@@ -432,8 +466,14 @@ int plat_init(void)
 
 int plat_reinit(void)
 {
-	audio.in_sample_rate = sample_rate;
-	plat_sound_resize_buffer();
+	if (sample_rate && sample_rate != audio.in_sample_rate) {
+		plat_sound_finish();
+
+		if (plat_sound_init()) {
+			PA_ERROR("SDL sound failed to init: %s\n", SDL_GetError());
+			return -1;
+		}
+	}
 	scale_update_scaler();
 	return 0;
 }
