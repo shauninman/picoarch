@@ -5,23 +5,22 @@ static const struct core_override_option snes9x2002_core_option_overrides[] = {
 		.key = "snes9x2002_frameskip",
 		.info = "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
 		.default_value = "auto",
-		.retro_var_value = "Frameskip ; disabled|auto|threshold"
 	},
 	{
 		.key = "snes9x2002_frameskip_threshold",
+		.desc = "FS Threshold (%)",
 		.info = "When 'Frameskip' is set to 'Threshold', sets how low the audio buffer can get before frames will be skipped.",
-		.retro_var_value = "FS Threshold (%); 30|40|50|60",
 	},
 	{
 		.key = "snes9x2002_frameskip_interval",
+		.desc = "FS Interval",
 		.info = "The maximum number of frames that can be skipped before a new frame is rendered.",
 		.default_value = "4",
-		.retro_var_value = "FS Interval; 1|2|3|4|5|6|7|8|9"
 	},
 	{
 		.key = "snes9x2002_overclock_cycles",
-		.info = "Hack, unsafe. Requires restart.",
-		.retro_var_value = "Overclock (Restart); disabled|compatible|max"
+		.desc = "Overclock (Restart)",
+		.info = "Alleviate normal SNES slowdown. Compatible keeps as much compatibility as possible. Max will reduce more slowdown but break more games.",
 	},
 	{ NULL }
 };
