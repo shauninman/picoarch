@@ -11,6 +11,7 @@ int show_cpu;
 int show_hud;
 int limit_frames;
 int enable_audio;
+int enable_drc;
 unsigned audio_buffer_size;
 enum scale_size scale_size;
 enum scale_filter scale_filter;

@@ -18,6 +18,8 @@ struct audio_state {
 	struct audio_frame *buf;
 	int in_sample_rate;
 	int out_sample_rate;
+	int sample_rate_adj;
+	int adj_out_sample_rate;
 };
 
 struct audio_state audio;
@@ -25,11 +27,16 @@ struct audio_state audio;
 static void plat_sound_select_resampler(void);
 void (*plat_sound_write)(const struct audio_frame *data, int frames);
 
+#define DRC_MAX_ADJUSTMENT 0.003
+#define DRC_ADJ_BELOW 0.4
+#define DRC_ADJ_ABOVE 0.6
+
 static char msg[HUD_LEN];
 static unsigned msg_priority = 0;
 static unsigned msg_expire = 0;
 
 static bool frame_dirty = false;
+static int frame_time = 1000000 / 60;
 
 static void video_expire_msg(void)
 {
@@ -65,16 +72,16 @@ static int audio_resample_nearest(struct audio_frame data) {
 	static int diff = 0;
 	int consumed = 0;
 
-	if (diff < audio.out_sample_rate) {
+	if (diff < audio.adj_out_sample_rate) {
 		audio.buf[audio.buf_w++] = data;
 		if (audio.buf_w >= audio.buf_len) audio.buf_w = 0;
 
 		diff += audio.in_sample_rate;
 	}
 
-	if (diff >= audio.out_sample_rate) {
+	if (diff >= audio.adj_out_sample_rate) {
 		consumed++;
-		diff -= audio.out_sample_rate;
+		diff -= audio.adj_out_sample_rate;
 	}
 
 	return consumed;
@@ -233,8 +240,24 @@ void plat_video_process(const void *data, unsigned width, unsigned height, size_
 
 void plat_video_flip(void)
 {
-	if (frame_dirty)
+	static unsigned int next_frame_time_us = 0;
+
+	if (frame_dirty) {
+		unsigned int time = plat_get_ticks_us();
+
+		if (limit_frames && enable_drc && time < next_frame_time_us) {
+			usleep(next_frame_time_us - time);
+		}
+
+		if (!next_frame_time_us)
+			next_frame_time_us = time;
+
 		fb_flip();
+
+		do {
+			next_frame_time_us += frame_time;
+		} while (next_frame_time_us < time);
+	}
 
 	frame_dirty = false;
 }
@@ -324,6 +347,9 @@ static int plat_sound_init(void)
 
 	audio.in_sample_rate = sample_rate;
 	audio.out_sample_rate = received.freq;
+	audio.sample_rate_adj = audio.out_sample_rate * DRC_MAX_ADJUSTMENT;
+	audio.adj_out_sample_rate = audio.out_sample_rate;
+
 	plat_sound_select_resampler();
 	plat_sound_resize_buffer();
 
@@ -347,11 +373,21 @@ float plat_sound_capacity(void)
 }
 
 #define BATCH_SIZE 100
-void plat_sound_write_resample(const struct audio_frame *data, int frames, int (*resample)(struct audio_frame data))
+void plat_sound_write_resample(const struct audio_frame *data, int frames, int (*resample)(struct audio_frame data), bool drc)
 {
 	int consumed = 0;
 	if (audio.buf_len == 0)
 		return;
+
+	if (drc) {
+		if (plat_sound_capacity() < DRC_ADJ_BELOW) {
+			audio.adj_out_sample_rate = audio.out_sample_rate - audio.sample_rate_adj;
+		} else if (plat_sound_capacity() > DRC_ADJ_ABOVE) {
+			audio.adj_out_sample_rate = audio.out_sample_rate + audio.sample_rate_adj;
+		} else {
+			audio.adj_out_sample_rate = audio.out_sample_rate;
+		}
+	}
 
 	SDL_LockAudio();
 
@@ -382,12 +418,17 @@ void plat_sound_write_resample(const struct audio_frame *data, int frames, int (
 
 void plat_sound_write_passthrough(const struct audio_frame *data, int frames)
 {
-	plat_sound_write_resample(data, frames, audio_resample_passthrough);
+	plat_sound_write_resample(data, frames, audio_resample_passthrough, false);
 }
 
 void plat_sound_write_nearest(const struct audio_frame *data, int frames)
 {
-	plat_sound_write_resample(data, frames, audio_resample_nearest);
+	plat_sound_write_resample(data, frames, audio_resample_nearest, false);
+}
+
+void plat_sound_write_drc(const struct audio_frame *data, int frames)
+{
+	plat_sound_write_resample(data, frames, audio_resample_nearest, true);
 }
 
 void plat_sound_resize_buffer(void) {
@@ -397,6 +438,10 @@ void plat_sound_resize_buffer(void) {
 	audio.buf_len = frame_rate > 0
 		? current_audio_buffer_size * audio.in_sample_rate / frame_rate
 		: 0;
+
+		/* Dynamic adjustment keeps buffer 50% full, need double size */
+	if (enable_drc)
+		audio.buf_len *= 2;
 
 	if (audio.buf_len == 0) {
 		SDL_UnlockAudio();
@@ -422,7 +467,10 @@ void plat_sound_resize_buffer(void) {
 
 static void plat_sound_select_resampler(void)
 {
-	if (audio.in_sample_rate == audio.out_sample_rate) {
+	if (enable_drc) {
+		PA_INFO("Using audio adjustment (in: %d, out: %d-%d)\n", audio.in_sample_rate, audio.out_sample_rate - audio.sample_rate_adj, audio.out_sample_rate + audio.sample_rate_adj);
+		plat_sound_write = plat_sound_write_drc;
+	} else if (audio.in_sample_rate == audio.out_sample_rate) {
 		PA_INFO("Using passthrough resampler (in: %d, out: %d)\n", audio.in_sample_rate, audio.out_sample_rate);
 		plat_sound_write = plat_sound_write_passthrough;
 	} else {
@@ -479,7 +527,14 @@ int plat_reinit(void)
 			PA_ERROR("SDL sound failed to init: %s\n", SDL_GetError());
 			return -1;
 		}
+	} else {
+		plat_sound_resize_buffer();
+		plat_sound_select_resampler();
 	}
+
+	if (frame_rate != 0)
+		frame_time = 1000000 / frame_rate;
+
 	scale_update_scaler();
 	return 0;
 }

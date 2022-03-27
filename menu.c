@@ -484,6 +484,7 @@ static const char h_restore_def[]     = "Switches back to default settings";
 
 static const char h_show_fps[]        = "Shows frames and vsyncs per second";
 static const char h_show_cpu[]        = "Shows CPU usage";
+static const char h_enable_drc[]      = "Dynamically adjusts audio rate for smoother video";
 
 static const char h_audio_buffer_size[]        =
 	"The size of the audio buffer, in frames. Higher\n"
@@ -511,6 +512,7 @@ static menu_entry e_menu_video_options[] =
 	mee_enum_h       ("Screen size",              0, scale_size, men_scale_size, h_scale_size),
 	mee_enum_h       ("Filter",                   0, scale_filter, men_scale_filter, h_scale_filter),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),
+	mee_onoff_h      ("Audio adjustment",         0, enable_drc, 1, h_enable_drc),
 	mee_end,
 };
 
@@ -519,7 +521,7 @@ static int menu_loop_video_options(int id, int keys)
 	static int sel = 0;
 
 	me_loop(e_menu_video_options, &sel);
-	scale_update_scaler();
+	plat_reinit();
 
 	return 0;
 }
@@ -676,7 +678,7 @@ void menu_loop(void)
 	me_enable(e_menu_main, MA_MAIN_SAVE_STATE, state_allowed());
 	me_enable(e_menu_main, MA_MAIN_LOAD_STATE, state_allowed());
 	me_enable(e_menu_main, MA_MAIN_CHEATS, cheats != NULL);
-	
+
 	me_enable(e_menu_main, MA_MAIN_DISC_CTRL, needs_disc_ctrl);
 
 	if (override)
