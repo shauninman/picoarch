@@ -28,8 +28,8 @@ static void plat_sound_select_resampler(void);
 void (*plat_sound_write)(const struct audio_frame *data, int frames);
 
 #define DRC_MAX_ADJUSTMENT 0.003
-#define DRC_ADJ_BELOW 0.4
-#define DRC_ADJ_ABOVE 0.6
+#define DRC_ADJ_BELOW 40
+#define DRC_ADJ_ABOVE 60
 
 static char msg[HUD_LEN];
 static unsigned msg_priority = 0;
@@ -357,11 +357,11 @@ static int plat_sound_init(void)
 	return 0;
 }
 
-float plat_sound_capacity(void)
+int plat_sound_occupancy(void)
 {
 	int buffered = 0;
 	if (audio.buf_len == 0)
-		return 1.0;
+		return 0;
 
 	if (audio.buf_w != audio.buf_r) {
 		buffered = audio.buf_w > audio.buf_r ?
@@ -369,7 +369,7 @@ float plat_sound_capacity(void)
 			(audio.buf_w + audio.buf_len) - audio.buf_r;
 	}
 
-	return 1.0 - (float)buffered / audio.buf_len;
+	return buffered * 100 / audio.buf_len;
 }
 
 #define BATCH_SIZE 100
@@ -380,10 +380,12 @@ void plat_sound_write_resample(const struct audio_frame *data, int frames, int (
 		return;
 
 	if (drc) {
-		if (plat_sound_capacity() < DRC_ADJ_BELOW) {
-			audio.adj_out_sample_rate = audio.out_sample_rate - audio.sample_rate_adj;
-		} else if (plat_sound_capacity() > DRC_ADJ_ABOVE) {
+		int occupancy = plat_sound_occupancy();
+
+		if (occupancy < DRC_ADJ_BELOW) {
 			audio.adj_out_sample_rate = audio.out_sample_rate + audio.sample_rate_adj;
+		} else if (occupancy > DRC_ADJ_ABOVE) {
+			audio.adj_out_sample_rate = audio.out_sample_rate - audio.sample_rate_adj;
 		} else {
 			audio.adj_out_sample_rate = audio.out_sample_rate;
 		}

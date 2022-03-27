@@ -31,7 +31,7 @@ static int last_screenshot = 0;
 static uint32_t vsyncs;
 static uint32_t renders;
 
-#define UNDERRUN_THRESHOLD 0.5
+#define UNDERRUN_THRESHOLD 50
 
 static void toggle_fast_forward(int force_off)
 {
@@ -498,11 +498,11 @@ static void adjust_audio(void) {
 	}
 
 	if (current_core.retro_audio_buffer_status) {
-		float occupancy = 1.0 - plat_sound_capacity();
+		int occupancy = plat_sound_occupancy();
 		if (enable_drc)
-			occupancy = MIN(1.0, occupancy * 2.0);
+			occupancy = MIN(100, occupancy * 2);
 
-		current_core.retro_audio_buffer_status(true, (int)(occupancy * 100), occupancy < UNDERRUN_THRESHOLD);
+		current_core.retro_audio_buffer_status(true, occupancy, occupancy < UNDERRUN_THRESHOLD);
 	}
 }
 
