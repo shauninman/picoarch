@@ -521,11 +521,47 @@ static size_t pa_audio_sample_batch(const int16_t *data, size_t frames) {
 	return frames;
 }
 
+#include <SDL/SDL.h>
+#define JOY_EVENTS (SDL_JOYAXISMOTIONMASK | SDL_JOYBALLMOTIONMASK | SDL_JOYHATMOTIONMASK \
+		    | SDL_JOYBUTTONDOWNMASK | SDL_JOYBUTTONUPMASK)
+static unsigned long power_start = 0;
 static void pa_input_poll(void) {
 	int actions[IN_BINDTYPE_COUNT] = { 0, };
 	unsigned int emu_act;
 	int which = EACTION_NONE;
-
+	
+	// special power button handling
+	if (power_start && SDL_GetTicks()-power_start>=1000) {
+		handle_emu_action(EACTION_POWER_OFF);
+		return;
+	}
+	SDL_PumpEvents();
+	SDL_Event events[10];
+	Uint32 mask = (SDL_ALLEVENTS & ~JOY_EVENTS);
+	int has_events = SDL_PeepEvents(NULL, 0, SDL_PEEKEVENT, mask);
+	if (has_events) {
+		int count = SDL_PeepEvents(events, (sizeof(events) / sizeof(events[0])), SDL_GETEVENT, mask);
+		for (int i=0; i<count; i++) {
+			SDL_Event *event = &events[i];
+			short key = (short)event->key.keysym.sym;
+			uint8_t type  = event->type;
+			if (key!=SDLK_POWER || (type!=SDL_KEYDOWN && type!=SDL_KEYUP)) {
+				SDL_PushEvent(event);
+				continue;
+			}
+		
+			if (type==SDL_KEYDOWN) {
+				power_start = SDL_GetTicks();
+			}
+			else if (type==SDL_KEYUP) {
+				power_start = 0;
+				handle_emu_action(EACTION_SLEEP);
+				return;
+			}
+		}
+	}
+	// end special power button handling
+	
 	in_update(actions);
 	emu_act = actions[IN_BINDTYPE_EMU];
 	if (emu_act) {

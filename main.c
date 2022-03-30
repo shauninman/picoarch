@@ -321,6 +321,14 @@ int remove_config(int is_game) {
 	return ret;
 }
 
+static void autosave(void) {
+	// autosave
+	int last_state_slot = state_slot;
+	state_slot = 9; // only supports up to 9 states :cold_sweat: (good thing the UI only supports 8 :lolsob:)
+	state_write();
+	state_slot = last_state_slot;
+}
+
 void handle_emu_action(emu_action action)
 {
 	static emu_action prev_action = EACTION_NONE;
@@ -331,15 +339,18 @@ void handle_emu_action(emu_action action)
 	case EACTION_NONE:
 		break;
 	case EACTION_MENU:
+	case EACTION_SLEEP:
+	case EACTION_POWER_OFF:
 		toggle_fast_forward(1); /* Force FF off */
 		sram_write();
 #ifdef MMENU
 		if (mmenu && content && content->path) {
 			ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
-			MenuReturnStatus status = ShowMenu(content->path, state_allowed() ? save_template_path : NULL, plat_clean_screen());
+			MenuRequestState requested_state = action==EACTION_SLEEP ? kRequestSleep : (action==EACTION_POWER_OFF ? kRequestPowerOff : kRequestMenu);
+			MenuReturnStatus status = ShowMenu(content->path, state_allowed() ? save_template_path : NULL, plat_clean_screen(), requested_state, autosave);
 			char disc_path[256];
 			ChangeDisc_t ChangeDisc = (ChangeDisc_t)dlsym(mmenu, "ChangeDisc");
-
+			
 			if (status == kStatusExitGame) {
 				should_quit = 1;
 				plat_video_menu_leave();
@@ -590,7 +601,6 @@ int main(int argc, char **argv) {
 	load_config_keys();
 
 #ifdef MMENU
-
 	mmenu = dlopen("libmmenu.so", RTLD_LAZY);
 	if (mmenu) {
 		ResumeSlot_t ResumeSlot = (ResumeSlot_t)dlsym(mmenu, "ResumeSlot");
