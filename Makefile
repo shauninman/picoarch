@@ -149,12 +149,11 @@ clone-$(1):
 $(1):
 	git clone $(if $($1_REVISION),,--depth 1) --recursive $$($(1)_REPO) $(1)
 	$(if $1_REVISION,cd $(1) && git checkout $($1_REVISION),)
-	(test ! -d patches/$(1)) || (cd $(1) && $(foreach $(PATCH), $(sort $(wildcard patches/$(1)/*.patch)), $(PATCH) -p1 < ../$(patch) &&) true)
+	(test ! -d patches/$(1)) || (cd $(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), $(PATCH) -p1 < ../$(patch) &&) true)
+	
 
-$(1)/$(1)_libretro.so: $(1)
+$(1)_libretro.so: $(1)
 	cd $$($1_BUILD_PATH) && $$($1_MAKE) $(PROCS)
-
-$(1)_libretro.so: $(1)/$(1)_libretro.so
 	cp $$($1_BUILD_PATH)/$(if $($(1)_CORE),$($(1)_CORE),$(1)_libretro.so) $(1)_libretro.so
 
 clean-$(1):

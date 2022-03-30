@@ -6,7 +6,7 @@
 #include "main.h"
 #include "util.h"
 
-#define SAMPLE_RATE 48000
+#define MAX_SAMPLE_RATE 48000
 
 static const struct in_default_bind in_sdl_defbinds[] = {
 	{ SDLK_UP,        IN_BINDTYPE_PLAYER12, RETRO_DEVICE_ID_JOYPAD_UP },
