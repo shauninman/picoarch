@@ -27,8 +27,8 @@ void plat_video_close(void);
 
 unsigned plat_cpu_ticks(void);
 
-float plat_sound_capacity(void);
-void plat_sound_write(const struct audio_frame *data, int frames);
+int plat_sound_occupancy(void);
+extern void (*plat_sound_write)(const struct audio_frame *data, int frames);
 void plat_sound_resize_buffer(void);
 
 void* plat_clean_screen(void);

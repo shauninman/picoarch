@@ -2,7 +2,13 @@
 
 static const struct core_override_option smsplus_core_option_overrides[] = {
 	{
+		.key = "smsplus_sms_bios",
+		.desc = "SMS BIOS (Restart)",
+		.info = "Use official BIOS/bootloader, if present in the system directory.",
+	},
+	{
 		.key = "smsplus_hardware",
+		.desc = "Hardware (Restart)",
 		.options = {
 			{ "auto",             NULL     },
 			{ "master system",    "sms"    },
@@ -12,6 +18,10 @@ static const struct core_override_option smsplus_core_option_overrides[] = {
 			{ "coleco",           NULL     },
 			{ NULL,               NULL     },
 		},
+	},
+	{
+		.key = "smsplus_region",
+		.desc = "Region (Restart)",
 	},
 	{
 		.key = "smsplus_fm_sound",

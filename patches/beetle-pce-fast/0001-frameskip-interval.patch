@@ -1,8 +1,8 @@
 diff --git a/libretro.cpp b/libretro.cpp
-index 508577f..c706d96 100644
+index 48fd03a..c0fe238 100644
 --- a/libretro.cpp
 +++ b/libretro.cpp
-@@ -1629,13 +1629,11 @@ static uint64_t audio_frames = 0;
+@@ -1627,13 +1627,11 @@ static uint64_t audio_frames = 0;
  static unsigned frameskip_type             = 0;
  static unsigned frameskip_threshold        = 0;
  static uint16_t frameskip_counter          = 0;
@@ -17,7 +17,7 @@ index 508577f..c706d96 100644
  
  static unsigned audio_latency              = 0;
  static bool update_audio_latency           = false;
-@@ -1749,6 +1747,7 @@ void retro_init(void)
+@@ -1747,6 +1745,7 @@ void retro_init(void)
     frameskip_type             = 0;
     frameskip_threshold        = 0;
     frameskip_counter          = 0;
@@ -25,7 +25,7 @@ index 508577f..c706d96 100644
     retro_audio_buff_active    = false;
     retro_audio_buff_occupancy = 0;
     retro_audio_buff_underrun  = false;
-@@ -1863,8 +1862,10 @@ static void check_variables(bool first_run)
+@@ -1861,8 +1860,10 @@ static void check_variables(bool first_run)
     {
        if (strcmp(var.value, "auto") == 0)
           frameskip_type = 1;
@@ -37,7 +37,7 @@ index 508577f..c706d96 100644
     }
  
     /* Reinitialise frameskipping, if required */
-@@ -1878,6 +1879,13 @@ static void check_variables(bool first_run)
+@@ -1876,6 +1877,13 @@ static void check_variables(bool first_run)
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
        frameskip_threshold = strtol(var.value, NULL, 10);
  
@@ -48,10 +48,10 @@ index 508577f..c706d96 100644
 +   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
 +      frameskip_interval = strtol(var.value, NULL, 10);
 +
- 	var.key = "pce_hoverscan";
+ 	var.key = "pce_fast_hoverscan";
  
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
-@@ -2357,16 +2365,19 @@ void retro_run(void)
+@@ -2355,16 +2363,19 @@ void retro_run(void)
           case 1: /* auto */
              skip_frame = retro_audio_buff_underrun ? 1 : 0;
              break;
@@ -74,15 +74,15 @@ index 508577f..c706d96 100644
           skip_frame        = 0;
           frameskip_counter = 0;
 diff --git a/libretro_core_options.h b/libretro_core_options.h
-index 28d27c6..1fedbd4 100644
+index 4b1a0a7..0e664b9 100644
 --- a/libretro_core_options.h
 +++ b/libretro_core_options.h
-@@ -102,13 +102,14 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+@@ -97,13 +97,14 @@ struct retro_core_option_v2_definition option_defs_us[] = {
        "pce_fast_frameskip",
        "Frameskip",
        NULL,
--      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Manual' utilises the 'Frameskip Threshold (%)' setting.",
-+      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Auto (Threshold)' utilises the 'Frameskip Threshold (%)' setting. 'Fixed Interval' utilises the 'Frameskip Interval' setting.",
+-      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Manual' utilizes the 'Frameskip Threshold (%)' setting.",
++      "Skip frames to avoid audio buffer under-run (crackling). Improves performance at the expense of visual smoothness. 'Auto' skips frames when advised by the frontend. 'Auto (Threshold)' utilises the 'Frameskip Threshold (%)' setting. 'Fixed Interval' utilizes the 'Frameskip Interval' setting.",
        NULL,
        "video",
        {
@@ -96,7 +96,7 @@ index 28d27c6..1fedbd4 100644
           { NULL, NULL },
        },
        "disabled"
-@@ -141,6 +142,28 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+@@ -136,6 +137,28 @@ struct retro_core_option_v2_definition option_defs_us[] = {
        },
        "33"
     },
@@ -123,5 +123,5 @@ index 28d27c6..1fedbd4 100644
 +      "2"
 +   },
     {
-       "pce_hoverscan",
+       "pce_fast_hoverscan",
        "Horizontal Overscan (352 Width Mode Only)",

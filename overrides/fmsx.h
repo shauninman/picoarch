@@ -2,6 +2,10 @@
 
 static const struct core_override_option fmsx_core_option_overrides[] = {
 	{
+		.key = "fmsx_hires",
+		.retro_var_value = "High res; Off|Interlaced|Progressive"
+	},
+	{
 		.key = "fmsx_mapper_type_mode",
 		.retro_var_value = "Mapper Type; "
 			"Guess Mapper Type A|"
@@ -22,6 +26,74 @@ static const struct core_override_option fmsx_core_option_overrides[] = {
 	{
 		.key = "fmsx_autospace",
 		.retro_var_value = "Autofire SPACE; No|Yes"
+	},
+	{
+		.key = "fmsx_phantom_disk",
+		.retro_var_value = "Make empty disk; No|Yes"
+	},
+	{
+		.key = "fmsx_custom_keyboard_up",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_down",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_left",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_right",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_a",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_b",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_y",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_x",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_start",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_select",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_l",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_r",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_l2",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_r2",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_l3",
+		.blocked = true
+	},
+	{
+		.key = "fmsx_custom_keyboard_r3",
+		.blocked = true
 	},
 	{ NULL }
 };

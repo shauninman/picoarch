@@ -175,6 +175,10 @@ static const struct core_override_option pcsx_rearmed_core_option_overrides[] = 
 		.key = "pcsx_rearmed_display_internal_fps",
 		.blocked = true
 	},
+	{
+		.key = "pcsx_rearmed_icache_emulation",
+		.blocked = true
+	},
 	{ NULL }
 };
 

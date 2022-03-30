@@ -1,3 +1,4 @@
+#include "main.h"
 #include "overrides.h"
 
 static const struct core_override_option mame2000_core_option_overrides[] = {
@@ -57,17 +58,27 @@ me_bind_action mame2000_ctrl_actions[] =
 	{ NULL,       0 }
 };
 
+me_bind_action mame2000_emu_actions[] =
+{
+	{ "Toggle FPS/CPU%  ", 1 << EACTION_TOGGLE_HUD },
+	{ "Toggle FF        ", 1 << EACTION_TOGGLE_FF },
+	{ "Take Screenshot  ", 1 << EACTION_SCREENSHOT },
+	{ NULL,                0 }
+};
+
 const struct core_override_fast_forward mame2000_fast_forward = {
 	.type_key = "mame2000-frameskip",
 	.type_value = "auto",
 	.interval_key = "mame2000-frameskip_interval"
 };
 
-#define mame2000_overrides {                              \
-	.core_name = "mame2000",                          \
-	.fast_forward = &mame2000_fast_forward,           \
-	.actions = mame2000_ctrl_actions,                 \
-	.action_size = array_size(mame2000_ctrl_actions), \
-	.options = mame2000_core_option_overrides,        \
-	.block_load_content = 1                           \
+#define mame2000_overrides {                           \
+	.core_name = "mame2000",                             \
+	.fast_forward = &mame2000_fast_forward,              \
+	.actions = mame2000_ctrl_actions,                    \
+	.action_size = array_size(mame2000_ctrl_actions),    \
+	.emu_actions = mame2000_emu_actions,                 \
+	.emu_action_size = array_size(mame2000_emu_actions), \
+	.options = mame2000_core_option_overrides,           \
+	.block_load_content = 1                              \
 }

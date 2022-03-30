@@ -386,9 +386,9 @@ static void scaleNN(unsigned w, unsigned h, size_t pitch, const void *src, void 
 	int dy = -dst_h;
 	unsigned lines = h;
 	bool copy = false;
+	size_t cpy_w = dst_w * SCREEN_BPP;
 
 	dst += dst_offs;
-	size_t cpy_w = dst_w * SCREEN_BPP;
 	
 	while (lines) {
 		int dx = -dst_w;

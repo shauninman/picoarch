@@ -486,6 +486,7 @@ static const char h_restore_def[]     = "Switches back to default settings";
 
 static const char h_show_fps[]        = "Shows frames and vsyncs per second";
 static const char h_show_cpu[]        = "Shows CPU usage";
+static const char h_enable_drc[]      = "Dynamically adjusts audio rate for smoother video";
 
 static const char h_audio_buffer_size[]        =
 	"The size of the audio buffer, in frames. Higher\n"
@@ -535,6 +536,7 @@ static menu_entry e_menu_video_options[] =
 	mee_handler_id_h (             "", MA_VID_BLANK, NULL, NULL),
 	mee_onoff_h      ("Optimize text",            0, optimize_text, 1, h_optimize_text),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),
+	mee_onoff_h      ("Audio adjustment",         0, enable_drc, 1, h_enable_drc),
 	mee_end,
 };
 
@@ -551,7 +553,7 @@ static int menu_loop_video_options(int id, int keys)
 	menu_loop_video_prep();
 	
 	me_loop_d(e_menu_video_options, &sel, menu_loop_video_prep, NULL);
-	scale_update_scaler();
+	plat_reinit();
 
 	return 0;
 }
@@ -561,8 +563,8 @@ static int key_config_loop_wrap(int id, int keys)
 	const struct core_override *override = get_overrides();
 	me_bind_action *actions = CORE_OVERRIDE(override, actions, me_ctrl_actions);
 	size_t action_size = CORE_OVERRIDE(override, action_size, array_size(me_ctrl_actions));
-	me_bind_action *emu_actions = emuctrl_actions;
-	size_t emu_action_size = array_size(emuctrl_actions);
+	me_bind_action *emu_actions = CORE_OVERRIDE(override, emu_actions, emuctrl_actions);
+	size_t emu_action_size = CORE_OVERRIDE(override, emu_action_size, array_size(emuctrl_actions));
 
 	switch (id) {
 	case MA_CTRL_PLAYER1:
@@ -708,7 +710,7 @@ void menu_loop(void)
 	me_enable(e_menu_main, MA_MAIN_SAVE_STATE, state_allowed());
 	me_enable(e_menu_main, MA_MAIN_LOAD_STATE, state_allowed());
 	me_enable(e_menu_main, MA_MAIN_CHEATS, cheats != NULL);
-	
+
 	me_enable(e_menu_main, MA_MAIN_DISC_CTRL, needs_disc_ctrl);
 
 	me_enable(e_menu_main, MA_MAIN_CONTENT_SEL, false);
