@@ -170,7 +170,7 @@ static void scale2x_lcd(unsigned w, unsigned h, size_t pitch, const void *src, v
 static void scale2x_scanline(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
 	dst += dst_offs;
 
-	// uint16_t k = 0x0000;
+	uint16_t k = 0x0000;
 	for (unsigned y = 0; y < h; y++) {
 		uint16_t* src_row = src + y * pitch;
 		uint16_t* dst_row = dst + y * SCREEN_PITCH * 2;
@@ -180,8 +180,8 @@ static void scale2x_scanline(unsigned w, unsigned h, size_t pitch, const void *s
 			*(dst_row                       ) = s;
 			*(dst_row + 1                   ) = s;
 			
-			// *(dst_row + SCREEN_WIDTH * 1    ) = k;
-			// *(dst_row + SCREEN_WIDTH * 1 + 1) = k;
+			*(dst_row + SCREEN_WIDTH * 1    ) = k;
+			*(dst_row + SCREEN_WIDTH * 1 + 1) = k;
 			
 			src_row += 1;
 			dst_row += 2;
@@ -288,6 +288,7 @@ static void scale3x_dmg(unsigned w, unsigned h, size_t pitch, const void *src, v
 static void scale3x_scanline(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
 	dst += dst_offs;
 
+	uint16_t k = 0x0000;
 	for (unsigned y = 0; y < h; y++) {
 		uint16_t* src_row = src + y * pitch;
 		uint16_t* dst_row = dst + y * SCREEN_PITCH * 3;
@@ -297,17 +298,17 @@ static void scale3x_scanline(unsigned w, unsigned h, size_t pitch, const void *s
 			// row 1
 			*(dst_row                       ) = s;
 			*(dst_row                    + 1) = s;
-			// *(dst_row                    + 2) = s;
+			*(dst_row                    + 2) = k;
 			
 			// row 2
 			*(dst_row + SCREEN_WIDTH * 1    ) = s;
 			*(dst_row + SCREEN_WIDTH * 1 + 1) = s;
-			// *(dst_row + SCREEN_WIDTH * 1 + 2) = s;
+			*(dst_row + SCREEN_WIDTH * 1 + 2) = k;
 
 			// row 3
-			// *(dst_row + SCREEN_WIDTH * 2    ) = s;
-			// *(dst_row + SCREEN_WIDTH * 2 + 1) = s;
-			// *(dst_row + SCREEN_WIDTH * 2 + 2) = s;
+			*(dst_row + SCREEN_WIDTH * 2    ) = k;
+			*(dst_row + SCREEN_WIDTH * 2 + 1) = k;
+			*(dst_row + SCREEN_WIDTH * 2 + 2) = k;
 
 			src_row += 1;
 			dst_row += 3;
@@ -440,6 +441,7 @@ static void scaleNN_scanline(unsigned w, unsigned h, size_t pitch, const void *s
 		if (copy) {
 			copy = false;
 			if (lines%2==2	) memcpy(dst, dst - SCREEN_PITCH, cpy_w);
+			else memset(dst, 0, cpy_w);
 			dst += SCREEN_PITCH;
 			dy += h;
 		} else if (dy < 0) {
@@ -550,6 +552,7 @@ static void scaleNN_text_scanline(unsigned w, unsigned h, size_t pitch, const vo
 		if (copy) {
 			copy = false;
 			if (lines%2==2) memcpy(dst, dst - SCREEN_PITCH, cpy_w);
+			else memset(dst, 0, cpy_w);
 			dst += SCREEN_PITCH;
 			dy += h;
 		} else if (dy < 0) {
