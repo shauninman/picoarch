@@ -39,7 +39,7 @@ typedef enum
 	MA_CTRL_PLAYER1,
 	MA_CTRL_EMU,
 	MA_VID_FX,
-	MA_VID_BLANK,
+	MA_VID_TXT,
 } menu_id;
 
 me_bind_action me_ctrl_actions[] =
@@ -495,8 +495,8 @@ static const char h_audio_buffer_size[]        =
 
 static const char h_scale_size[]        =
 	"How much to stretch the screen when scaling. Native\n"
-	"does no stretching. Aspect uses the correct aspect\n"
-	"ratio. Full uses the whole screen.";
+	"does no stretching. Aspect uses the core reported\n"
+	"aspect ratio. Full uses the whole screen.";
 
 // static const char h_max_upscale[]       =
 // 	"When stretching the screen, the maximum integer\n"
@@ -532,9 +532,8 @@ static menu_entry e_menu_video_options[] =
 	mee_enum_h       ("Screen size",              0, scale_size, men_scale_size, h_scale_size),
 	// mee_enum_h       ("Filter",                   0, scale_filter, men_scale_filter, h_scale_filter),
 	// mee_range_h      ("Max upscale",              0, max_upscale, 1, 8, h_max_upscale),
-	mee_enum_h       ("Screen effect",    MA_VID_FX, scale_effect, men_scale_effect, h_scale_effect),
-	mee_handler_id_h (             "", MA_VID_BLANK, NULL, NULL),
-	mee_onoff_h      ("Optimize text",            0, optimize_text, 1, h_optimize_text),
+	mee_enum_h       (" Screen effect",    MA_VID_FX, scale_effect, men_scale_effect, h_scale_effect),
+	mee_onoff_h      (" Optimize text",   MA_VID_TXT, optimize_text, 1, h_optimize_text),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),
 	mee_onoff_h      ("Audio adjustment",         0, enable_drc, 1, h_enable_drc),
 	mee_end,
@@ -543,7 +542,7 @@ static menu_entry e_menu_video_options[] =
 	// only show effects on native scale
 static void menu_loop_video_prep(void) {
 	me_enable(e_menu_video_options, MA_VID_FX, scale_size==SCALE_SIZE_NONE);
-	me_enable(e_menu_video_options, MA_VID_BLANK, scale_size!=SCALE_SIZE_NONE);
+	me_enable(e_menu_video_options, MA_VID_TXT, scale_size==SCALE_SIZE_NONE);
 }
 
 static int menu_loop_video_options(int id, int keys)
