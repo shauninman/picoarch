@@ -31,6 +31,10 @@ static const struct core_override_option snes9x2005_plus_core_option_overrides[]
 		.desc = "Reduce Flicker",
 		.info = "Raises sprite limit to reduce flickering in games.",
 	},
+	{
+		.key = "snes9x_2005_dynarec",
+		.default_value = "enabled",
+	},
 	{ NULL }
 };
 
