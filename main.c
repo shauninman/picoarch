@@ -358,7 +358,7 @@ void handle_emu_action(emu_action action)
 				should_quit = 1;
 				plat_video_menu_leave();
 			} else if (status == kStatusChangeDisc && ChangeDisc(disc_path)) {
-				disc_replace_index(0, disc_path);
+				disc_replace_index(&content, 0, disc_path);
 			} else if (status == kStatusOpenMenu) {
 				plat_video_flip();
 				menu_loop();

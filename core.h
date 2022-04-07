@@ -58,7 +58,7 @@ int state_resume(void);
 unsigned disc_get_count(void);
 unsigned disc_get_index(void);
 bool disc_switch_index(unsigned index);
-bool disc_replace_index(unsigned index, const char *content_path);
+bool disc_replace_index(struct content **content, unsigned index, const char *content_path);
 
 void core_extract_name(const char* core_file, char *buf, size_t len);
 int core_open(const char *corefile, const char* tag_name);

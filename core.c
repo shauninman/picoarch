@@ -250,24 +250,28 @@ bool disc_switch_index(unsigned index) {
 	return ret;
 }
 
-bool disc_replace_index(unsigned index, const char *content_path) {
+bool disc_replace_index(struct content **content, unsigned index, const char *content_path) {
 	bool ret = false;
 	struct retro_game_info info = {};
-	struct content *content;
+	struct content *new_content;
 	if (!disk_control_ext.replace_image_index)
 		return false;
 
-	content = content_init(content_path);
-	if (!content)
+	new_content = content_init(content_path);
+	if (!new_content)
 		goto finish;
 
-	if (core_load_game_info(content, &info))
+	if (core_load_game_info(new_content, &info))
 		goto finish;
 
 	ret = disk_control_ext.replace_image_index(index, &info);
-
+	
+	if (ret) {
+		content_free(*content);
+		*content = new_content;
+	}
 finish:
-	content_free(content);
+	if (!ret) content_free(new_content);
 	return ret;
 }
 
