@@ -363,6 +363,7 @@ void handle_emu_action(emu_action action)
 				plat_video_flip();
 				menu_loop();
 			} else if (status >= kStatusLoadSlot) {
+				if (ChangeDisc(disc_path)) disc_replace_index(&content, 0, disc_path);
 				state_slot = status - kStatusLoadSlot;
 				state_read();
 			} else if (status >= kStatusSaveSlot) {
