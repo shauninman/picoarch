@@ -357,6 +357,8 @@ void handle_emu_action(emu_action action)
 			if (status == kStatusExitGame) {
 				should_quit = 1;
 				plat_video_menu_leave();
+			} else if (status == kStatusResetGame) {
+				current_core.retro_reset();
 			} else if (status == kStatusChangeDisc && ChangeDisc(disc_path)) {
 				disc_replace_index(&content, 0, disc_path);
 			} else if (status == kStatusOpenMenu) {
