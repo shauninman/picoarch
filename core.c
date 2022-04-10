@@ -252,6 +252,11 @@ bool disc_switch_index(unsigned index) {
 
 bool disc_replace_index(struct content **content, unsigned index, const char *content_path) {
 	bool ret = false;
+	
+	int len = strlen((*content)->path);
+	if (len==strlen(content_path) && strncmp((*content)->path,content_path,len)==0)
+		return ret;
+	
 	struct retro_game_info info = {};
 	struct content *new_content;
 	if (!disk_control_ext.replace_image_index)
