@@ -327,7 +327,7 @@ int remove_config(int is_game) {
 static void autosave(void) {
 	// autosave
 	int last_state_slot = state_slot;
-	state_slot = 9; // only supports up to 9 states :cold_sweat: (good thing the UI only supports 8 :lolsob:)
+	state_slot = 9; // only supports up to 10 states :cold_sweat: (good thing the UI only supports 8 :lolsob:)
 	state_write();
 	state_slot = last_state_slot;
 }
