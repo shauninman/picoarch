@@ -46,7 +46,7 @@ static int core_load_game_info(struct content *content, struct retro_game_info *
 void config_file_name(char *buf, size_t len, int is_game)
 {
 	if (is_game && content) {
-		content_based_name(content, buf, len, save_dir, NULL, ".cfg");
+		content_based_name(content, buf, len, config_dir, NULL, ".cfg");
 	} else {
 		snprintf(buf, len, "%s%s", config_dir, "picoarch.cfg");
 	}
