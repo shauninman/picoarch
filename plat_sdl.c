@@ -586,23 +586,28 @@ void plat_video_flip(void)
 	static uint64_t next_frame_time_us = 0;
 
 	if (frame_dirty) {
-		uint64_t time = plat_get_ticks_us_u64();
+		if (!enable_drc) {
+			fb_flip();
+			next_frame_time_us = 0;
+		} else {
+			uint64_t time = plat_get_ticks_us_u64();
 
-		if (limit_frames && enable_drc && time < next_frame_time_us) {
-			usleep(next_frame_time_us - time);
+			if ( (limit_frames) && (time < next_frame_time_us) ) {
+				SDL_Delay( (next_frame_time_us - time - 1) / 1000 + 1 );
+			}
+
+			if ( (!next_frame_time_us) || (!limit_frames) ) {
+				next_frame_time_us = time;
+			}
+
+			fb_flip();
+
+			do {
+				next_frame_time_us += frame_time;
+			} while (next_frame_time_us < time);
 		}
-
-		if (!next_frame_time_us || !limit_frames)
-			next_frame_time_us = time;
-
-		fb_flip();
-
-		do {
-			next_frame_time_us += frame_time;
-		} while (next_frame_time_us < time);
+		frame_dirty = false;
 	}
-
-	frame_dirty = false;
 }
 
 void plat_video_close(void)
