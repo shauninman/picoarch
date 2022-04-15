@@ -568,18 +568,31 @@ void plat_video_process(const void *data, unsigned width, unsigned height, size_
 	video_update_msg();
 }
 
+#include <sys/time.h>
+static uint64_t plat_get_ticks_us_u64(void) {
+    uint64_t ret;
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+    ret = (uint64_t)tv.tv_sec * 1000000;
+    ret += (uint64_t)tv.tv_usec;
+
+    return ret;
+}
+
 void plat_video_flip(void)
 {
-	static unsigned int next_frame_time_us = 0;
+	static uint64_t next_frame_time_us = 0;
 
 	if (frame_dirty) {
-		unsigned int time = plat_get_ticks_us();
+		uint64_t time = plat_get_ticks_us_u64();
 
 		if (limit_frames && enable_drc && time < next_frame_time_us) {
 			usleep(next_frame_time_us - time);
 		}
 
-		if (!next_frame_time_us)
+		if (!next_frame_time_us || !limit_frames)
 			next_frame_time_us = time;
 
 		fb_flip();
