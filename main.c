@@ -201,7 +201,7 @@ void set_defaults(void)
 	show_hud = 1;
 	limit_frames = 1;
 	enable_audio = 1;
-	enable_drc = 1;
+	enable_drc = 0;
 	audio_buffer_size = 5;
 	scale_size = SCALE_SIZE_NONE;
 	// scale_filter = SCALE_FILTER_NEAREST;
