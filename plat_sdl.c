@@ -594,6 +594,7 @@ void plat_video_flip(void)
 
 			if ( (limit_frames) && (time < next_frame_time_us) ) {
 				SDL_Delay( (next_frame_time_us - time - 1) / 1000 + 1 );
+				time = plat_get_ticks_us_u64();
 			}
 
 			if ( (!next_frame_time_us) || (!limit_frames) ) {
