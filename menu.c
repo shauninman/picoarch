@@ -494,9 +494,10 @@ static const char h_audio_buffer_size[]        =
 	"cost of delayed sound.";
 
 static const char h_scale_size[]        =
-	"How much to stretch the screen when scaling. Native\n"
-	"does no stretching. Aspect uses the core reported\n"
-	"aspect ratio. Full uses the whole screen.";
+	"How much to stretch the screen when scaling.\n"
+	"Native does no stretching. Aspect uses the\n"
+	"core reported aspect ratio. Full uses the\n"
+	"whole screen.";
 
 // static const char h_max_upscale[]       =
 // 	"When stretching the screen, the maximum integer\n"
@@ -519,7 +520,7 @@ static const char h_scale_effect[]        =
 static const char h_optimize_text[]        =
 	"When non-integer scaling is required,\n"
 	"prioritize a consistent stroke size for\n"
-	"text. May affect non-text content.";
+	"text. May also affect non-text content.";
 
 static const char *men_scale_size[] = { "Native", "Aspect", "Full", NULL};
 // static const char *men_scale_filter[] = { "Nearest", "Sharp", "Smooth", NULL};
