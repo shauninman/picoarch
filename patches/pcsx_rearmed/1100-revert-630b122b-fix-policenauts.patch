@@ -1,0 +1,13 @@
+diff --git a/plugins/gpulib/vout_pl.c b/plugins/gpulib/vout_pl.c
+index 064b349051ccae01b2b1668538c83d87a35a9e0a..075e3c339bb64feb6e9c63395ef61df63a72bc88 100644
+--- a/plugins/gpulib/vout_pl.c
++++ b/plugins/gpulib/vout_pl.c
+@@ -64,7 +64,7 @@ static void check_mode_change(int force)
+ 
+ void vout_update(void)
+ {
+-  int x = gpu.screen.x;
++  int x = gpu.screen.x & ~1; // alignment needed by blitter
+   int y = gpu.screen.y;
+   int w = gpu.screen.w;
+   int h = gpu.screen.h;

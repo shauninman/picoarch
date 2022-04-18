@@ -29,6 +29,7 @@ static const struct core_override_option pcsx_rearmed_core_option_overrides[] = 
 		.key = "pcsx_rearmed_dithering",
 		.desc = "Dithering",
 		.info = "If disabled, turns off the dithering pattern the PSX applies to combat color banding.",
+		.default_value = "enabled",
 	},
 	
 	// TODO: don't apply to TRIMUI
