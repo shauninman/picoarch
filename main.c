@@ -354,7 +354,10 @@ void handle_emu_action(emu_action action)
 			char disc_path[256];
 			ChangeDisc_t ChangeDisc = (ChangeDisc_t)dlsym(mmenu, "ChangeDisc");
 			
-			if (status == kStatusExitGame) {
+			if (status == kStatusPowerOff) {
+				should_quit = 1;
+			}
+			else if (status == kStatusExitGame) {
 				should_quit = 1;
 				plat_video_menu_leave();
 			} else if (status == kStatusResetGame) {
