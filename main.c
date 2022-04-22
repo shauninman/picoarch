@@ -541,7 +541,7 @@ static void get_tag_name(const char* in_path, char* out_tag) {
 	if (tmp2) tmp2[0] = '\0';
 
 	// finally extract pak name from parenths if present
-	tmp = strchr(tmp, '(');
+	tmp = strrchr(tmp, '(');
 	if (tmp) {
 		tmp += 1;
 		strcpy(out_tag, tmp);
