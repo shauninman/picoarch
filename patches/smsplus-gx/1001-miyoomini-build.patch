@@ -1,0 +1,27 @@
+diff --git a/Makefile.libretro b/Makefile.libretro
+index 4588cb86a0e01c62aa91f782791bbcc98a19269b..a384a5ee95fbe3cf05ee64266b424dc71127d262 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -343,6 +343,22 @@ else ifeq ($(platform), trimui)
+ 		LDFLAGS += -s
+ 	endif
+ 	ENDIANNESS_DEFINES += -DLSB_FIRST -DBYTE_ORDER=LITTLE_ENDIAN -DALIGN_DWORD
++ 
++# MIYOO MINI
++else ifeq ($(platform), miyoomini)
++	TARGET := $(TARGET_NAME)_libretro.so
++	CC = $(CROSS_COMPILE)gcc
++	CXX = $(CROSS_COMPILE)g++
++	AR = $(CROSS_COMPILE)ar
++	fpic := -fPIC
++	SHARED := -shared -Wl,--no-undefined -Wl,--version-script=link.T
++	CFLAGS += -fomit-frame-pointer -ffast-math -fPIC -flto
++	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
++	LDFLAGS += -flto
++	ifeq (,$(DEBUG))
++		LDFLAGS += -s
++	endif
++	ENDIANNESS_DEFINES += -DLSB_FIRST -DBYTE_ORDER=LITTLE_ENDIAN -DALIGN_DWORD
+ 
+ # else ifneq (,$(findstring armv,$(platform)))
+ #    TARGET := $(TARGET_NAME)_libretro.so
