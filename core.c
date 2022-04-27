@@ -690,7 +690,7 @@ int core_load_content(struct content *content) {
 	}
 
 	if (!current_core.retro_load_game(&game_info)) {
-		PA_ERROR("Couldn't load content\n");
+		PA_ERROR("Couldn't load content: %s\n", game_info.path);
 		goto finish;
 	}
 

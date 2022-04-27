@@ -214,7 +214,7 @@ static int content_patch_file(struct content *content, const char *path) {
 
 	fd = open(path, O_RDONLY);
 	if (fd == -1) {
-		PA_ERROR("Couldn't open content file\n");
+		PA_ERROR("Couldn't open content file: %s\n", path);
 		goto finish;
 	}
 
