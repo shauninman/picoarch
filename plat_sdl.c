@@ -240,6 +240,8 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	int sy = ceilf((float)SCREEN_HEIGHT / src_h);
 	int s = sx>sy ? sx : sy;
 	
+	while (s>1 && src_w*SCREEN_BPP*src_h*s>buffer.size) s -= 1;
+	
 	// maximum
 	// snes can't keep up (so we added max_upscale)
 	// int sx = 2 * SCREEN_WIDTH / src_w;
@@ -309,10 +311,10 @@ static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) 
 	scaler.upscale(src, buffer.virAddr,scaler.src_w,scaler.src_h,scaler.src_p,scaler.dst_p);
 	
 	if (scale_size==SCALE_SIZE_ASPECT) {
-		GFX_BlitSurfaceExec(scaled, NULL, screen, &(SDL_Rect){scaler.asp_x, scaler.asp_y, scaler.asp_w, scaler.asp_h},0,0,0);
+		GFX_BlitSurfaceExec(scaled, NULL, screen, &(SDL_Rect){scaler.asp_x, scaler.asp_y, scaler.asp_w, scaler.asp_h}, 0,0,0);
 	}
 	else {
-		GFX_BlitSurfaceExec(scaled, NULL, screen, NULL,0,0,0);
+		GFX_BlitSurfaceExec(scaled, NULL, screen, NULL, 0,0,0);
 	}
 	
 	// just awful
