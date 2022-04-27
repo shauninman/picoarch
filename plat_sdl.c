@@ -240,7 +240,7 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	int sy = ceilf((float)SCREEN_HEIGHT / src_h);
 	int s = sx>sy ? sx : sy;
 	
-	while (s>1 && src_w*SCREEN_BPP*src_h*s>buffer.size) s -= 1;
+	while (s>1 && s*src_w*SCREEN_BPP*s*src_h>buffer.size) s -= 1;
 	
 	// maximum
 	// snes can't keep up (so we added max_upscale)
