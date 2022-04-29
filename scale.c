@@ -431,20 +431,14 @@ static void scaleNN_scanline(unsigned w, unsigned h, size_t pitch, const void *s
 	bool copy = false;
 
 	dst += dst_offs;
-	size_t cpy_w = dst_w * SCREEN_BPP;
-
+	int row = 0;
+	
 	while (lines) {
 		int dx = -dst_w;
 		const uint16_t *psrc16 = src;
 		uint16_t *pdst16 = dst;
-
-		if (copy) {
-			copy = false;
-			if (lines%2==2	) memcpy(dst, dst - SCREEN_PITCH, cpy_w);
-			// else memset(dst, 0, cpy_w);
-			dst += SCREEN_PITCH;
-			dy += h;
-		} else if (dy < 0) {
+		
+		if (row%2==0) {
 			int col = w;
 			while(col--) {
 				while (dx < 0) {
@@ -455,18 +449,17 @@ static void scaleNN_scanline(unsigned w, unsigned h, size_t pitch, const void *s
 				dx -= dst_w;
 				psrc16++;
 			}
-
-			dst += SCREEN_PITCH;
-			dy += h;
 		}
 
+		dst += SCREEN_PITCH;
+		dy += h;
+				
 		if (dy >= 0) {
 			dy -= dst_h;
 			src += pitch;
 			lines--;
-		} else {
-			copy = true;
 		}
+		row += 1;
 	}
 }
 
@@ -536,11 +529,10 @@ static void scaleNN_text(unsigned w, unsigned h, size_t pitch, const void *src, 
 static void scaleNN_text_scanline(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
 	int dy = -dst_h;
 	unsigned lines = h;
-	bool copy = false;
 
 	dst += dst_offs;
-	size_t cpy_w = dst_w * SCREEN_BPP;
 	
+	int row = 0;
 	int safe = w - 1; // don't look behind when there's nothing to see
 	uint16_t l1,l2;
 	while (lines) {
@@ -549,13 +541,7 @@ static void scaleNN_text_scanline(unsigned w, unsigned h, size_t pitch, const vo
 		uint16_t *pdst16 = dst;
 		l1 = l2 = 0x0;
 		
-		if (copy) {
-			copy = false;
-			if (lines%2==2) memcpy(dst, dst - SCREEN_PITCH, cpy_w);
-			// else memset(dst, 0, cpy_w);
-			dst += SCREEN_PITCH;
-			dy += h;
-		} else if (dy < 0) {
+		if (row%2==0) {
 			int col = w;
 			while(col--) {
 				int d = 0;
@@ -583,18 +569,17 @@ static void scaleNN_text_scanline(unsigned w, unsigned h, size_t pitch, const vo
 				dx -= dst_w;
 				psrc16++;
 			}
-
-			dst += SCREEN_PITCH;
-			dy += h;
 		}
 
+		dst += SCREEN_PITCH;
+		dy += h;
+				
 		if (dy >= 0) {
 			dy -= dst_h;
 			src += pitch;
 			lines--;
-		} else {
-			copy = true;
 		}
+		row += 1;
 	}
 }
 
