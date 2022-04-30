@@ -69,6 +69,8 @@ static const char * const in_sdl_key_names[SDLK_LAST] = {
 	[SDLK_t]          = "R",
 	[SDLK_TAB]        = "L2",
 	[SDLK_BACKSPACE]  = "R2",
+	[SDLK_ESCAPE]     = "MENU",
+	// [SDLK_POWER]      = "POWER",
 	[SDLK_1]          = "MENU+UP",
 	[SDLK_2]          = "MENU+DOWN",
 	[SDLK_3]          = "MENU+LEFT",
@@ -80,10 +82,9 @@ static const char * const in_sdl_key_names[SDLK_LAST] = {
 	[SDLK_9]          = "MENU+START",
 	[SDLK_0]          = "MENU+SELECT",
 	[SDLK_q]          = "MENU+L",
-	[SDLK_BACKSLASH]  = "MENU+R",
-	[SDLK_ESCAPE]     = "MENU",
-	[SDLK_ESCAPE]     = "MENU",
-	[SDLK_POWER]      = "POWER",
+	[SDLK_w]          = "MENU+R",
+	[SDLK_o]          = "MENU+L2",
+	[SDLK_p]          = "MENU+R2",
 };
 
 static const struct mod_keymap in_sdl_mod_keymap[] = {
@@ -97,8 +98,10 @@ static const struct mod_keymap in_sdl_mod_keymap[] = {
 	{ SDLK_LALT,      SDLK_8 },
 	{ SDLK_RETURN,    SDLK_9 },
 	{ SDLK_RCTRL,     SDLK_0 },
-	{ SDLK_TAB,       SDLK_q },          /* mod+L1 = L2 */
-	{ SDLK_BACKSPACE, SDLK_BACKSLASH },  /* mod+R1 = R2 */
+	{ SDLK_e,         SDLK_q },
+	{ SDLK_t,         SDLK_w },
+	{ SDLK_TAB,       SDLK_o },
+	{ SDLK_BACKSPACE, SDLK_p },
 };
 
 static const struct in_pdata in_sdl_platform_data = {
