@@ -280,40 +280,43 @@ finish:
 	return ret;
 }
 
+// #define ENABLE_PREVIEWS
 static void set_directories(const char *core_name, const char *tag_name) {
 	const char *home = getenv("HOME");
 	const char *sdcard_path = getenv("SDCARD_PATH");
-	// char *dst = save_dir;
-	// int len = MAX_PATH;
-// #ifndef MINUI
-// 	char cwd[MAX_PATH];
-// #endif
+	
+	// TODO: should missing HOME be a fatal error?
 	if (home != NULL) {
-		snprintf(config_dir, MAX_PATH, "%s/.picoarch-%s-%s/", home, core_name, tag_name);
+		char config_dirname[MAX_PATH];
+		snprintf(config_dirname, MAX_PATH, ".picoarch-%s-%s", core_name, tag_name);
+		snprintf(config_dir, MAX_PATH, "%s/%s/", home, config_dirname);
 		mkdir(config_dir, 0755);
+#ifdef ENABLE_PREVIEWS
+		// used by miniui to display preview behind list
+		const char *userdata_path = getenv("USERDATA_PATH");
+		char mmenu_userdata_path[MAX_PATH];
+		snprintf(mmenu_userdata_path, MAX_PATH, "%s/.mmenu/%s/userdata.txt", userdata_path, tag_name);
+		PA_INFO("mmenu additions: %s > %s\n", mmenu_userdata_path, config_dirname);
+		
+		if (access(mmenu_userdata_path, F_OK)==-1) {
+			int fd = open(mmenu_userdata_path, O_CREAT | O_WRONLY);
+			if (fd) {
+				write(fd, config_dirname, strlen(config_dirname));
+				close(fd);
+			}
+		}
+#endif
 	}
 
-	// strncpy(config_dir, save_dir, MAX_PATH-1);
-	
 	snprintf(save_dir, MAX_PATH, "%s/Saves/%s/", sdcard_path, tag_name);
 	snprintf(system_dir, MAX_PATH, "%s/Bios/%s", sdcard_path, tag_name);
-
-// #ifdef MINUI
-// 	strncpy(system_dir, save_dir, MAX_PATH-1);
-// #else
-// 	if (getcwd(cwd, MAX_PATH)) {
-// 		snprintf(system_dir, MAX_PATH, "%s/.picoarch_system", cwd);
-// 		mkdir(system_dir, 0755);
-// 	} else {
-// 		PA_FATAL("Can't find system directory");
-// 	}
-// #endif
 }
 
 // based on eggs pokemini miyoominin rumble
 static bool pa_set_rumble_state(unsigned port, enum retro_rumble_effect effect, uint16_t strength) {
 	// PA_INFO("Rumble (strength: %u)\n", (unsigned int)strength);
 
+	// literally on (for 0.2 seconds) or off
 	uint32_t val = strength>0; // TODO: can we do better than just off or on?
 	
 	int fd;
@@ -323,20 +326,20 @@ static bool pa_set_rumble_state(unsigned port, enum retro_rumble_effect effect, 
 	value[0] = ((val&1)^1) + 0x30;
 
 	fd = open("/sys/class/gpio/export",O_WRONLY);
-		if (fd > 0) {
-			write(fd, str_export, 2);
-			close(fd);
-		}
+	if (fd > 0) {
+		write(fd, str_export, 2);
+		close(fd);
+	}
 	fd = open("/sys/class/gpio/gpio48/direction",O_WRONLY);
-		if (fd > 0) {
-			write(fd, str_direction, 3);
-			close(fd);
-		}
+	if (fd > 0) {
+		write(fd, str_direction, 3);
+		close(fd);
+	}
 	fd = open("/sys/class/gpio/gpio48/value",O_WRONLY);
-		if (fd > 0) {
-			write(fd, value, 1);
-			close(fd);
-		}
+	if (fd > 0) {
+		write(fd, value, 1);
+		close(fd);
+	}
 	
 	return true;
 }
