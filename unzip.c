@@ -161,12 +161,15 @@ int unzip_tmp(FILE *zip, const char **extensions, char *filename, size_t len) {
 	FILE *dest = NULL;
 
 	if (!find_entry(zip, extensions, &info)) {
-		int fd = 0;
-		snprintf(filename, len, "/tmp/pa-XXXXXX%s", basename(info.filename));
-
-		fd = mkstemps(filename, strlen(info.filename));
-		dest = fdopen(fd, "w");
-
+		char template[MAX_PATH];
+		strcpy(template, "/tmp/pa-XXXXXX");
+		char *dirname = mkdtemp(template);
+		if (!dirname) {
+			PA_ERROR("Error creating temporary directory for decompression\n");
+			goto finish;
+		}
+		snprintf(filename, len, "%s/%s", dirname, basename(info.filename));
+		dest = fopen(filename, "w");
 		if (!dest) {
 			PA_ERROR("Error creating temporary file for decompression\n");
 			goto finish;
