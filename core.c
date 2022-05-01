@@ -294,35 +294,46 @@ static void set_directories(const char *core_name, const char *tag_name) {
 	snprintf(system_dir, MAX_PATH, "%s/Bios/%s", sdcard_path, tag_name);
 }
 
-// based on eggs pokemini miyoominin rumble
+// TODO: move to plat_miyoomini.c?
+// based on eggs retroarch miyoomini rumble
+void miyoomini_rumble(uint16_t strength) {
+   static char lastvalue = 0;
+   const char str_export[2] = "48";
+   const char str_direction[3] = "out";
+   char value[1];
+   int fd;
+
+   value[0] = (strength == 0 ? 0x31 : 0x30); // '0' : '1'
+   if (lastvalue != value[0]) {
+      fd = open("/sys/class/gpio/export", O_WRONLY);
+      if (fd > 0) { write(fd, str_export, 2); close(fd); }
+      fd = open("/sys/class/gpio/gpio48/direction", O_WRONLY);
+      if (fd > 0) { write(fd, str_direction, 3); close(fd); }
+      fd = open("/sys/class/gpio/gpio48/value", O_WRONLY);
+      if (fd > 0) { write(fd, value, 1); close(fd); }
+      lastvalue = value[0];
+   }
+}
+
+uint32_t miyoomini_rumble_finish(uint32_t interval) {
+   miyoomini_rumble(0);
+   return 0;
+}
+
+#define RUMBLE_MS 200
 static bool pa_set_rumble_state(unsigned port, enum retro_rumble_effect effect, uint16_t strength) {
-	// PA_INFO("Rumble (strength: %u)\n", (unsigned int)strength);
-
-	// literally on (for 0.2 seconds) or off
-	uint32_t val = strength>0; // TODO: can we do better than just off or on?
-	
-	int fd;
-	const char str_export[] = "48";
-	const char str_direction[] = "out";
-	char value[1];
-	value[0] = ((val&1)^1) + 0x30;
-
-	fd = open("/sys/class/gpio/export",O_WRONLY);
-	if (fd > 0) {
-		write(fd, str_export, 2);
-		close(fd);
+	if (strength) {
+		// not sure where gain comes from in retroarch
+		// strength already appears to be scaled by the 
+		// Controller Rumble core option so I'm using it 
+		// here to scale rumble duration
+		unsigned int ms = RUMBLE_MS * strength / 65535;
+		// PA_INFO("Rumble (strength: %u duration: %u)\n", (unsigned int)strength, ms);
+		if (ms) {
+			miyoomini_rumble(strength);
+			SDL_SetTimer(ms, miyoomini_rumble_finish);
+		}
 	}
-	fd = open("/sys/class/gpio/gpio48/direction",O_WRONLY);
-	if (fd > 0) {
-		write(fd, str_direction, 3);
-		close(fd);
-	}
-	fd = open("/sys/class/gpio/gpio48/value",O_WRONLY);
-	if (fd > 0) {
-		write(fd, value, 1);
-		close(fd);
-	}
-	
 	return true;
 }
 
@@ -748,6 +759,10 @@ const char **core_extensions(void) {
 
 void core_unload(void) {
 	PA_INFO("Unloading core...\n");
+	
+	// stop rumble
+    SDL_SetTimer(0, NULL);
+    miyoomini_rumble(0);
 
 	if (current_core.initialized) {
 		core_unload_content();

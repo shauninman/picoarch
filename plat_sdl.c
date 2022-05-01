@@ -843,7 +843,7 @@ int plat_init(void)
 {
 	plat_sound_write = plat_sound_write_nearest;
 
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP * 8, SDL_SWSURFACE);
 	if (screen == NULL) {
 		PA_ERROR("%s, failed to set video mode\n", __func__);
