@@ -287,6 +287,7 @@ static void set_directories(const char *core_name, const char *tag_name) {
 	// TODO: should missing HOME be a fatal error?
 	if (home != NULL) {
 		snprintf(config_dir, MAX_PATH, "%s/.picoarch-%s-%s/", home, core_name, tag_name);
+		mkdir(config_dir, 0755);
 	}
 
 	snprintf(save_dir, MAX_PATH, "%s/Saves/%s/", sdcard_path, tag_name);
