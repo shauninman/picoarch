@@ -280,35 +280,13 @@ finish:
 	return ret;
 }
 
-// #define ENABLE_PREVIEWS
 static void set_directories(const char *core_name, const char *tag_name) {
 	const char *home = getenv("HOME");
 	const char *sdcard_path = getenv("SDCARD_PATH");
 	
 	// TODO: should missing HOME be a fatal error?
 	if (home != NULL) {
-#ifndef ENABLE_PREVIEWS
 		snprintf(config_dir, MAX_PATH, "%s/.picoarch-%s-%s/", home, core_name, tag_name);
-#else
-		char config_dirname[MAX_PATH];
-		snprintf(config_dirname, MAX_PATH, ".picoarch-%s-%s", core_name, tag_name);
-		snprintf(config_dir, MAX_PATH, "%s/%s/", home, config_dirname);
-		mkdir(config_dir, 0755);
-
-		// used by miniui to display preview behind list
-		const char *userdata_path = getenv("USERDATA_PATH");
-		char mmenu_userdata_path[MAX_PATH];
-		snprintf(mmenu_userdata_path, MAX_PATH, "%s/.mmenu/%s/userdata.txt", userdata_path, tag_name);
-		PA_INFO("mmenu additions: %s > %s\n", mmenu_userdata_path, config_dirname);
-		
-		if (access(mmenu_userdata_path, F_OK)==-1) {
-			int fd = open(mmenu_userdata_path, O_CREAT | O_WRONLY);
-			if (fd) {
-				write(fd, config_dirname, strlen(config_dirname));
-				close(fd);
-			}
-		}
-#endif
 	}
 
 	snprintf(save_dir, MAX_PATH, "%s/Saves/%s/", sdcard_path, tag_name);
