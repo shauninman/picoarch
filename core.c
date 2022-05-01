@@ -287,11 +287,14 @@ static void set_directories(const char *core_name, const char *tag_name) {
 	
 	// TODO: should missing HOME be a fatal error?
 	if (home != NULL) {
+#ifndef ENABLE_PREVIEWS
+		snprintf(config_dir, MAX_PATH, "%s/.picoarch-%s-%s/", home, core_name, tag_name);
+#else
 		char config_dirname[MAX_PATH];
 		snprintf(config_dirname, MAX_PATH, ".picoarch-%s-%s", core_name, tag_name);
 		snprintf(config_dir, MAX_PATH, "%s/%s/", home, config_dirname);
 		mkdir(config_dir, 0755);
-#ifdef ENABLE_PREVIEWS
+
 		// used by miniui to display preview behind list
 		const char *userdata_path = getenv("USERDATA_PATH");
 		char mmenu_userdata_path[MAX_PATH];
