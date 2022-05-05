@@ -428,7 +428,6 @@ static void scaleNN(unsigned w, unsigned h, size_t pitch, const void *src, void 
 static void scaleNN_scanline(unsigned w, unsigned h, size_t pitch, const void *src, void *dst) {
 	int dy = -dst_h;
 	unsigned lines = h;
-	bool copy = false;
 
 	dst += dst_offs;
 	int row = 0;
@@ -596,6 +595,8 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 	if (scale_size==SCALE_SIZE_FULL) {
 		dst_w = SCREEN_WIDTH;
 		dst_h = SCREEN_HEIGHT;
+		
+		// printf("full for %ix%i: %ix%i (%f)\n", w,h, dst_w, dst_h, aspect_ratio); fflush(stdout);
 	}
 	else if (scale_size==SCALE_SIZE_ASPECT) {
 		dst_w = SCREEN_HEIGHT * aspect_ratio;
@@ -605,7 +606,7 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 			dst_h = SCREEN_WIDTH / aspect_ratio;
 		}
 		
-		// printf("aspect for %ix%i: %ix%i (%f)\n", w,h, dst_w, dst_h, aspect_ratio);
+		// printf("aspect for %ix%i: %ix%i (%f)\n", w,h, dst_w, dst_h, aspect_ratio); fflush(stdout);
 	}
 	else {
 		unsigned sx = SCREEN_WIDTH / w;
@@ -614,10 +615,14 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 		use_nearest = false;
 		double near_ratio;
 	
+		// printf("%ix%i (%i)\n", sx,sy,scale); fflush(stdout);
+		
 		if (scale<=1) {
 			use_nearest = true;
-			if (sy>sx) {
+			if (sy>sx) { // eg. Final Fantasy VII 368x240
+				// printf("normal\n"); fflush(stdout);
 				dst_h = h * sy;
+				
 			
 				// if the aspect ratio of an unmodified
 				// w to dst_h is within 20% of the target
@@ -636,7 +641,8 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 					if (dst_h>SCREEN_HEIGHT) dst_h = SCREEN_HEIGHT;
 				}
 			}
-			else { // have yet to encounter this...
+			else if (sx>sy) { // not encountered yet (something like 320x480, perhaps "Fantastic Night Dreams - Cotton Original (Japan) (SLPS-02034)")
+				printf("weird nearest scaling!\n"); fflush(stdout);
 				dst_w = w * sx;
 			
 				// see above
@@ -654,10 +660,40 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 					if (dst_w>SCREEN_WIDTH) dst_w = SCREEN_WIDTH;
 				}
 			}
+			else { // eg. Tekken 3, 368x480
+				// printf("weirdest\n"); fflush(stdout);
+				dst_w = w * sx;
+				dst_h = h * sy;
+				
+				// see above
+				near_ratio = (double)dst_w / dst_h / aspect_ratio;
+				if (near_ratio>=0.79 && near_ratio<=1.21) {
+					// close enough
+				}
+				else {
+					if (dst_h>dst_w) {
+						dst_w = dst_h * aspect_ratio;
+					}
+					else {
+						dst_h = dst_w / aspect_ratio;
+					}
+				}
+				
+				if (dst_w>SCREEN_WIDTH) {
+					dst_w = SCREEN_WIDTH;
+				}
+				if (dst_h>SCREEN_HEIGHT) {
+					dst_h = SCREEN_HEIGHT;
+				}
+			}
+			
+			// printf("nearest for %ix%i: %ix%i (%f)\n", w,h, dst_w, dst_h, aspect_ratio); fflush(stdout);
 		}
 		else {
 			dst_w = w * scale;
 			dst_h = h * scale;
+			
+			// printf("native for %ix%i: %ix%i (%f)\n", w,h, dst_w, dst_h, aspect_ratio); fflush(stdout);
 		}
 	}
 	
