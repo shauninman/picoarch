@@ -31,6 +31,9 @@ snes9x2005_plus_FLAGS = USE_BLARGG_APU=1
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
 beetle-pce-fast_CORE = mednafen_pce_fast_libretro.so
 
+beetle-vb_REPO = https://github.com/libretro/beetle-vb-libretro
+beetle-vb_CORE = mednafen_vb_libretro.so
+
 bluemsx_REPO = https://github.com/libretro/blueMSX-libretro
 
 fbalpha2012_BUILD_PATH = fbalpha2012/svn-current/trunk
