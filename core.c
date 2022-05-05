@@ -143,7 +143,9 @@ int state_read(void) {
 
 	state_file = fopen(filename, "r");
 	if (!state_file) {
-		PA_ERROR("Error opening state file: %s\n", strerror(errno));
+		if (state_slot!=8) { // st8 is a default state in MiniUI and may not exist, that's okay
+			PA_ERROR("Error opening state file: %s\n", strerror(errno));
+		}
 		goto error;
 	}
 
