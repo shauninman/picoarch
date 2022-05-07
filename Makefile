@@ -54,6 +54,8 @@ mame2000_REPO = https://github.com/libretro/mame2000-libretro
 mame2003_plus_REPO = https://github.com/libretro/mame2003-plus-libretro
 
 pcsx_rearmed_MAKEFILE = Makefile.libretro
+# the next commit breaks trimui patches
+pcsx_rearmed_REVISION = 131a1b41835bc0eba3e35998dce376163a0a1b14 
 
 picodrive_MAKEFILE = Makefile.libretro
 
