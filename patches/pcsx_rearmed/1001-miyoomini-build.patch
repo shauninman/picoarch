@@ -1,18 +1,18 @@
 diff --git a/Makefile.libretro b/Makefile.libretro
-index f6e81638fd8edc042fb89c6d4120759f37ddb1c1..cfce444ea1ef83fe0165e4457f88afd7be14d965 100644
+index 7d57680053a397f1a05c101dd165e3b9234d73b5..cf4d897ec0fabab04cc29bce61767be5508f8e46 100644
 --- a/Makefile.libretro
 +++ b/Makefile.libretro
-@@ -384,6 +384,26 @@ else ifeq ($(platform), trimui)
+@@ -388,6 +388,25 @@ else ifeq ($(platform), trimui)
+ 	DYNAREC = ari64
  	ARCH = arm
  	HAVE_NEON = 0
- 
++	
 +else ifeq ($(platform), miyoomini)
 +	TARGET := $(TARGET_NAME)_libretro.so
 +	CC = $(CROSS_COMPILE)gcc
 +	CXX = $(CROSS_COMPILE)g++
 +
 +	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
-+	CFLAGS += -DGPULIB_USE_MMAP -DGPU_UNAI_USE_INT_DIV_MULTINV -D_TRIMUI
 +	CFLAGS += -ffast-math -fdata-sections -ffunction-sections -fsingle-precision-constant -flto -fPIC
 +	LDFLAGS += -flto -fPIC
 +	ifeq (,$(DEBUG))
@@ -25,7 +25,6 @@ index f6e81638fd8edc042fb89c6d4120759f37ddb1c1..cfce444ea1ef83fe0165e4457f88afd7
 +	ARCH = arm
 +	BUILTIN_GPU = neon
 +	DYNAREC = ari64
-+
+ 
  # Classic Platforms ####################
  # Platform affix = classic_<ISA>_<µARCH>
- # Help at https://modmyclassic.com/comp
