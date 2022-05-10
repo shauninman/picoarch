@@ -633,16 +633,18 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 				}
 				else {
 					dst_w = dst_h * aspect_ratio;
+					dst_w -= dst_w % 2;
 				}
 
 				if (dst_w>SCREEN_WIDTH) {
 					dst_w = SCREEN_WIDTH;
 					dst_h = dst_w / aspect_ratio;
+					dst_h -= dst_w % 2;
 					if (dst_h>SCREEN_HEIGHT) dst_h = SCREEN_HEIGHT;
 				}
 			}
 			else if (sx>sy) { // not encountered yet (something like 320x480, perhaps "Fantastic Night Dreams - Cotton Original (Japan) (SLPS-02034)")
-				printf("weird nearest scaling!\n"); fflush(stdout);
+				// printf("weird nearest scaling!\n"); fflush(stdout);
 				dst_w = w * sx;
 			
 				// see above
@@ -652,11 +654,13 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 				}
 				else {
 					dst_h = dst_w / aspect_ratio;
+					dst_h -= dst_w % 2;
 				}
 			
 				if (dst_h>SCREEN_HEIGHT) {
 					dst_h = SCREEN_HEIGHT;
 					dst_w = dst_h * aspect_ratio;
+					dst_w -= dst_w % 2;
 					if (dst_w>SCREEN_WIDTH) dst_w = SCREEN_WIDTH;
 				}
 			}
@@ -673,9 +677,11 @@ static void scale_select_scaler(unsigned w, unsigned h, size_t pitch) {
 				else {
 					if (dst_h>dst_w) {
 						dst_w = dst_h * aspect_ratio;
+						dst_w -= dst_w % 2;
 					}
 					else {
 						dst_h = dst_w / aspect_ratio;
+						dst_h -= dst_w % 2;
 					}
 				}
 				
