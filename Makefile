@@ -22,7 +22,7 @@ PATCH = git apply
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
 # CORES     = pcsx_rearmed beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
-CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed picodrive mgba smsplus-gx beetle-pce-fast
+CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed picodrive mgba smsplus-gx beetle-pce-fast genesis-plus-gx
 
 snes9x2005_plus_REPO = https://git.crowdedwood.com/snes9x2005
 snes9x2005_plus_REVISION = performance
@@ -66,6 +66,9 @@ quicknes_REPO = https://github.com/libretro/QuickNES_Core
 
 smsplus-gx_MAKEFILE = Makefile.libretro
 smsplus-gx_CORE = smsplus_libretro.so
+
+genesis-plus-gx_MAKEFILE = Makefile.libretro
+genesis-plus-gx_CORE = genesis_plus_gx_libretro.so
 
 snes9x2005_REPO = https://git.crowdedwood.com/snes9x2005
 snes9x2005_REVISION = performance
@@ -179,6 +182,8 @@ clean-all: $(foreach core,$(CORES),clean-$(core)) clean
 
 force-clean: clean
 	rm -rf $(CORES)
+
+################################################################
 
 ifeq ($(platform), trimui)
 

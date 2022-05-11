@@ -1,0 +1,34 @@
+diff --git a/Makefile.libretro b/Makefile.libretro
+index ed92c27df93c42cfbba59a8ae68dbf55943ea972..3036920fb2220ce5f26988d9cd122550f849bf9d 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -471,7 +471,28 @@ else ifeq ($(platform), retrofw)
+    ENDIANNESS_DEFINES := -DLSB_FIRST -DBYTE_ORDER=LITTLE_ENDIAN -DALIGN_LONG
+    USE_PER_SOUND_CHANNELS_CONFIG = 0
+    MAX_ROM_SIZE = 16777216
+-   
++
++# MIYOO MINI
++else ifeq ($(platform), miyoomini)
++   TARGET := $(TARGET_NAME)_libretro.so
++   CC = $(CROSS_COMPILE)gcc
++   CXX = $(CROSS_COMPILE)g++
++   AR = $(CROSS_COMPILE)ar
++   fpic := -fPIC
++   SHARED := -shared -Wl,--version-script=$(CORE_DIR)/libretro/link.T -Wl,--no-undefined
++   fpic := -fPIC
++   LDFLAGS += -flto
++   LDFLAGS += $(PTHREAD_FLAGS)
++   CFLAGS += $(PTHREAD_FLAGS) 
++   CFLAGS += -fomit-frame-pointer -ffast-math -fPIC -flto
++   CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
++   ENDIANNESS_DEFINES += -DLSB_FIRST -DBYTE_ORDER=LITTLE_ENDIAN -DALIGN_LONG
++   USE_PER_SOUND_CHANNELS_CONFIG = 0
++   MAX_ROM_SIZE = 16777216
++   ifeq (,$(DEBUG))
++      LDFLAGS += -s
++   endif
++
+ # MIYOO
+ else ifeq ($(platform), miyoo)
+    TARGET := $(TARGET_NAME)_libretro.so
