@@ -17,6 +17,10 @@ static const struct core_override_option pokemini_core_option_overrides[] = {
 		.key = "pokemini_lowpass_filter",
 		.default_value = "enabled",
 	},
+	{
+		.key = "pokemini_60hz_mode",
+		.default_value = "disabled",
+	},
 	{ NULL }
 };
 
