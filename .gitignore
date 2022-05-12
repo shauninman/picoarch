@@ -1,5 +1,6 @@
 *.o
 *.so
+.DS_Store
 picoarch
 /pkg
 /profile
@@ -23,3 +24,4 @@ picoarch
 /smsplus-gx
 /snes9x2002
 /snes9x2005_plus
+/genesis-plus-gx

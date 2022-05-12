@@ -58,6 +58,8 @@ pcsx_rearmed_MAKEFILE = Makefile.libretro
 pcsx_rearmed_REVISION = 131a1b41835bc0eba3e35998dce376163a0a1b14 
 
 picodrive_MAKEFILE = Makefile.libretro
+# match onion?
+# picodrive_REVISION = 688c90d5
 
 pokemini_REPO = https://github.com/libretro/PokeMini
 pokemini_MAKEFILE = Makefile.libretro
