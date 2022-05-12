@@ -674,7 +674,11 @@ int core_open(const char *corefile, const char *tag_name) {
 void core_load(void) {
 	current_core.retro_init();
 	current_core.initialized = true;
-	PA_INFO("Finished loading core\n");
+	
+	struct retro_system_info info = {};
+	current_core.retro_get_system_info(&info);
+	
+	PA_INFO("Finished loading core %s (%s)\n", info.library_name, info.library_version);
 }
 
 int core_load_content(struct content *content) {
