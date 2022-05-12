@@ -1,8 +1,8 @@
 diff --git a/libretro/libretro.c b/libretro/libretro.c
-index f4980a5844b24a919b49a8795966cdca1d4faae7..cab4a123dc1e22573a47862a30398dd12d8b456f 100644
+index 1f8b3c2b46a79372860c928a47a840b18cc60710..9e849f174c05e78c7808a63ad151db64ab4c3b87 100644
 --- a/libretro/libretro.c
 +++ b/libretro/libretro.c
-@@ -889,6 +889,45 @@ void retro_init (void)
+@@ -1007,6 +1007,45 @@ void retro_init (void)
  
  ///////////////////////////////////////////////////////////
  
@@ -48,25 +48,25 @@ index f4980a5844b24a919b49a8795966cdca1d4faae7..cab4a123dc1e22573a47862a30398dd1
  void retro_deinit(void)
  {
  	DeactivateControllerRumble();
-@@ -906,6 +945,8 @@ void retro_deinit(void)
- 	turbo_period      = TURBO_PERIOD_DEFAULT;
- 	turbo_pulse_width = TURBO_PULSE_WIDTH_DEFAULT;
+@@ -1029,6 +1068,8 @@ void retro_deinit(void)
  	turbo_counter     = 0;
-+
+ 
+ 	update_av_info = false;
++	
 +	free_deferred_data();
  }
  
  ///////////////////////////////////////////////////////////
-@@ -922,6 +963,8 @@ void retro_reset (void)
+@@ -1045,6 +1086,8 @@ void retro_reset (void)
  
  void retro_run (void)
  {
 +	if (frames<defer_frames) update_deferred();
-+
- 	static int16_t audiobuffer[612 * 2]; // 2 Channels -> MinxAudio_SamplesInBuffer() * 2
- 	uint16_t audiosamples = 612;
++	
+ 	size_t audio_samples_per_frame;
  	
-@@ -995,6 +1038,11 @@ bool retro_serialize(void *data, size_t size)
+ 	// Check for core options updates
+@@ -1223,6 +1266,11 @@ bool retro_serialize(void *data, size_t size)
  
  bool retro_unserialize(const void *data, size_t size)
  {
