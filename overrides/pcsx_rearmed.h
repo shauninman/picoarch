@@ -4,7 +4,7 @@ static const struct core_override_option pcsx_rearmed_core_option_overrides[] = 
 	{
 		.key = "pcsx_rearmed_frameskip_type",
 		.info = "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness. Will cause graphical glitches.",
-		.default_value = "auto",
+		.default_value = "disabled",
 		.options = {
 			[2] = {"auto_threshold", "Threshold"},
 			[3] = {"fixed_interval", "Fixed"},
