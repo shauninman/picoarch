@@ -4,7 +4,6 @@ static const struct core_override_option beetle_pce_fast_core_option_overrides[]
 	{
 		.key = "pce_fast_frameskip",
 		.info = "Skip frames to avoid audio crackling. Improves performance at the expense of visual smoothness.",
-		.default_value = "auto",
 		.options = {
 			[2] = {"auto_threshold", "Threshold"},
 			[3] = {"fixed_interval", "Fixed"},
