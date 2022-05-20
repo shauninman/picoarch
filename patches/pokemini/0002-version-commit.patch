@@ -2,7 +2,7 @@ diff --git a/libretro/libretro.c b/libretro/libretro.c
 index cab4a123dc1e22573a47862a30398dd12d8b456f..ba1563e9b93d07925c9e57aba84b772dccad8299 100644
 --- a/libretro/libretro.c
 +++ b/libretro/libretro.c
-@@ -855,7 +855,13 @@ void retro_get_system_info(struct retro_system_info *info)
+@@ -855,7 +855,12 @@ void retro_get_system_info(struct retro_system_info *info)
  	memset(info, 0, sizeof(*info));
  	info->need_fullpath    = false;
  	info->valid_extensions = "min";
@@ -13,7 +13,6 @@ index cab4a123dc1e22573a47862a30398dd12d8b456f..ba1563e9b93d07925c9e57aba84b772d
 +#define _GIT_VERSION " -" GIT_VERSION
 +#endif
 +	info->library_version = PokeMini_Version _GIT_VERSION;
-+	// info->library_version  = "v0.60";
  	info->library_name     = "PokeMini";
  	info->block_extract    = false;
  }
