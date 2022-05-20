@@ -13,7 +13,7 @@ index 1f8b3c2b46a79372860c928a47a840b18cc60710..9e849f174c05e78c7808a63ad151db64
 +
 +static void free_deferred_data(void) {
 +	if (deferred_size) {
-+		log_cb(RETRO_LOG_INFO, "Freed deferred save state.\n");
++		if (log_cb) log_cb(RETRO_LOG_INFO, "Freed deferred save state.\n");
 +		free(deferred_data);
 +		deferred_data = NULL;
 +		deferred_size = 0;
