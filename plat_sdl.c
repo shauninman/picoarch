@@ -240,6 +240,9 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	int sy = ceilf((float)SCREEN_HEIGHT / src_h);
 	int s = sx>sy ? sx : sy;
 	
+	// eggs thought 4x would perform better than 3x
+	// if (s==3) s = 4;
+	// if (s==5) s = 6;
 	while (s>1 && s*src_w*SCREEN_BPP*s*src_h>buffer.size) s -= 1;
 	
 	// maximum
