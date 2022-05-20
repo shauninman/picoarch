@@ -79,7 +79,6 @@ me_bind_action gpsp_ctrl_actions[] =
 	{ "SELECT   ",  1 << RETRO_DEVICE_ID_JOYPAD_SELECT },
 	{ "L BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_L },
 	{ "R BUTTON ",  1 << RETRO_DEVICE_ID_JOYPAD_R },
-	{ "FAST FWD ",  1 << RETRO_DEVICE_ID_JOYPAD_R2 },
 	{ NULL,       0 }
 };
 

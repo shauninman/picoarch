@@ -104,8 +104,8 @@ const struct core_override_fast_forward beetle_pce_fast_fast_forward = {
 	.interval_key = "pce_fast_frameskip_interval",
 };
 
-#define beetle_pce_fast_overrides {                                    \
-	.core_name = "beetle-pce-fast",                                \
+#define beetle_pce_fast_overrides {                                \
+	.core_name = "mednafen_pce_fast",                              \
 	.fast_forward = &beetle_pce_fast_fast_forward,                 \
 	.actions = beetle_pce_fast_ctrl_actions,                       \
 	.action_size = array_size(beetle_pce_fast_ctrl_actions),       \
