@@ -12,7 +12,7 @@ index 7d57680053a397f1a05c101dd165e3b9234d73b5..cf4d897ec0fabab04cc29bce61767be5
 +	CC = $(CROSS_COMPILE)gcc
 +	CXX = $(CROSS_COMPILE)g++
 +
-+	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve
++	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve -D_TRIMUI
 +	CFLAGS += -ffast-math -fdata-sections -ffunction-sections -fsingle-precision-constant -flto -fPIC
 +	LDFLAGS += -flto -fPIC
 +	ifeq (,$(DEBUG))
