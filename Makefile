@@ -57,6 +57,7 @@ pcsx_rearmed_MAKEFILE = Makefile.libretro
 # the next commit breaks trimui patches
 pcsx_rearmed_REVISION = 131a1b41835bc0eba3e35998dce376163a0a1b14 
 
+picodrive_REPO = https://github.com/irixxxx/picodrive
 picodrive_MAKEFILE = Makefile.libretro
 # match onion?
 # picodrive_REVISION = 688c90d5
