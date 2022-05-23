@@ -539,8 +539,13 @@ static void pa_input_poll(void) {
 	
 	// special power button handling
 	if (power_start && SDL_GetTicks()-power_start>=1000) {
-		handle_emu_action(EACTION_POWER_OFF);
-		return;
+		if (state_allowed()) {
+			handle_emu_action(EACTION_POWER_OFF);
+			return;
+		}
+		else {
+			power_start = 0;
+		}
 	}
 	SDL_PumpEvents();
 	SDL_Event events[10];

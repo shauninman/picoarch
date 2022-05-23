@@ -615,8 +615,14 @@ int main(int argc, char **argv) {
 #ifdef MMENU
 	mmenu = dlopen("libmmenu.so", RTLD_LAZY);
 	if (mmenu) {
-		ResumeSlot_t ResumeSlot = (ResumeSlot_t)dlsym(mmenu, "ResumeSlot");
-		if (ResumeSlot) resume_slot = ResumeSlot();
+		if (state_allowed()) {
+			ResumeSlot_t ResumeSlot = (ResumeSlot_t)dlsym(mmenu, "ResumeSlot");
+			if (ResumeSlot) resume_slot = ResumeSlot();
+		}
+		else {
+			ShowWarning_t ShowWarning = (ShowWarning_t)dlsym(mmenu, "ShowWarning");
+			if (ShowWarning) ShowWarning();
+		}
 	}
 #endif
 	show_startup_message();
