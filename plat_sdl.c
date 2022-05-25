@@ -691,7 +691,7 @@ static int plat_sound_init(void)
 
 	SDL_AudioSpec spec, received;
 
-	spec.freq = MIN(sample_rate, MAX_SAMPLE_RATE);
+	spec.freq = MAX_SAMPLE_RATE; // MIN(sample_rate, MAX_SAMPLE_RATE);
 	spec.format = AUDIO_S16;
 	spec.channels = 2;
 	spec.samples = 512;
