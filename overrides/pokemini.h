@@ -44,3 +44,4 @@ me_bind_action pokemini_ctrl_actions[] =
 	.action_size = array_size(pokemini_ctrl_actions),      \
 	.options = pokemini_core_option_overrides              \
 }
+

@@ -22,7 +22,9 @@ PATCH = git apply
 # EXTRA_CORES += fbalpha2012
 # EXTRA_CORES += mame2003_plus
 # CORES     = pcsx_rearmed beetle-pce-fast bluemsx fceumm fmsx gambatte gme gpsp mame2000 pcsx_rearmed picodrive quicknes smsplus-gx snes9x2002 snes9x2005 $(EXTRA_CORES)
-CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed picodrive mgba smsplus-gx beetle-pce-fast genesis-plus-gx snes9x2005
+CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed picodrive mgba smsplus-gx beetle-pce-fast genesis-plus-gx snes9x2005 nxengine
+
+nxengine_REPO = https://github.com/libretro/nxengine-libretro
 
 snes9x2005_plus_REPO = https://git.crowdedwood.com/snes9x2005
 snes9x2005_plus_REVISION = performance
@@ -73,8 +75,8 @@ smsplus-gx_CORE = smsplus_libretro.so
 genesis-plus-gx_MAKEFILE = Makefile.libretro
 genesis-plus-gx_CORE = genesis_plus_gx_libretro.so
 
-snes9x2005_REPO = https://git.crowdedwood.com/snes9x2005
-snes9x2005_REVISION = performance
+# snes9x2005_REPO = https://git.crowdedwood.com/snes9x2005
+# snes9x2005_REVISION = performance
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o
@@ -85,7 +87,7 @@ else ifeq ($(platform), miyoomini)
 	CFLAGS += -marm -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard -march=armv7ve -fPIC -DCONTENT_DIR='"/mnt/SDCARD/Roms"'
 	LDFLAGS += -fPIC -lmi_sys -lmi_gfx
 	MMENU=1
-	PATCH=patch
+	# PATCH=patch
 else ifeq ($(platform), unix)
 	OBJS += plat_linux.o
 	LDFLAGS += -fPIE
