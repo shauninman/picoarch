@@ -12,11 +12,13 @@ picoarch
 /fceumm
 /fmsx
 /gambatte
+/genesis-plus-gx
 /gme
 /gpsp
 /mame2000
 /mame2003_plus
 /mgba
+/nxengine
 /pcsx_rearmed
 /picodrive
 /pokemini
@@ -25,5 +27,4 @@ picoarch
 /snes9x2002
 /snes9x2005
 /snes9x2005_plus
-/genesis-plus-gx
-/nxengine
+/supafaust
