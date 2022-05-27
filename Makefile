@@ -26,8 +26,7 @@ CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed picodrive mgb
 
 nxengine_REPO = https://github.com/libretro/nxengine-libretro
 
-snes9x2005_plus_REPO = https://git.crowdedwood.com/snes9x2005
-snes9x2005_plus_REVISION = performance
+snes9x2005_plus_REPO = https://github.com/libretro/snes9x2005
 snes9x2005_plus_FLAGS = USE_BLARGG_APU=1
 
 beetle-pce-fast_REPO = https://github.com/libretro/beetle-pce-fast-libretro
@@ -61,8 +60,6 @@ pcsx_rearmed_REVISION = 131a1b41835bc0eba3e35998dce376163a0a1b14
 
 picodrive_REPO = https://github.com/irixxxx/picodrive
 picodrive_MAKEFILE = Makefile.libretro
-# match onion?
-# picodrive_REVISION = 688c90d5
 
 pokemini_REPO = https://github.com/libretro/PokeMini
 pokemini_MAKEFILE = Makefile.libretro
@@ -74,9 +71,6 @@ smsplus-gx_CORE = smsplus_libretro.so
 
 genesis-plus-gx_MAKEFILE = Makefile.libretro
 genesis-plus-gx_CORE = genesis_plus_gx_libretro.so
-
-# snes9x2005_REPO = https://git.crowdedwood.com/snes9x2005
-# snes9x2005_REVISION = performance
 
 ifeq ($(platform), trimui)
 	OBJS += plat_trimui.o

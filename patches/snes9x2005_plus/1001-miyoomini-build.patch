@@ -1,11 +1,12 @@
 diff --git a/Makefile b/Makefile
-index 2142f6d8aa89776f953439b487b393b6068e8c10..aa4f4fae1282453159ae761c8ab0d15a7ac12a60 100644
+index 07d5368a8e78a020813732239ec369d83e931ede..009f13b8e61c634de4cb83e97785a10b83b4322d 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -307,6 +307,30 @@ else ifeq ($(platform), trimui)
- 		LDFLAGS += -s
- 	endif
+@@ -288,6 +288,31 @@ else ifeq ($(platform), miyoo)
+ 	FLAGS += -fomit-frame-pointer -ffast-math -march=armv5te -mtune=arm926ej-s
+ 	FLAGS += -DFAST_ALIGNED_LSB_WORD_ACCESS -fno-unroll-loops
  
++# MIYOOMINI
 +else ifeq ($(platform), miyoomini)
 +	TARGET := $(TARGET_NAME)_libretro.so
 +	CC = $(CROSS_COMPILE)gcc
