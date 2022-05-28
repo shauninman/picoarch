@@ -1,0 +1,254 @@
+diff --git a/libretro.cpp b/libretro.cpp
+index 6c58dd0a7e0864494634064e7976a3f91aee6bc1..515d4f827460eaf3bde027e8fe4060b30f4259ad 100644
+--- a/libretro.cpp
++++ b/libretro.cpp
+@@ -101,15 +101,89 @@ static MDFN_COLD void Cleanup(void)
+  }
+ }
+ 
++static unsigned frameskip_type             = 1; // tmp: default to auto
++static unsigned frameskip_threshold        = 0;
++static uint16_t frameskip_counter          = 0;
++static unsigned frameskip_interval         = 0;
++
++static bool retro_audio_buff_active        = false;
++static unsigned retro_audio_buff_occupancy = 0;
++static bool retro_audio_buff_underrun      = false;
++
++#define FRAMETIME_NTSC 16667
++#define FRAMETIME_PAL  20000
++
++static unsigned retro_audio_latency        = 0;
++static bool update_audio_latency           = false;
++
++static void retro_audio_buff_status_cb(
++      bool active, unsigned occupancy, bool underrun_likely)
++{
++   retro_audio_buff_active    = active;
++   retro_audio_buff_occupancy = occupancy;
++   retro_audio_buff_underrun  = underrun_likely;
++}
++
++static void retro_set_audio_buff_status_cb(void)
++{
++   if (frameskip_type > 0)
++   {
++      struct retro_audio_buffer_status_callback buf_status_cb;
++
++      buf_status_cb.callback = retro_audio_buff_status_cb;
++      if (!cb.environment(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK,
++            &buf_status_cb))
++      {
++         if (cb.log)
++            cb.log(RETRO_LOG_WARN, "Frameskip disabled - frontend does not support audio buffer status monitoring.\n");
++
++         retro_audio_buff_active    = false;
++         retro_audio_buff_occupancy = 0;
++         retro_audio_buff_underrun  = false;
++         retro_audio_latency        = 0;
++      }
++      else
++      {
++         /* Frameskip is enabled - increase frontend
++          * audio latency to minimise potential
++          * buffer underruns */
++         uint32_t frame_time_usec = FRAMETIME_NTSC;
++		 if (cgi!=nullptr) { // required by retro_get_region()
++			 if (retro_get_region()==RETRO_REGION_NTSC)
++			 			 frame_time_usec = FRAMETIME_NTSC;
++			 else
++			 	frame_time_usec = FRAMETIME_PAL;
++		 }
++
++         /* Set latency to 6x current frame time... */
++         retro_audio_latency = (unsigned)(6 * frame_time_usec / 1000);
++
++         /* ...then round up to nearest multiple of 32 */
++         retro_audio_latency = (retro_audio_latency + 0x1F) & ~0x1F;
++      }
++   }
++   else
++   {
++      cb.environment(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK, NULL);
++      retro_audio_latency = 0;
++   }
++
++   update_audio_latency = true;
++}
++
+ //
+ //
+ //
+ 
+ static const struct retro_variable options[] =
+ {
++ { "supafaust_frameskip", "Frameskip; disabled|auto|threshold" },
++ { "supafaust_frameskip_threshold", "FS threshold (%); 15|18|21|24|27|30|33|36|39|42|45|48|51|54|57|60" },
++ { "supafaust_frameskip_interval", "FS interval; 0|1|2|3|4|5|6|7|8|9|10|15|20|30" },
++
+  { "supafaust_pixel_format", "Pixel format; rgb565|xrgb8888|0rgb1555" },
+  { "supafaust_correct_aspect", "Correct pixel aspect ratio; enabled|disabled|force_ntsc|force_pal" },
+- { "supafaust_h_filter", "Horizontal blend/double filter; phr256blend_auto512|phr256blend_512|512_blend|512|phr256blend" },
++ { "supafaust_h_filter", "Horizontal blend/double filter; none|phr256blend_auto512|phr256blend_512|512_blend|512|phr256blend" },
+  { "supafaust_deinterlacer", "Deinterlacer; bob_offset|weave|blend" },
+ 
+  { "supafaust_slstart", "First displayed scanline in NTSC mode; 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16" },
+@@ -277,6 +351,7 @@ MDFN_COLD RETRO_API void retro_init(void)
+  }
+  //
+  Initialized = 1;
++ retro_set_audio_buff_status_cb();
+ }
+ 
+ MDFN_COLD RETRO_API void retro_deinit(void)
+@@ -286,6 +361,17 @@ MDFN_COLD RETRO_API void retro_deinit(void)
+  MDFNI_Kill();
+  //
+  libretro_supports_bitmasks = false;
++ 
++ frameskip_type             = 0;
++ frameskip_threshold        = 0;
++ frameskip_counter          = 0;
++ frameskip_interval         = 0;
++ retro_audio_buff_active    = false;
++ retro_audio_buff_occupancy = 0;
++ retro_audio_buff_underrun  = false;
++ retro_audio_latency        = 0;
++ update_audio_latency       = false;
++   
+  //
+  Initialized = -1;
+ }
+@@ -407,6 +493,51 @@ static NO_INLINE void DoFrame(MDFN_Surface* s)
+  espec.LineWidths = lw.get();
+  espec.skip = false; //!(lr_avenable & 0x1);		// Skips drawing the frame if true; espec.surface and espec.LineWidths must still be valid when true, however.
+ 
++ if ((frameskip_type > 0) &&
++        retro_audio_buff_active &&
++        !espec.skip)
++    {
++       bool skip_frame;
++	   
++	   switch (frameskip_type)
++	         {
++	            case 1: /* auto */
++	               skip_frame = retro_audio_buff_underrun;
++	               break;
++	            case 2: /* manual */
++	               skip_frame = (retro_audio_buff_occupancy < frameskip_threshold);
++	               break;
++	            default:
++	               skip_frame = false;
++	               break;
++	         }
++
++	         if (skip_frame)
++	         {
++	            if(frameskip_counter < frameskip_interval)
++	            {
++	               espec.skip = true;
++	               frameskip_counter++;
++	            }
++	            else
++	               frameskip_counter = 0;
++	         }
++	         else
++	            frameskip_counter = 0;
++   }
++   
++	/* If frameskip/timing settings have changed,
++    * update frontend audio latency
++    * > Can do this before or after the frameskip
++    *   check, but doing it after means we at least
++    *   retain the current frame's audio output */
++   if (update_audio_latency)
++   {
++      cb.environment(RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY,
++            &retro_audio_latency);
++      update_audio_latency = false;
++   }
++   
+  espec.SoundRate = SoundRate;
+  espec.SoundBuf = SoundBuf.get(); // Should have enough room for 100ms of sound to be on the safe side.
+  espec.SoundBufMaxSize = SoundBufMaxSize;
+@@ -415,22 +546,50 @@ static NO_INLINE void DoFrame(MDFN_Surface* s)
+  //
+  //
+  //
+- if(espec.surface->format.opp == 2)
+- {
+-  cb.video_refresh(espec.surface->pix<uint16>() + espec.DisplayRect.x + espec.DisplayRect.y * espec.surface->pitchinpix,
+-	(lw[0] == ~0) ? espec.DisplayRect.w : lw[espec.DisplayRect.y],
+-	espec.DisplayRect.h,
+-	espec.surface->pitchinpix * sizeof(uint16));
++ if (!espec.skip) {
++	 if(espec.surface->format.opp == 2)
++	 {
++	  cb.video_refresh(espec.surface->pix<uint16>() + espec.DisplayRect.x + espec.DisplayRect.y * espec.surface->pitchinpix,
++		(lw[0] == ~0) ? espec.DisplayRect.w : lw[espec.DisplayRect.y],
++		espec.DisplayRect.h,
++		espec.surface->pitchinpix * sizeof(uint16));
++	 }
++	 else
++	 {
++	  cb.video_refresh(espec.surface->pix<uint32>() + espec.DisplayRect.x + espec.DisplayRect.y * espec.surface->pitchinpix,
++		(lw[0] == ~0) ? espec.DisplayRect.w : lw[espec.DisplayRect.y],
++		espec.DisplayRect.h,
++		espec.surface->pitchinpix * sizeof(uint32));
++	 }
+  }
+- else
+- {
+-  cb.video_refresh(espec.surface->pix<uint32>() + espec.DisplayRect.x + espec.DisplayRect.y * espec.surface->pitchinpix,
++ else {
++  cb.video_refresh(NULL,
+ 	(lw[0] == ~0) ? espec.DisplayRect.w : lw[espec.DisplayRect.y],
+ 	espec.DisplayRect.h,
+ 	espec.surface->pitchinpix * sizeof(uint32));
+  }
+ }
+ 
++void check_variables(void) {
++    unsigned prev_frameskip_type = frameskip_type;
++    //
++    {
++    	const char* const v = get_option("supafaust_frameskip");
++      if(!MDFN_strazicmp(v, "threshold"))
++       frameskip_type = 2;
++      else if(!MDFN_strazicmp(v, "auto"))
++       frameskip_type = 1;
++      else
++       frameskip_type = 0;
++	
++  	frameskip_threshold = get_option_unsigned("supafaust_frameskip_threshold");
++	frameskip_interval = get_option_unsigned("supafaust_frameskip_interval");
++    }
++    //
++    if (frameskip_type != prev_frameskip_type)
++    	 retro_set_audio_buff_status_cb();
++}
++
+ RETRO_API void retro_run(void)
+ {
+  if(MDFN_UNLIKELY(CheatsChanged))
+@@ -456,6 +615,10 @@ RETRO_API void retro_run(void)
+   CheatsChanged = false;
+  }
+  //
++ //
++  bool updated = false;
++  if (cb.environment(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
++     check_variables();
+  //
+  //
+   DoFrame(surf.get());
+@@ -691,6 +854,9 @@ MDFN_COLD RETRO_API bool retro_load_game(const retro_game_info* game)
+   cgi = MDFNI_LoadGame(&gf);
+   //
+   //
++  check_variables();
++  //
++  //
+   for(size_t i = 0; i < ports_active; i++)
+   {
+    port_data[i] = MDFNI_SetInput(i/*port*/, 1/*device type id, gamepad*/);
