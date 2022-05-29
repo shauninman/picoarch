@@ -2,6 +2,10 @@
 
 static const struct core_override_option supafaust_core_option_overrides[] = {
 	{
+		.key = "supafaust_frameskip",
+		.default_value = "auto",
+	},
+	{
 		.key = "supafaust_frameskip_threshold",
 		.default_value = "33",
 	},
