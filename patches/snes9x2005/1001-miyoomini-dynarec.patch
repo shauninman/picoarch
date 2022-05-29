@@ -1,10 +1,10 @@
 diff --git a/Makefile b/Makefile
-index 2c4fecdf8dfc9f658d031a1818671e6f0c8041d9..3d6eb0689092c79bf2a5eb20e0fd80b19e3bce21 100644
+index 07d5368a8e78a020813732239ec369d83e931ede..91742318da06f5ade18499e88231e1defb3b5a47 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -311,6 +311,32 @@ else
- endif
- 	OPTIMIZE += -Ofast -DNDEBUG=1
+@@ -288,6 +288,32 @@ else ifeq ($(platform), miyoo)
+ 	FLAGS += -fomit-frame-pointer -ffast-math -march=armv5te -mtune=arm926ej-s
+ 	FLAGS += -DFAST_ALIGNED_LSB_WORD_ACCESS -fno-unroll-loops
  
 +else ifeq ($(platform), miyoomini)
 +	TARGET := $(TARGET_NAME)_libretro.so
