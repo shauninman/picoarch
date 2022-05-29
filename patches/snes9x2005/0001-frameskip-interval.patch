@@ -1,0 +1,106 @@
+diff --git a/libretro_core_options.h b/libretro_core_options.h
+index 28bb210aa37cece527d1c3bbf859335b812b7a66..ebcca213c4761cba1f3afb1dc08dac9d88f15d3b 100644
+--- a/libretro_core_options.h
++++ b/libretro_core_options.h
+@@ -89,7 +89,7 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+       {
+          { "disabled", NULL },
+          { "auto",     "Auto" },
+-         { "manual",   "Manual" },
++         { "auto_threshold", "Threshold" },
+          { NULL, NULL },
+       },
+       "disabled"
+@@ -122,6 +122,32 @@ struct retro_core_option_v2_definition option_defs_us[] = {
+       },
+       "33"
+    },
++   {
++      "snes9x_2005_frameskip_interval",
++      "Frameskip Interval",
++      NULL,
++      "The maximum number of frames that can be skipped before a new frame is rendered.",
++      NULL,
++      NULL,
++      {
++         { "0",  NULL },
++         { "1",  NULL },
++         { "2",  NULL },
++         { "3",  NULL },
++         { "4",  NULL },
++         { "5",  NULL },
++         { "6",  NULL },
++         { "7",  NULL },
++         { "8",  NULL },
++         { "9",  NULL },
++         { "10", NULL },
++         { "15", NULL },
++         { "20", NULL },
++         { "30", NULL },
++         { NULL, NULL },
++      },
++      "4"
++   },
+ #ifndef USE_BLARGG_APU
+    {
+       "snes9x_2005_low_pass_filter",
+diff --git a/libretro.c b/libretro.c
+index f64b71c248db0eeed7c5ff94cedb6ed0863fbc83..32d04b9e6bc7bb4d0056d4f17b467b389c0ca72b 100644
+--- a/libretro.c
++++ b/libretro.c
+@@ -70,13 +70,11 @@ static int32_t audio_low_pass_range = (60 * 65536) / 100;
+ static unsigned frameskip_type             = 0;
+ static unsigned frameskip_threshold        = 0;
+ static uint16_t frameskip_counter          = 0;
++static unsigned frameskip_interval         = 0;
+ 
+ static bool retro_audio_buff_active        = false;
+ static unsigned retro_audio_buff_occupancy = 0;
+ static bool retro_audio_buff_underrun      = false;
+-/* Maximum number of consecutive frames that
+- * can be skipped */
+-#define FRAMESKIP_MAX 30
+ 
+ static unsigned retro_audio_latency        = 0;
+ static bool update_audio_latency           = false;
+@@ -484,6 +482,7 @@ void retro_deinit(void)
+    frameskip_type             = 0;
+    frameskip_threshold        = 0;
+    frameskip_counter          = 0;
++   frameskip_interval         = 0;
+ #ifndef USE_BLARGG_APU
+    audio_low_pass_enabled     = false;
+    audio_low_pass_range       = (60 * 65536) / 100;
+@@ -562,7 +561,7 @@ static void check_variables(bool first_run)
+    {
+       if (strcmp(var.value, "auto") == 0)
+          frameskip_type = 1;
+-      else if (strcmp(var.value, "manual") == 0)
++      else if (strcmp(var.value, "auto_threshold") == 0)
+          frameskip_type = 2;
+    }
+ 
+@@ -573,6 +572,14 @@ static void check_variables(bool first_run)
+ 
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+       frameskip_threshold = strtol(var.value, NULL, 10);
++   
++   var.key = "snes9x_2005_frameskip_interval";
++   var.value = NULL;
++   
++   frameskip_interval = 4;
++   
++   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
++      frameskip_interval = strtol(var.value, NULL, 10);
+ 
+ #ifndef USE_BLARGG_APU
+    var.key = "snes9x_2005_low_pass_filter";
+@@ -690,7 +697,7 @@ void retro_run(void)
+ 
+       if (skip_frame)
+       {
+-         if(frameskip_counter < FRAMESKIP_MAX)
++         if(frameskip_counter < frameskip_interval)
+          {
+             IPPU.RenderThisFrame = false;
+             frameskip_counter++;
