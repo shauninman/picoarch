@@ -112,8 +112,15 @@ me_bind_action supafaust_ctrl_actions[] =
 	{ NULL,       0 }
 };
 
+const struct core_override_fast_forward supafaust_fast_forward = {
+	.type_key = "supafaust_frameskip",
+	.type_value = "auto",
+	.interval_key = "supafaust_frameskip_interval"
+};
+
 #define supafaust_overrides {                          \
 	.core_name = "supafaust",                          \
+	.fast_forward = &supafaust_fast_forward,           \
 	.actions = supafaust_ctrl_actions,                 \
 	.action_size = array_size(supafaust_ctrl_actions), \
 	.options = supafaust_core_option_overrides         \
