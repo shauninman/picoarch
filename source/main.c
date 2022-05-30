@@ -491,9 +491,7 @@ static void count_fps(void)
 					last_cpu_ticks = cpu_ticks;
 				}
 
-				snprintf(msg, HUD_LEN, "%-*s%*s",
-				         (HUD_LEN - CPU_MSG_LEN - 1), fps_msg,
-				         CPU_MSG_LEN - 1, cpu_msg);
+				snprintf(msg, HUD_LEN, "%s CPU: %s", fps_msg, cpu_msg);
 				plat_video_set_msg(msg, 1, 1100);
 			}
 		}

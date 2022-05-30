@@ -12,6 +12,83 @@
 
 static SDL_Surface* screen;
 
+struct audio_state {
+	unsigned buf_w;
+	unsigned max_buf_w;
+	unsigned buf_r;
+	size_t buf_len;
+	struct audio_frame *buf;
+	int in_sample_rate;
+	int out_sample_rate;
+	int sample_rate_adj;
+	int adj_out_sample_rate;
+};
+
+struct audio_state audio;
+
+static void plat_sound_select_resampler(void);
+void (*plat_sound_write)(const struct audio_frame *data, int frames);
+
+#define DRC_MAX_ADJUSTMENT 0.003
+#define DRC_ADJ_BELOW 40
+#define DRC_ADJ_ABOVE 60
+
+static char msg[HUD_LEN];
+static unsigned msg_priority = 0;
+static unsigned msg_expire = 0;
+
+static bool frame_dirty = false;
+static int frame_time = 1000000 / 60;
+
+static void video_expire_msg(void)
+{
+	msg[0] = '\0';
+	msg_priority = 0;
+	msg_expire = 0;
+}
+
+static void video_update_msg(void)
+{
+	if (msg[0] && msg_expire < plat_get_ticks_ms())
+		video_expire_msg();
+}
+
+static void video_clear_msg(uint16_t *dst, uint32_t h, uint32_t pitch)
+{
+	memset(dst + (h - 10) * pitch, 0, 10 * pitch * sizeof(uint16_t));
+}
+
+static void video_print_msg(uint16_t *dst, uint32_t h, uint32_t pitch, char *msg)
+{
+	basic_text_out16_nf(dst, pitch, 2, h - 10, msg);
+}
+
+static int audio_resample_passthrough(struct audio_frame data) {
+	audio.buf[audio.buf_w++] = data;
+	if (audio.buf_w >= audio.buf_len) audio.buf_w = 0;
+
+	return 1;
+}
+
+static int audio_resample_nearest(struct audio_frame data) {
+	static int diff = 0;
+	int consumed = 0;
+
+	if (diff < audio.adj_out_sample_rate) {
+		audio.buf[audio.buf_w++] = data;
+		if (audio.buf_w >= audio.buf_len) audio.buf_w = 0;
+
+		diff += audio.in_sample_rate;
+	}
+
+	if (diff >= audio.adj_out_sample_rate) {
+		consumed++;
+		diff -= audio.adj_out_sample_rate;
+	}
+
+	return consumed;
+}
+
 // begin miyoo hardware scaling support
 // loosely based on eggs' picogpsp gfx.c
 #include <mi_sys.h>
@@ -234,24 +311,13 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	scaler.src_h = src_h;
 	scaler.src_p = src_p;
 	
-	// minimum
-	// snes can barely keep up
 	int sx = ceilf((float)SCREEN_WIDTH / src_w);
 	int sy = ceilf((float)SCREEN_HEIGHT / src_h);
 	int s = sx>sy ? sx : sy;
 	
 	// eggs thought 4x would perform better than 3x
-	// if (s==3) s = 4;
-	// if (s==5) s = 6;
+	if (s==3) s = 4;
 	while (s>1 && s*src_w*SCREEN_BPP*s*src_h>buffer.size) s -= 1;
-	
-	// maximum
-	// snes can't keep up (so we added max_upscale)
-	// int sx = 2 * SCREEN_WIDTH / src_w;
-	// int sy = 2 * SCREEN_HEIGHT / src_h;
-	// int s = sx<sy ? sx : sy;
-	//
-	// if (s>max_upscale) s = max_upscale;
 	
 	if (s>6) s = 6;
 	switch(s) {
@@ -261,9 +327,7 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 		case 4: scaler.upscale = scale4x_n16; break;
 		case 5: scaler.upscale = scale5x_n16; break;
 		case 6: scaler.upscale = scale6x_n16; break;
-		// TODO: make an 8x version?
 	}
-	
 	
 	scaler.dst_w = src_w * s;
 	scaler.dst_h = src_h * s;
@@ -272,13 +336,10 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	scaled = SDL_CreateRGBSurfaceFrom(buffer.virAddr,scaler.dst_w,scaler.dst_h,buffer.depth,scaler.dst_p,0,0,0,0);
 	if (scaled != NULL) scaled->pixelsPa = buffer.phyAddr;
 	PA_INFO("created %ix%i surface (%ix)\n", scaler.dst_w, scaler.dst_h, s); fflush(stdout);
-	// buffer_clear();
 }
 static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) {
 	bool update_asp = false;
-	// static int scaler_max_upscale;
-	if (w!=scaler.src_w || h!=scaler.src_h || pitch!=scaler.src_p) { //  || scaler_max_upscale!=max_upscale
-		// scaler_max_upscale = max_upscale;
+	if (w!=scaler.src_w || h!=scaler.src_h || pitch!=scaler.src_p) {
 		buffer_renew_surface(w,h,pitch);
 		update_asp = true;
 	}
@@ -294,7 +355,7 @@ static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) 
 		buffer_clear();
 		
 		if (aspect_ratio<=0) aspect_ratio = (float)scaler.src_w / scaler.src_h;
-	
+		
 		if (scale_size==SCALE_SIZE_ASPECT) {
 			scaler.asp_w = SCREEN_HEIGHT * aspect_ratio;
 			scaler.asp_h = SCREEN_HEIGHT;
@@ -302,111 +363,27 @@ static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) 
 				scaler.asp_w = SCREEN_WIDTH;
 				scaler.asp_h = SCREEN_WIDTH / aspect_ratio;
 			}
-		
+			
 			scaler.asp_x = (SCREEN_WIDTH - scaler.asp_w) / 2;
 			scaler.asp_y = (SCREEN_HEIGHT - scaler.asp_h) / 2;
 		}
 	}
 	
-	// buffer_upscale_nn(src);
-	// buffer_upscale(scaler.src_w,scaler.src_h,scaler.src_p,src,
-	// 		scaler.dst_w,scaler.dst_h,scaler.dst_p,buffer.virAddr);
+	if (msg[0]) video_print_msg(src, h, pitch / SCREEN_BPP, msg);
+		
 	scaler.upscale(src, buffer.virAddr,scaler.src_w,scaler.src_h,scaler.src_p,scaler.dst_p);
 	
+	// if (msg[0]) video_print_msg(scaled->pixels, scaled->h, scaled->pitch / scaled->format->BytesPerPixel, msg);
+	
 	if (scale_size==SCALE_SIZE_ASPECT) {
-		GFX_BlitSurfaceExec(scaled, NULL, screen, &(SDL_Rect){scaler.asp_x, scaler.asp_y, scaler.asp_w, scaler.asp_h}, 0,0,0);
+		GFX_BlitSurfaceExec(scaled, NULL, screen, &(SDL_Rect){scaler.asp_x, scaler.asp_y, scaler.asp_w, scaler.asp_h}, 0,0,1);
 	}
 	else {
-		GFX_BlitSurfaceExec(scaled, NULL, screen, NULL, 0,0,0);
+		GFX_BlitSurfaceExec(scaled, NULL, screen, NULL, 0,0,1);
 	}
-	
-	// just awful
-	// void* dst = screen->pixels;
-	// if (scale_effect==SCALE_EFFECT_SCANLINE) {
-	// 	for (int i=1; i<480; i+=2) {
-	// 		memset(dst+i*SCREEN_PITCH, 0, SCREEN_PITCH);
-	// 	}
-	// }
 }
 
 // end miyoo hardware scaling support
-
-struct audio_state {
-	unsigned buf_w;
-	unsigned max_buf_w;
-	unsigned buf_r;
-	size_t buf_len;
-	struct audio_frame *buf;
-	int in_sample_rate;
-	int out_sample_rate;
-	int sample_rate_adj;
-	int adj_out_sample_rate;
-};
-
-struct audio_state audio;
-
-static void plat_sound_select_resampler(void);
-void (*plat_sound_write)(const struct audio_frame *data, int frames);
-
-#define DRC_MAX_ADJUSTMENT 0.003
-#define DRC_ADJ_BELOW 40
-#define DRC_ADJ_ABOVE 60
-
-static char msg[HUD_LEN];
-static unsigned msg_priority = 0;
-static unsigned msg_expire = 0;
-
-static bool frame_dirty = false;
-static int frame_time = 1000000 / 60;
-
-static void video_expire_msg(void)
-{
-	msg[0] = '\0';
-	msg_priority = 0;
-	msg_expire = 0;
-}
-
-static void video_update_msg(void)
-{
-	if (msg[0] && msg_expire < plat_get_ticks_ms())
-		video_expire_msg();
-}
-
-static void video_clear_msg(uint16_t *dst, uint32_t h, uint32_t pitch)
-{
-	memset(dst + (h - 10) * pitch, 0, 10 * pitch * sizeof(uint16_t));
-}
-
-static void video_print_msg(uint16_t *dst, uint32_t h, uint32_t pitch, char *msg)
-{
-	basic_text_out16_nf(dst, pitch, 2, h - 10, msg);
-}
-
-static int audio_resample_passthrough(struct audio_frame data) {
-	audio.buf[audio.buf_w++] = data;
-	if (audio.buf_w >= audio.buf_len) audio.buf_w = 0;
-
-	return 1;
-}
-
-static int audio_resample_nearest(struct audio_frame data) {
-	static int diff = 0;
-	int consumed = 0;
-
-	if (diff < audio.adj_out_sample_rate) {
-		audio.buf[audio.buf_w++] = data;
-		if (audio.buf_w >= audio.buf_len) audio.buf_w = 0;
-
-		diff += audio.in_sample_rate;
-	}
-
-	if (diff >= audio.adj_out_sample_rate) {
-		consumed++;
-		diff -= audio.adj_out_sample_rate;
-	}
-
-	return consumed;
-}
 
 static void *fb_flip(void)
 {
@@ -558,15 +535,13 @@ void plat_video_process(const void *data, unsigned width, unsigned height, size_
 	
 	if (scale_size==SCALE_SIZE_NONE) {
 		scale(width, height, pitch, data, screen->pixels);
+		if (msg[0]) video_print_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP, msg);
 	}
 	else {
 		buffer_scale(width, height, pitch, data);
 	}
 	
-	if (msg[0]) {
-		video_print_msg(screen->pixels, screen->h, screen->pitch / SCREEN_BPP, msg);
-		had_msg = 1;
-	}
+	if (msg[0]) had_msg = 1;
 	
 	SDL_UnlockSurface(screen);
 	
