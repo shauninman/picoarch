@@ -1,5 +1,5 @@
 # Global definitions
-platform   ?= unix
+platform   ?= $(UNION_PLATFORM)
 
 CC        = $(CROSS_COMPILE)gcc
 SYSROOT   = $(shell $(CC) --print-sysroot)
@@ -183,9 +183,8 @@ $(foreach core,$(CORES),$(eval $(call CORE_template,$(core))))
 cores: $(SOFILES)
 
 clean: # clean-libpicofe
-	rm -f $(OBJS) $(SOFILES)
-	rm -rf output
-	rm -rf pkg
+	cd source && rm -f *.o
+	cd output && rm -f $(BIN) $(SOFILES)
 
 clean-all: $(foreach core,$(CORES),clean-$(core)) clean
 
