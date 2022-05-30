@@ -315,7 +315,6 @@ static void buffer_renew_surface(int src_w, int src_h, int src_p) {
 	int sy = ceilf((float)SCREEN_HEIGHT / src_h);
 	int s = sx>sy ? sx : sy;
 	
-	// eggs thought 4x would perform better than 3x
 	if (s==3) s = 4;
 	while (s>1 && s*src_w*SCREEN_BPP*s*src_h>buffer.size) s -= 1;
 	
@@ -369,11 +368,11 @@ static void buffer_scale(unsigned w, unsigned h, size_t pitch, const void *src) 
 		}
 	}
 	
-	if (msg[0]) video_print_msg(src, h, pitch / SCREEN_BPP, msg);
+	if (msg[0]) video_print_msg(src, h, pitch / SCREEN_BPP, msg); // before scaling
 		
 	scaler.upscale(src, buffer.virAddr,scaler.src_w,scaler.src_h,scaler.src_p,scaler.dst_p);
 	
-	// if (msg[0]) video_print_msg(scaled->pixels, scaled->h, scaled->pitch / scaled->format->BytesPerPixel, msg);
+	// if (msg[0]) video_print_msg(scaled->pixels, scaled->h, scaled->pitch / scaled->format->BytesPerPixel, msg); // mid scaling
 	
 	if (scale_size==SCALE_SIZE_ASPECT) {
 		GFX_BlitSurfaceExec(scaled, NULL, screen, &(SDL_Rect){scaler.asp_x, scaler.asp_y, scaler.asp_w, scaler.asp_h}, 0,0,1);
@@ -561,17 +560,22 @@ static uint64_t plat_get_ticks_us_u64(void) {
     return ret;
 }
 
+#define FRAME_LIMIT_US 12000 
 void plat_video_flip(void)
 {
+	static uint64_t last_flip_time_us = 0;
 	static uint64_t next_frame_time_us = 0;
 
 	if (frame_dirty) {
+		uint64_t time = plat_get_ticks_us_u64();
+		int skip_flip = !limit_frames && time-last_flip_time_us<FRAME_LIMIT_US;
 		if (!enable_drc) {
-			fb_flip();
+			if (!skip_flip) {
+				fb_flip();
+				last_flip_time_us = time;
+			}
 			next_frame_time_us = 0;
 		} else {
-			uint64_t time = plat_get_ticks_us_u64();
-
             if ( (limit_frames) && (time < next_frame_time_us) ) {
                 uint32_t delaytime = (next_frame_time_us - time - 1) / 1000 + 1;
                 if (delaytime < 1000) SDL_Delay(delaytime);
@@ -582,8 +586,11 @@ void plat_video_flip(void)
 			if ( (!next_frame_time_us) || (!limit_frames) ) {
 				next_frame_time_us = time;
 			}
-
-			fb_flip();
+			
+			if (!skip_flip) {
+				fb_flip();
+				last_flip_time_us = time;
+			}
 
 			do {
 				next_frame_time_us += frame_time;
