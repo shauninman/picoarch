@@ -70,6 +70,7 @@ me_bind_action emuctrl_actions[] =
 	{ "Load State       ", 1 << EACTION_LOAD_STATE },
 	{ "Toggle FPS/CPU%  ", 1 << EACTION_TOGGLE_HUD },
 	{ "Toggle FF        ", 1 << EACTION_TOGGLE_FF },
+	{ "Reset            ", 1 << EACTION_RESET },
 	// { "Take Screenshot  ", 1 << EACTION_SCREENSHOT },
 	{ NULL,                0 }
 };
@@ -536,7 +537,7 @@ static menu_entry e_menu_video_options[] =
 	mee_enum_h       (" Screen effect",    MA_VID_FX, scale_effect, men_scale_effect, h_scale_effect),
 	mee_onoff_h      (" Optimize text",   MA_VID_TXT, optimize_text, 1, h_optimize_text),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),
-	mee_onoff_h      ("Audio adjustment",         0, enable_drc, 1, h_enable_drc),
+	mee_onoff_h      ("Reduce judder",            0, enable_drc, 1, h_enable_drc),
 	mee_end,
 };
 

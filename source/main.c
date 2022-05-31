@@ -403,6 +403,9 @@ void handle_emu_action(emu_action action)
 	case EACTION_TOGGLE_FF:
 		toggle_fast_forward(0);
 		break;
+	case EACTION_RESET:
+		current_core.retro_reset();
+		break;
 	case EACTION_SCREENSHOT:
 		screenshot();
 		break;
