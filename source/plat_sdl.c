@@ -513,14 +513,18 @@ void plat_video_set_msg(const char *new_msg, unsigned priority, unsigned msec)
 	}
 }
 
-
 static SDL_Surface* clean_screen = NULL;
 static const void* framebuffer; // NOTE: we don't own this
 void* plat_clean_screen(void) {
 	return scale_clean(framebuffer, clean_screen->pixels) ? clean_screen : NULL;
 }
 
-void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
+void plat_video_flip(void)
+{
+	fb_flip();
+}
+
+static void _video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
 	framebuffer = data;
 	
 	static int had_msg = 0;
@@ -559,18 +563,17 @@ static uint64_t plat_get_ticks_us_u64(void) {
 
     return ret;
 }
-
 #define FRAME_LIMIT_US 12000 
-void plat_video_flip(void)
-{
+void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
 	static uint64_t last_flip_time_us = 0;
 	static uint64_t next_frame_time_us = 0;
 
-	if (frame_dirty) {
+	if (data) {
 		uint64_t time = plat_get_ticks_us_u64();
 		int skip_flip = !limit_frames && time-last_flip_time_us<FRAME_LIMIT_US;
 		if (!enable_drc) {
 			if (!skip_flip) {
+				_video_process(data,width,height,pitch);
 				fb_flip();
 				last_flip_time_us = time;
 			}
@@ -588,6 +591,7 @@ void plat_video_flip(void)
 			}
 			
 			if (!skip_flip) {
+				_video_process(data,width,height,pitch);
 				fb_flip();
 				last_flip_time_us = time;
 			}
@@ -596,7 +600,6 @@ void plat_video_flip(void)
 				next_frame_time_us += frame_time;
 			} while (next_frame_time_us < time);
 		}
-		frame_dirty = false;
 	}
 }
 

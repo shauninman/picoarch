@@ -630,8 +630,8 @@ int main(int argc, char **argv) {
 		count_fps();
 		adjust_audio();
 		current_core.retro_run();
-		if (!should_quit)
-			plat_video_flip();
+		// if (!should_quit)
+		// 	plat_video_flip();
 	} while (!should_quit);
 
 	return quit(0);
