@@ -68,10 +68,11 @@ static const struct core_override_option gambatte_core_option_overrides[] = {
 		.desc = "Opp. Directions",
 		.info = "Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time."
 	},
-	// {
-	// 	.key = "gambatte_rumble_level",
-	// 	.blocked = true
-	// },
+	{
+		.key = "gambatte_audio_resampler",
+		.default_value = "sinc",
+		.blocked = true
+	},
 	{
 		.key = "gambatte_show_gb_link_settings",
 		.blocked = true
