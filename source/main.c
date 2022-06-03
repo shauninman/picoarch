@@ -482,7 +482,7 @@ static void count_fps(void)
 					float rendersps = renders / last_time;
 					vsyncs = 0;
 					renders = 0;
-					snprintf(fps_msg, sizeof(fps_msg), "FPS: %.1f (%.0f)", rendersps, vsyncsps);
+					snprintf(fps_msg, sizeof(fps_msg), "FPS:%.1f (%.0f) ", rendersps, vsyncsps);
 				}
 
 				if (show_cpu) {
@@ -494,7 +494,7 @@ static void count_fps(void)
 					last_cpu_ticks = cpu_ticks;
 				}
 
-				snprintf(msg, HUD_LEN, "%s CPU: %s", fps_msg, cpu_msg);
+				snprintf(msg, HUD_LEN, "%s%s", fps_msg, cpu_msg);
 				plat_video_set_msg(msg, 1, 1100);
 			}
 		}
