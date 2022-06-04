@@ -25,11 +25,11 @@ PATCH = git apply
 
 # Unpolished or slow cores that build
 # EXTRA_CORES += mame2003_plus
-CORES = gambatte gpsp pokemini fceumm snes9x2005_plus pcsx_rearmed picodrive mgba smsplus-gx beetle-pce-fast genesis-plus-gx snes9x2005 nxengine supafaust
+CORES = gambatte gpsp fceumm snes9x2005_plus pcsx_rearmed picodrive pokemini mgba smsplus-gx beetle-pce-fast genesis-plus-gx snes9x2005 nxengine mednafen_supafaust
 
 nxengine_REPO = https://github.com/libretro/nxengine-libretro
 
-supafaust_CORE = mednafen_supafaust_libretro.so
+mednafen_supafaust_REPO = https://github.com/libretro/supafaust
 
 snes9x2005_plus_REPO = https://github.com/libretro/snes9x2005
 snes9x2005_plus_FLAGS = USE_BLARGG_APU=1

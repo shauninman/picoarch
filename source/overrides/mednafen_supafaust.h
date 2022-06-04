@@ -1,6 +1,6 @@
 #include "overrides.h"
 
-static const struct core_override_option supafaust_core_option_overrides[] = {
+static const struct core_override_option mednafen_supafaust_core_option_overrides[] = {
 	{
 		.key = "supafaust_frameskip",
 		.default_value = "auto",
@@ -95,7 +95,7 @@ static const struct core_override_option supafaust_core_option_overrides[] = {
 	{ NULL }
 };
 
-me_bind_action supafaust_ctrl_actions[] =
+me_bind_action mednafen_supafaust_ctrl_actions[] =
 {
 	{ "UP       ",  1 << RETRO_DEVICE_ID_JOYPAD_UP},
 	{ "DOWN     ",  1 << RETRO_DEVICE_ID_JOYPAD_DOWN },
@@ -112,16 +112,16 @@ me_bind_action supafaust_ctrl_actions[] =
 	{ NULL,       0 }
 };
 
-const struct core_override_fast_forward supafaust_fast_forward = {
+const struct core_override_fast_forward mednafen_supafaust_fast_forward = {
 	.type_key = "supafaust_frameskip",
 	.type_value = "auto",
 	.interval_key = "supafaust_frameskip_interval"
 };
 
-#define supafaust_overrides {                          \
-	.core_name = "supafaust",                          \
-	.fast_forward = &supafaust_fast_forward,           \
-	.actions = supafaust_ctrl_actions,                 \
-	.action_size = array_size(supafaust_ctrl_actions), \
-	.options = supafaust_core_option_overrides         \
+#define mednafen_supafaust_overrides {                          \
+	.core_name = "mednafen_supafaust",                          \
+	.fast_forward = &mednafen_supafaust_fast_forward,           \
+	.actions = mednafen_supafaust_ctrl_actions,                 \
+	.action_size = array_size(mednafen_supafaust_ctrl_actions), \
+	.options = mednafen_supafaust_core_option_overrides         \
 }
