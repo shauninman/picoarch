@@ -444,6 +444,7 @@ void pa_log(enum retro_log_level level, const char *fmt, ...) {
 	default:
 		break;
 	}
+	fflush(stdout);
 }
 
 static void show_startup_message(void) {
