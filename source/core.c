@@ -531,13 +531,13 @@ static size_t pa_audio_sample_batch(const int16_t *data, size_t frames) {
 #include <SDL/SDL.h>
 #define JOY_EVENTS (SDL_JOYAXISMOTIONMASK | SDL_JOYBALLMOTIONMASK | SDL_JOYHATMOTIONMASK \
 		    | SDL_JOYBUTTONDOWNMASK | SDL_JOYBUTTONUPMASK)
-static unsigned long power_start = 0;
 static void pa_input_poll(void) {
 	int actions[IN_BINDTYPE_COUNT] = { 0, };
 	unsigned int emu_act;
 	int which = EACTION_NONE;
 	
 	// special power button handling
+	static unsigned long power_start = 0;
 	if (power_start && SDL_GetTicks()-power_start>=1000) {
 		if (state_allowed()) {
 			handle_emu_action(EACTION_POWER_OFF);
