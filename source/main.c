@@ -346,11 +346,23 @@ void handle_emu_action(emu_action action)
 	case EACTION_POWER_OFF:
 		toggle_fast_forward(1); /* Force FF off */
 		sram_write();
+		// intentional fallthrough
+	case EACTION_SAVE_STATE:
+	case EACTION_LOAD_STATE:
 #ifdef MMENU
 		if (mmenu && content && content->path) {
+			
+			MenuRequestState requested_state = kRequestMenu;
+			switch (action) {
+				case EACTION_SLEEP: requested_state = kRequestSleep; break;
+				case EACTION_POWER_OFF: requested_state = kRequestPowerOff; break;
+				case EACTION_SAVE_STATE: requested_state = kRequestSave; break;
+				case EACTION_LOAD_STATE: requested_state = kRequestLoad; break;
+			}
+			
 			ShowMenu_t ShowMenu = (ShowMenu_t)dlsym(mmenu, "ShowMenu");
-			MenuRequestState requested_state = action==EACTION_SLEEP ? kRequestSleep : (action==EACTION_POWER_OFF ? kRequestPowerOff : kRequestMenu);
 			MenuReturnStatus status = ShowMenu(content->path, state_allowed() ? save_template_path : NULL, plat_clean_screen(), requested_state, autosave);
+			
 			char disc_path[256];
 			ChangeDisc_t ChangeDisc = (ChangeDisc_t)dlsym(mmenu, "ChangeDisc");
 			
@@ -394,12 +406,12 @@ void handle_emu_action(emu_action action)
 		/* Force the hud to clear */
 		plat_video_set_msg(NULL, 0, 0);
 		break;
-	case EACTION_SAVE_STATE:
-		state_write();
-		break;
-	case EACTION_LOAD_STATE:
-		state_read();
-		break;
+	// case EACTION_SAVE_STATE:
+	// 	state_write();
+	// 	break;
+	// case EACTION_LOAD_STATE:
+	// 	state_read();
+	// 	break;
 	case EACTION_TOGGLE_FF:
 		toggle_fast_forward(0);
 		break;
