@@ -1,0 +1,27 @@
+diff --git a/menu.c b/menu.c
+index e91f84a80f1857233090ec588939dc42c39682d0..fc41631d2568a7fe78fdbe73e9d68f4df3a90e3f 100644
+--- a/menu.c
++++ b/menu.c
+@@ -1420,6 +1420,13 @@ static void draw_key_config(const me_bind_action *opts, int opt_cnt, int player_
+ 			action_binds(player_idx, opts[i].mask, dev_id));
+ 
+ 	menu_separation();
++	
++	if (player_idx<0) {
++		y += me_mfont_h;
++		text_out16(x, y, "Supports single BUTTON and");
++		y += me_mfont_h;
++		text_out16(x, y, "MENU+BUTTON combos");
++	}
+ 
+ 	if (dev_id < 0)
+ 		dev_name = "(all devices)";
+@@ -1435,7 +1442,7 @@ static void draw_key_config(const me_bind_action *opts, int opt_cnt, int player_
+ 
+ 	if (!is_bind) {
+ 		snprintf(buff2, sizeof(buff2), "%s", in_get_key_name(-1, -PBTN_MOK));
+-		snprintf(buff, sizeof(buff), "%s - bind, %s - clear", buff2,
++		snprintf(buff, sizeof(buff), "Press %s to bind, %s to clear", buff2,
+ 				in_get_key_name(-1, -PBTN_MA2));
+ 		text_out16(x, g_menuscreen_h - 4 * me_mfont_h, buff);
+ 	}
