@@ -32,5 +32,6 @@ extern void (*plat_sound_write)(const struct audio_frame *data, int frames);
 void plat_sound_resize_buffer(void);
 
 void* plat_clean_screen(void);
+uint64_t plat_get_ticks_us_u64(void);
 
 #endif /* __PLAT_H__ */

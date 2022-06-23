@@ -19,6 +19,7 @@ enum scale_effect scale_effect;
 enum scale_effect default_scale_effect = SCALE_EFFECT_SCANLINE;
 int optimize_text;
 // int max_upscale;
+int max_ff_speed;
 
 struct core_options core_options;
 

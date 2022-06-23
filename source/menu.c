@@ -523,9 +523,15 @@ static const char h_optimize_text[]        =
 	"prioritize a consistent stroke size for\n"
 	"text. May also affect non-text content.";
 
+static const char h_max_ff_speed[]        =
+	"Limits the maximum fast forward speed to\n"
+	"maintain a more playable frame rate. Actual\n"
+	"fast forward speed varies by system and game.";
+
 static const char *men_scale_size[] = { "Native", "Aspect", "Full", NULL};
 // static const char *men_scale_filter[] = { "Nearest", "Sharp", "Smooth", NULL};
 static const char *men_scale_effect[] = { "None", "DMG", "LCD", "Scanline", NULL};
+static const char *men_max_ff_speed[] = { "None", "2x", "3x", "4x", "5x", "6x", "7x", "8x", NULL};
 
 static menu_entry e_menu_video_options[] =
 {
@@ -538,6 +544,7 @@ static menu_entry e_menu_video_options[] =
 	mee_onoff_h      (" Optimize text",   MA_VID_TXT, optimize_text, 1, h_optimize_text),
 	mee_range_h      ("Audio buffer",             0, audio_buffer_size, 1, 15, h_audio_buffer_size),
 	mee_onoff_h      ("Reduce judder",            0, enable_drc, 1, h_enable_drc),
+	mee_enum_h       ("Max FF speed",             0, max_ff_speed, men_max_ff_speed, h_max_ff_speed),
 	mee_end,
 };
 

@@ -32,6 +32,7 @@ static const struct {
 	// CE_NUM(scale_filter),
 	CE_NUM(scale_effect),
 	CE_NUM(optimize_text),
+	CE_NUM(max_ff_speed),
 };
 
 void config_write(FILE *f)

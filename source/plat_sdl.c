@@ -1,6 +1,7 @@
 #include <SDL/SDL.h>
 #include <unistd.h>
 #include <math.h>
+#include <sys/time.h>
 #include "core.h"
 #include "libpicofe/fonts.h"
 #include "libpicofe/plat.h"
@@ -524,6 +525,18 @@ void plat_video_flip(void)
 	fb_flip();
 }
 
+uint64_t plat_get_ticks_us_u64(void) {
+    uint64_t ret;
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+    ret = (uint64_t)tv.tv_sec * 1000000;
+    ret += (uint64_t)tv.tv_usec;
+
+    return ret;
+}
+
 static void _video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
 	framebuffer = data;
 	
@@ -551,18 +564,6 @@ static void _video_process(const void *data, unsigned width, unsigned height, si
 	video_update_msg();
 }
 
-#include <sys/time.h>
-static uint64_t plat_get_ticks_us_u64(void) {
-    uint64_t ret;
-    struct timeval tv;
-
-    gettimeofday(&tv, NULL);
-
-    ret = (uint64_t)tv.tv_sec * 1000000;
-    ret += (uint64_t)tv.tv_usec;
-
-    return ret;
-}
 #define FRAME_LIMIT_US 12000 
 void plat_video_process(const void *data, unsigned width, unsigned height, size_t pitch) {
 	static uint64_t last_flip_time_us = 0;
@@ -584,6 +585,7 @@ void plat_video_process(const void *data, unsigned width, unsigned height, size_
                 if (delaytime < 1000) SDL_Delay(delaytime);
                 else next_frame_time_us = 0;
                 time = plat_get_ticks_us_u64();
+				// TODO: should I recalculate skip_flip here since we might have updated time after a delay? probably?
             }
 
 			if ( (!next_frame_time_us) || (!limit_frames) ) {

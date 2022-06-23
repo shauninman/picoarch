@@ -33,6 +33,7 @@ static uint32_t renders;
 
 #define UNDERRUN_THRESHOLD 50
 
+static int ff_frame_time;
 static void toggle_fast_forward(int force_off)
 {
 	static int frameskip_style_was;
@@ -59,13 +60,14 @@ static void toggle_fast_forward(int force_off)
 				CORE_OVERRIDE(override->fast_forward, type_value, "fixed_interval"));
 			options_set_value(
 				interval_key,
-				CORE_OVERRIDE(override->fast_forward, interval_value, "5"));
+				CORE_OVERRIDE(override->fast_forward, interval_value, "0")); // TODO: was 5, test in a core that used this!
 		}
 
 		limit_frames_was = limit_frames;
 		enable_audio_was = enable_audio;
 		limit_frames = 0;
 		enable_audio = 0;
+		ff_frame_time = 1000000 / (frame_rate * (max_ff_speed + 1)); // microseconds
 	} else {
 		if (override && override->fast_forward) {
 			const char *type_key = override->fast_forward->type_key;
@@ -78,6 +80,25 @@ static void toggle_fast_forward(int force_off)
 		limit_frames = limit_frames_was;
 		enable_audio = enable_audio_was;
 	}
+}
+
+static void limit_fast_forward(void) {
+	static uint64_t last_time = 0;
+	const uint64_t now = plat_get_ticks_us_u64();
+
+	if (!limit_frames && max_ff_speed) {
+		if (last_time == 0) last_time = now;
+		int elapsed = now - last_time;
+		if (elapsed>0 && elapsed<0x80000) {
+			if (elapsed<ff_frame_time) {
+				int delay = (ff_frame_time - elapsed) / 1000;
+				if (delay>0) SDL_Delay(delay);
+			}
+			last_time += ff_frame_time;
+			return;
+		}
+	}
+	last_time = now;
 }
 
 // static int screenshot_file_name(char *name, size_t len) {
@@ -208,6 +229,7 @@ void set_defaults(void)
 	scale_effect = default_scale_effect;
 	optimize_text = 1;
 	// max_upscale = 8;
+	max_ff_speed = 3; // == 4x
 	
 	scale_update_scaler();
 
@@ -512,7 +534,6 @@ static void count_fps(void)
 			}
 		}
 		vsyncs++;
-
 	}
 }
 
@@ -646,6 +667,7 @@ int main(int argc, char **argv) {
 		count_fps();
 		adjust_audio();
 		current_core.retro_run();
+		limit_fast_forward();
 		// if (!should_quit)
 		// 	plat_video_flip();
 	} while (!should_quit);

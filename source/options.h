@@ -16,6 +16,7 @@ extern enum scale_effect scale_effect;
 extern enum scale_effect default_scale_effect;
 extern int optimize_text;
 // extern int max_upscale;
+extern int max_ff_speed;
 
 struct core_option_entry {
 	char *key;
