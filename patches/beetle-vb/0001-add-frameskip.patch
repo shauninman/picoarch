@@ -1,0 +1,303 @@
+diff --git a/mednafen/vb/vip.c b/mednafen/vb/vip.c
+index 644f33ffb00df690c7520b4ae087fb00b5d00d32..06c2374e52342cdbe7ad777040603bf67b32853d 100644
+--- a/mednafen/vb/vip.c
++++ b/mednafen/vb/vip.c
+@@ -826,7 +826,7 @@ void VIP_StartFrame(EmulateSpecStruct *espec)
+    }
+ 
+    surface = espec->surface;
+-   skip    = false;
++   skip    = espec->skip;
+    
+    if(VidSettingsDirty)
+    {
+diff --git a/libretro.cpp b/libretro.cpp
+index 2579bdfa1682ec7cc0c11d98c7c59108b2f75008..2e85b329f1e1c078ba291297bcaa2caef36a299f 100644
+--- a/libretro.cpp
++++ b/libretro.cpp
+@@ -1926,6 +1926,73 @@ extern "C" void VB_ExitLoop(void)
+    VB_V810->Exit();
+ }
+ 
++// TODO: these should be prefixed with `setting_`
++static unsigned frameskip_type             = 0;
++static unsigned frameskip_threshold        = 0;
++static uint16_t frameskip_counter          = 0;
++static unsigned frameskip_interval         = 0;
++
++static bool retro_audio_buff_active        = false;
++static unsigned retro_audio_buff_occupancy = 0;
++static bool retro_audio_buff_underrun      = false;
++
++#define FRAMETIME_NTSC 16667
++#define FRAMETIME_PAL  20000
++
++static unsigned retro_audio_latency        = 0;
++static bool update_audio_latency           = false;
++
++static void retro_audio_buff_status_cb(
++      bool active, unsigned occupancy, bool underrun_likely)
++{
++   retro_audio_buff_active    = active;
++   retro_audio_buff_occupancy = occupancy;
++   retro_audio_buff_underrun  = underrun_likely;
++}
++
++static void retro_set_audio_buff_status_cb(void)
++{
++   if (frameskip_type > 0)
++   {
++      struct retro_audio_buffer_status_callback buf_status_cb;
++
++      buf_status_cb.callback = retro_audio_buff_status_cb;
++      if (!environ_cb(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK,
++            &buf_status_cb))
++      {
++         if (log_cb)
++            log_cb(RETRO_LOG_WARN, "Frameskip disabled - frontend does not support audio buffer status monitoring.\n");
++
++         retro_audio_buff_active    = false;
++         retro_audio_buff_occupancy = 0;
++         retro_audio_buff_underrun  = false;
++         retro_audio_latency        = 0;
++      }
++      else
++      {
++		  log_cb(RETRO_LOG_WARN, "Frameskip enabled - here we go!\n");
++		  
++         /* Frameskip is enabled - increase frontend
++          * audio latency to minimise potential
++          * buffer underruns */
++         uint32_t frame_time_usec = FRAMETIME_PAL;
++
++         /* Set latency to 6x current frame time... */
++         retro_audio_latency = (unsigned)(6 * frame_time_usec / 1000);
++
++         /* ...then round up to nearest multiple of 32 */
++         retro_audio_latency = (retro_audio_latency + 0x1F) & ~0x1F;
++      }
++   }
++   else
++   {
++      environ_cb(RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK, NULL);
++      retro_audio_latency = 0;
++   }
++
++   update_audio_latency = true;
++}
++
+ static void Emulate(EmulateSpecStruct *espec, int16_t *sound_buf)
+ {
+    v810_timestamp_t v810_timestamp;
+@@ -1933,6 +2000,54 @@ static void Emulate(EmulateSpecStruct *espec, int16_t *sound_buf)
+    MDFNMP_ApplyPeriodicCheats();
+ 
+    VBINPUT_Frame();
++   
++    espec->skip = false;
++
++   if ((frameskip_type > 0) &&
++          retro_audio_buff_active &&
++          !espec->skip)
++      {
++         bool skip_frame;
++      
++      switch (frameskip_type)
++            {
++               case 1: /* auto */
++                  skip_frame = retro_audio_buff_underrun;
++                  break;
++               case 2: /* manual */
++                  skip_frame = (retro_audio_buff_occupancy < frameskip_threshold);
++                  break;
++               default:
++                  skip_frame = false;
++                  break;
++            }
++            
++            if (skip_frame)
++            {
++               if(frameskip_counter < frameskip_interval)
++               {
++                  espec->skip = true;
++                  frameskip_counter++;
++               }
++               else
++                  frameskip_counter = 0;
++            }
++            else
++               frameskip_counter = 0;
++     }
++     
++   /* If frameskip/timing settings have changed,
++      * update frontend audio latency
++      * > Can do this before or after the frameskip
++      *   check, but doing it after means we at least
++      *   retain the current frame's audio output */
++     if (update_audio_latency)
++     {
++        environ_cb(RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY,
++              &retro_audio_latency);
++        update_audio_latency = false;
++     }
++ 
+ 
+    VIP_StartFrame(espec);
+ 
+@@ -2043,6 +2158,8 @@ void retro_init(void)
+ 
+    if (environ_cb(RETRO_ENVIRONMENT_GET_INPUT_BITMASKS, NULL))
+       libretro_supports_bitmasks = true;
++   
++   retro_set_audio_buff_status_cb();
+ }
+ 
+ void retro_reset(void)
+@@ -2067,6 +2184,8 @@ static void set_volume (uint32_t *ptr, unsigned number)
+ 
+ static void check_variables(void)
+ {
++	unsigned prev_frameskip_type = frameskip_type;
++	
+    struct retro_variable var = {0};
+ 
+    var.key = "vb_3dmode";
+@@ -2221,6 +2340,39 @@ static void check_variables(void)
+          ? V810_EMU_MODE_ACCURATE 
+          : V810_EMU_MODE_FAST;
+    }
++   
++   var.key = "vb_frameskip";
++
++   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
++   {
++	   if (strcmp(var.value, "disabled") == 0)
++          frameskip_type = 0;
++       else if (strcmp(var.value, "auto") == 0)
++       {
++          frameskip_type = 1;
++       }
++       else if (strcmp(var.value, "threshold") == 0)
++       {
++          frameskip_type = 2;
++       }
++   }
++   
++   var.key = "vb_frameskip_threshold";
++
++   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
++   {
++	   frameskip_threshold = atoi(var.value);
++   }
++   
++   var.key = "vb_frameskip_interval";
++
++   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
++   {
++	   frameskip_interval = atoi(var.value);
++   }
++   
++   if (frameskip_type != prev_frameskip_type)
++	   retro_set_audio_buff_status_cb();
+ }
+ 
+ #define MAX_PLAYERS 1
+@@ -2535,6 +2687,16 @@ void retro_deinit(void)
+    surf.format.Ashift     = 0;
+ 
+    libretro_supports_bitmasks = false;
++   
++   frameskip_type             = 0;
++   frameskip_threshold        = 0;
++   frameskip_counter          = 0;
++   frameskip_interval         = 0;
++   retro_audio_buff_active    = false;
++   retro_audio_buff_occupancy = 0;
++   retro_audio_buff_underrun  = false;
++   retro_audio_latency        = 0;
++   update_audio_latency       = false;
+ }
+ 
+ unsigned retro_get_region(void)
+diff --git a/mednafen/git.h b/mednafen/git.h
+index 056e6b550d2746315958d5dc9b6f5313e86c5a50..7af3af930461ec0200365bbd6475788226beec16 100644
+--- a/mednafen/git.h
++++ b/mednafen/git.h
+@@ -43,6 +43,9 @@ typedef struct
+ 
+ 	// Number of frames currently in internal sound buffer.  Set by the system emulation code, to be read by the driver code.
+ 	int32 SoundBufSize;
++	
++	// whether or not to skip drawing the current frame
++	bool skip;
+ } EmulateSpecStruct;
+ 
+ #ifdef __cplusplus
+diff --git a/libretro_core_options.h b/libretro_core_options.h
+index 4eea140b73c725b5cf08dbdcb4fdf146b9c2f717..19b5b8da8218cc0484c35704ef8dee7e6775f04f 100644
+--- a/libretro_core_options.h
++++ b/libretro_core_options.h
+@@ -120,6 +120,63 @@ struct retro_core_option_definition option_defs_us[] = {
+       },
+       "fast",
+    },
++   {
++	   "vb_frameskip",
++	   "Frameskip",
++	   "",
++	   {
++		   { "disabled", NULL },
++		   { "auto", NULL },
++		   { "threshold", NULL },
++	   },
++	   "auto",
++   },
++   { 
++	   "vb_frameskip_threshold", 
++	   "FS threshold (%)",
++	   "",
++	   {
++		   { "15", NULL },
++		   { "18", NULL },
++		   { "21", NULL },
++		   { "24", NULL },
++		   { "27", NULL },
++		   { "30", NULL },
++		   { "33", NULL },
++		   { "36", NULL },
++		   { "39", NULL },
++		   { "42", NULL },
++		   { "45", NULL },
++		   { "48", NULL },
++		   { "51", NULL },
++		   { "54", NULL },
++		   { "57", NULL },
++		   { "60", NULL },
++	   },
++	   "33",
++   },
++   {
++	   "vb_frameskip_interval",
++	   "FS interval",
++	   "",
++	   {
++		   { "0",  NULL },
++		   { "1",  NULL },
++		   { "2",  NULL },
++		   { "3",  NULL },
++		   { "4",  NULL },
++		   { "5",  NULL },
++		   { "6",  NULL },
++		   { "7",  NULL },
++		   { "8",  NULL },
++		   { "9",  NULL },
++		   { "10", NULL },
++		   { "15", NULL },
++		   { "20", NULL },
++		   { "30", NULL },
++	   },
++	   "4"
++   },
+    { NULL, NULL, NULL, { NULL, NULL }, NULL },
+ };
+ 
