@@ -26,6 +26,7 @@ PATCH = git apply
 # Unpolished or slow cores that build
 # EXTRA_CORES += mame2003_plus
 CORES = gambatte gpsp fceumm snes9x2005_plus pcsx_rearmed picodrive pokemini mgba smsplus-gx beetle-pce-fast genesis-plus-gx snes9x2005 nxengine mednafen_supafaust
+CORES+= beetle-vb
 
 nxengine_REPO = https://github.com/libretro/nxengine-libretro
 

@@ -224,7 +224,7 @@ void set_defaults(void)
 	enable_audio = 1;
 	enable_drc = 0;
 	audio_buffer_size = 5;
-	scale_size = SCALE_SIZE_NONE;
+	scale_size = SCALE_SIZE_ASPECT;
 	// scale_filter = SCALE_FILTER_NEAREST;
 	scale_effect = default_scale_effect;
 	optimize_text = 1;
