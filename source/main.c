@@ -366,11 +366,11 @@ void handle_emu_action(emu_action action)
 	case EACTION_MENU:
 	case EACTION_SLEEP:
 	case EACTION_POWER_OFF:
-		toggle_fast_forward(1); /* Force FF off */
 		sram_write();
 		// intentional fallthrough
 	case EACTION_SAVE_STATE:
 	case EACTION_LOAD_STATE:
+		toggle_fast_forward(1); /* Force FF off */
 #ifdef MMENU
 		if (mmenu && content && content->path) {
 			
