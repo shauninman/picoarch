@@ -28,6 +28,8 @@ PATCH = git apply
 CORES = gambatte gpsp fceumm snes9x2005_plus pcsx_rearmed picodrive pokemini mgba smsplus-gx beetle-pce-fast genesis-plus-gx snes9x2005 nxengine mednafen_supafaust
 CORES+= beetle-vb fake-08
 
+# *_BUILD_PATH seems to assume the makefile is present in the root of the repo
+
 fake-08_REPO = https://github.com/jtothebell/fake-08
 fake-08_BUILD_PATH = cores/fake-08/platform/libretro
 fake-08_CORE = fake08_libretro_miyoomini.so
@@ -169,7 +171,8 @@ cores/$(1):
 	mkdir -p cores
 	cd cores && git clone $(if $($1_REVISION),,--depth 1) --recursive $$($(1)_REPO) $(1)
 	$(if $1_REVISION,cd $$($1_BUILD_PATH) && git checkout $($1_REVISION),)
-	(test ! -d patches/$(1)) || (cd $$($1_BUILD_PATH) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), $(PATCH) -p1 < ../../$(patch) &&) true)
+	(test ! -d patches/$(1)) || (cd cores/$(1) && $(foreach patch, $(sort $(wildcard patches/$(1)/*.patch)), $(PATCH) -p1 < ../../$(patch) &&) true)
+	# using ../../patches assumes BUILD_PATH is cores/$(1)
 
 $(1): cores/$(1)
 
