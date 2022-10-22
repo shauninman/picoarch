@@ -26,7 +26,11 @@ PATCH = git apply
 # Unpolished or slow cores that build
 # EXTRA_CORES += mame2003_plus
 CORES = gambatte gpsp fceumm snes9x2005_plus pcsx_rearmed picodrive pokemini mgba smsplus-gx beetle-pce-fast genesis-plus-gx snes9x2005 nxengine mednafen_supafaust
-CORES+= beetle-vb
+CORES+= beetle-vb fake-08
+
+fake-08_REPO = https://github.com/jtothebell/fake-08
+fake-08_BUILD_PATH = cores/fake-08/platform/libretro
+fake-08_CORE = fake08_libretro_miyoomini.so
 
 nxengine_REPO = https://github.com/libretro/nxengine-libretro
 
@@ -43,7 +47,7 @@ beetle-vb_CORE = mednafen_vb_libretro.so
 
 bluemsx_REPO = https://github.com/libretro/blueMSX-libretro
 
-fbalpha2012_BUILD_PATH = fbalpha2012/svn-current/trunk
+fbalpha2012_BUILD_PATH = cores/fbalpha2012/svn-current/trunk
 fbalpha2012_MAKEFILE = makefile.libretro
 
 fceumm_REPO = https://github.com/libretro/libretro-fceumm
