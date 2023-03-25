@@ -29,6 +29,7 @@ unsigned audio_buffer_size_override;
 int state_slot;
 int resume_slot = -1;
 
+static char cheats_dir[MAX_PATH];
 static char config_dir[MAX_PATH];
 static char save_dir[MAX_PATH];
 static char system_dir[MAX_PATH];
@@ -292,6 +293,7 @@ static void set_directories(const char *core_name, const char *tag_name) {
 		mkdir(config_dir, 0755);
 	}
 
+	snprintf(cheats_dir, MAX_PATH, "%s/Cheats/%s/", sdcard_path, tag_name);
 	snprintf(save_dir, MAX_PATH, "%s/Saves/%s/", sdcard_path, tag_name);
 	snprintf(system_dir, MAX_PATH, "%s/Bios/%s", sdcard_path, tag_name);
 }
@@ -701,7 +703,7 @@ int core_load_content(struct content *content) {
 		goto finish;
 	}
 
-	content_based_name(content, cheats_path, sizeof(cheats_path), config_dir, "cheats/", ".cht");
+	content_based_name(content, cheats_path, sizeof(cheats_path), cheats_dir, NULL, ".cht");
 	if (cheats_path[0] != '\0') {
 		cheats = cheats_load(cheats_path);
 		core_apply_cheats(cheats);
