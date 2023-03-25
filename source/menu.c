@@ -70,7 +70,7 @@ me_bind_action emuctrl_actions[] =
 	{ "Load State       ", 1 << EACTION_LOAD_STATE },
 	{ "Toggle FPS/CPU%  ", 1 << EACTION_TOGGLE_HUD },
 	{ "Toggle FF        ", 1 << EACTION_TOGGLE_FF },
-	{ "Reset            ", 1 << EACTION_RESET },
+	{ "Reset Game       ", 1 << EACTION_RESET },
 	// { "Take Screenshot  ", 1 << EACTION_SCREENSHOT },
 	{ NULL,                0 }
 };
